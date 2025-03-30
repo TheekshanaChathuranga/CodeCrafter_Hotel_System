@@ -1,23 +1,24 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
 import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import RoomsList from "./pages/RoomsList";
+import AddRoom from "./pages/AddRoom";
+import Profile from "./pages/Profile";
+import RoomDetails from "./pages/RoomDetails";
+import BookingPage from "./pages/BookingPage";
 
-const App = () => {
+export default function App() {
   return (
     <Router>
       <Navbar />
-      <div className="container mx-auto p-4">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/rooms" element={<RoomsList />} />
+        <Route path="/add-room" element={<AddRoom />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/rooms/:id" element={<RoomDetails />} />
+        <Route path="/booking" element={<BookingPage />} />
+      </Routes>
     </Router>
   );
-};
-
-export default App;
+}
