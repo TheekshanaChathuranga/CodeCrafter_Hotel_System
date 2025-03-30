@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
@@ -6,6 +7,7 @@ import AddRoom from "./pages/AddRoom";
 import Profile from "./pages/Profile";
 import RoomDetails from "./pages/RoomDetails";
 import BookingPage from "./pages/BookingPage";
+import ConfirmationPage from "./pages/ConfirmationPage";
 
 export default function App() {
   return (
@@ -18,6 +20,7 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/rooms/:id" element={<RoomDetails />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/confirmation" element={<ConfirmationPage />} />
       </Routes>
     </Router>
   );

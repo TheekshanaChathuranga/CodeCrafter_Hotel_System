@@ -1,60 +1,103 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const roomsData = [
-  { id: 1, type: "Single Room", guests: "👤", oldPrice: 25000, newPrice: 12500, tax: 1200, meal: "Breakfast LKR 1,500", refundable: false },
-  { id: 2, type: "Double Room (AC)", guests: "👥", oldPrice: 45000, newPrice: 22500, tax: 1800, meal: "Very good breakfast included", refundable: false },
-  { id: 3, type: "Double Room (Non-AC)", guests: "👥", oldPrice: 40000, newPrice: 20000, tax: 1600, meal: "Breakfast LKR 1,500", refundable: false },
-  { id: 4, type: "Double Room (AC)", guests: "👥", oldPrice: 45000, newPrice: 22500, tax: 1800, meal: "Very good breakfast included", refundable: false },
-  { id: 5, type: "Double Room (AC)", guests: "👥", oldPrice: 45000, newPrice: 22500, tax: 1800, meal: "Very good breakfast included", refundable: false },
-  { id: 6, type: "Double Room (AC)", guests: "👥", oldPrice: 45000, newPrice: 22500, tax: 1800, meal: "Very good breakfast included", refundable: false },
-  { id: 7, type: "Triple Room", guests: "👥👤", oldPrice: 55000, newPrice: 27500, tax: 2200, meal: "Breakfast & Dinner included", refundable: false },
-  { id: 8, type: "Triple Room", guests: "👥👤", oldPrice: 55000, newPrice: 27500, tax: 2200, meal: "Breakfast & Dinner included", refundable: false },
-  { id: 9, type: "Triple Room", guests: "👥👤", oldPrice: 55000, newPrice: 27500, tax: 2200, meal: "Breakfast & Dinner included", refundable: false }
-];
+const roomCategories = {
+  "Single Room": [{ id: 1, type: "Single Room" }],
+  "Double Room": [{ id: 2, type: "Double Room" }, { id: 3, type: "Double Room" }],
+  "Triple Room": [{ id: 4, type: "Triple Room" }],
+};
 
 export default function BookingPage() {
+  const [adminDetails, setAdminDetails] = useState({
+    name: "",
+    mobile: "",
+    whatsapp: "",
+    checkIn: "",
+    checkOut: "",
+    arrivalDate: "",
+  });
+
   const [selectedRooms, setSelectedRooms] = useState({});
   const navigate = useNavigate();
 
-  const handleSelectChange = (id, value) => {
-    setSelectedRooms({ ...selectedRooms, [id]: value });
+  const handleInputChange = (e) => {
+    setAdminDetails({ ...adminDetails, [e.target.name]: e.target.value });
+  };
+
+  const handleRoomSelection = (roomId, field, value) => {
+    setSelectedRooms((prev) => ({
+      ...prev,
+      [roomId]: { ...prev[roomId], [field]: value },
+    }));
+  };
+
+  const handleBooking = () => {
+    const bookingDetails = {
+      adminDetails,
+      selectedRooms: Object.entries(selectedRooms).map(([id, details]) => ({
+        id: parseInt(id),
+        type: details.type,
+        acType: details.acType || "Non-AC",
+      })),
+    };
+
+    console.log("Booking Data:", bookingDetails);
+
+    fetch("http://localhost:5000/api/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookingDetails),
+    })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Booking Successful", data);
+        navigate("/confirmation", { state: { adminDetails, selectedRooms } });
+      })
+      .catch(error => console.error("Error:", error));
   };
 
   return (
     <div className="container mx-auto p-5">
-      <h2 className="text-2xl font-bold mb-4">Select Your Rooms</h2>
-      <div className="grid grid-cols-1 gap-4">
-        {roomsData.map((room) => (
-          <div key={room.id} className="border p-4 rounded-lg shadow-lg bg-white flex justify-between items-center">
-            <div className="w-2/3">
-              <p className="text-lg font-bold">{room.guests} {room.type}</p>
-              <p className="text-red-500 line-through">LKR {room.oldPrice.toLocaleString()}</p>
-              <p className="text-xl font-semibold">LKR {room.newPrice.toLocaleString()}</p>
-              <p className="text-gray-600">+ LKR {room.tax.toLocaleString()} taxes and charges</p>
-              <p className="bg-green-500 text-white px-2 py-1 inline-block rounded text-sm">67% off</p>
-              <p className="text-green-700">{room.meal}</p>
-              <p className="text-red-600">{room.refundable ? "Refundable" : "Non-refundable"}</p>
-            </div>
-            <select
-              className="border p-2 rounded"
-              value={selectedRooms[room.id] || 0}
-              onChange={(e) => handleSelectChange(room.id, e.target.value)}
-            >
-              {[...Array(6)].map((_, i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </div>
-        ))}
+      <h2 className="text-2xl font-bold mb-4">Admin Booking</h2>
+
+      <div className="bg-gray-100 p-4 rounded-lg shadow mb-6">
+        <h3 className="text-lg font-semibold mb-2">Admin Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <input type="text" name="name" placeholder="Name" className="border p-2 rounded" onChange={handleInputChange} />
+          <input type="text" name="mobile" placeholder="Mobile No" className="border p-2 rounded" onChange={handleInputChange} />
+          <input type="text" name="whatsapp" placeholder="WhatsApp No (Optional)" className="border p-2 rounded" onChange={handleInputChange} />
+          <input type="datetime-local" name="checkIn" placeholder="Check-in Time" className="border p-2 rounded" onChange={handleInputChange} />
+          <input type="datetime-local" name="checkOut" placeholder="Check-out Time" className="border p-2 rounded" onChange={handleInputChange} />
+          <input type="date" name="arrivalDate" placeholder="Arrival Date" className="border p-2 rounded" onChange={handleInputChange} />
+        </div>
       </div>
-      <button
-        className="mt-5 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-        onClick={() => navigate("/payment")}
-      >
-        Continue to Payment
+
+      {Object.entries(roomCategories).map(([category, rooms]) => (
+        <div key={category} className="mb-6">
+          <h3 className="text-xl font-semibold bg-gray-200 p-2">{category}</h3>
+          <div className="grid grid-cols-1 gap-4">
+            {rooms.map((room) => (
+              <div key={room.id} className="border p-4 rounded-lg shadow-lg bg-white flex justify-between items-center">
+                <div className="w-2/3">
+                  <p className="text-lg font-bold">{room.type}</p>
+                </div>
+                <select
+                  className="border p-2 rounded"
+                  value={selectedRooms[room.id]?.acType || ""}
+                  onChange={(e) => handleRoomSelection(room.id, "acType", e.target.value)}
+                >
+                  <option value="">Select AC/Non-AC</option>
+                  <option value="AC">AC</option>
+                  <option value="Non-AC">Non-AC</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <button className="mt-5 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onClick={handleBooking}>
+        Book Now
       </button>
     </div>
   );
