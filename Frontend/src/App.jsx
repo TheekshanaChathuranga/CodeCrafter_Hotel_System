@@ -8,6 +8,9 @@ import Profile from "./pages/Profile";
 import RoomDetails from "./pages/RoomDetails";
 import BookingPage from "./pages/BookingPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
+import ViewBookings from "./components/ViewBookings";
+import BookingDetails from "./components/BookingDetails";
+
 
 export default function App() {
   return (
@@ -21,6 +24,9 @@ export default function App() {
         <Route path="/rooms/:id" element={<RoomDetails />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/confirmation" element={<ConfirmationPage />} />
+        <Route path="/bookings" element={<ViewBookings />} />
+        <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
+        
       </Routes>
     </Router>
   );

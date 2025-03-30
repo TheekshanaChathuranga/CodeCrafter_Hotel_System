@@ -1,13 +1,10 @@
 import mongoose from "mongoose";
 
-const RoomSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    image: { type: String, required: true },
-    description: { type: String, required: true },
-  },
-  { timestamps: true }
-);
+const roomSchema = new mongoose.Schema({
+  roomNumber: { type: String, required: true, unique: true },
+  type: { type: String, required: true },
+  price: { type: Number, required: true },
+  acType: { type: String, enum: ["AC", "Non-AC"], required: true },
+});
 
-export default mongoose.model("Room", RoomSchema);
+export default mongoose.model("Room", roomSchema);
