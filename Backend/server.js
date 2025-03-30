@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import eventRoutes from "./routes/events.js";
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
 
 // Check if MONGODB_URI is defined
@@ -37,6 +38,7 @@ mongoose
 // });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/events', eventRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

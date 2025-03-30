@@ -6,6 +6,7 @@ import Contact from "./pages/Contact";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import EventBooking from "./pages/EventBooking";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/event-booking" element={<EventBooking />} />
         </Routes>
       </div>
     </Router>
