@@ -52,9 +52,6 @@ export default function Pool_Book() {
   const [price, setPrice] = useState(1.7); // Base price
 
   const poolImages = [
-    // 'https://example.com/pool1.jpg',
-    // 'https://example.com/pool2.jpg',
-    // 'https://example.com/pool3.jpg'
     'src/img/Pool1.jpeg',
     'src/img/Pool2.jpeg',
     'src/img/Pool3.jpeg'
@@ -97,7 +94,7 @@ export default function Pool_Book() {
     <div className="container mx-auto p-4">
       <button 
         onClick={() => navigate(-1)}
-        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
         //className="mb-8 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         Go Back   
@@ -122,7 +119,7 @@ export default function Pool_Book() {
           </div>
 
           {/* Booking Form */}
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-lg">
+          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-lg ">
             <div>
               <label className="block text-sm font-medium text-gray-700">Date</label>
               <input
