@@ -22,7 +22,7 @@ const Home = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <div className="relative h-[600px] bg-[url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb')] bg-cover bg-center">
+      <div className="relative h-[600px] bg-[url('The_Lake1.jpeg')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black/50 flex items-center">
           <div className="max-w-6xl mx-auto px-4 text-center text-white">
             <h1 className="text-5xl font-bold mb-4">The Lake Hotel & Resort</h1>
