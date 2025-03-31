@@ -7,6 +7,8 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Booking from "./pages/Booking";
+import Pool_Book from "./pages/Pool_Book";
+
 
 
 const App = () => {
@@ -20,6 +22,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/booking" element={<Booking />} />
+          <Route path="/Pool-booking" element={<Pool_Book />} />
           
         </Routes>
       </div>
