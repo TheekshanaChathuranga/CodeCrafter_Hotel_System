@@ -23,22 +23,22 @@ export default function Header() {
                 </Link>
               </li>
               <li>
-                <Link to="/Room-booking" className="hover:text-gray-300">
+                <Link to="/room-booking" className="hover:text-gray-300">
                   Room Booking
                 </Link>
               </li>
               <li>
-                <Link to="/Pool-booking" className="hover:text-gray-300">
+                <Link to="/pool-booking" className="hover:text-gray-300">
                   Pool Booking
                 </Link>
               </li>
               <li>
-                <Link to="/Event-booking" className="hover:text-gray-300">
+                <Link to="/event-booking" className="hover:text-gray-300">
                   Event Booking
                 </Link>
               </li>
               <li>
-                <Link to="/About" className="hover:text-gray-300">
+                <Link to="/about" className="hover:text-gray-300">
                   About Us
                 </Link>
               </li>

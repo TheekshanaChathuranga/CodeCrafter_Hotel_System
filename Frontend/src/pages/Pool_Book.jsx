@@ -49,12 +49,16 @@ export default function Pool_Book() {
   });
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [price, setPrice] = useState(50); // Base price
+  const [price, setPrice] = useState(1.7); // Base price
 
   const poolImages = [
-    'https://example.com/pool1.jpg',
-    'https://example.com/pool2.jpg',
-    'https://example.com/pool3.jpg'
+    // 'https://example.com/pool1.jpg',
+    // 'https://example.com/pool2.jpg',
+    // 'https://example.com/pool3.jpg'
+    'src/img/Pool1.jpeg',
+    'src/img/Pool2.jpeg',
+    'src/img/Pool3.jpeg'
+    
   ];
 
   const validateForm = () => {
@@ -99,8 +103,10 @@ export default function Pool_Book() {
         Go Back   
       </button>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-semibold mb-8">Pool Booking</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+        <h1 className="text-3xl font-semibold mb-8">Pool Booking
+            <span className="text-gray-500 text-sm">(${price} per person)</span>
+        </h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Pool Images */}
@@ -110,7 +116,7 @@ export default function Pool_Book() {
                 key={index}
                 src={img}
                 alt={`Pool ${index + 1}`}
-                className="w-full h-64 object-cover rounded-lg shadow-lg"
+                className="w-full h-78 object-cover rounded-lg shadow-lg"
               />
             ))}
           </div>

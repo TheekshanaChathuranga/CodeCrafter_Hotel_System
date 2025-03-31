@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Booking from "./pages/Booking";
 import Pool_Book from "./pages/Pool_Book";
+import Room_Book from "./pages/Room_Book";
 
 
 
@@ -22,8 +23,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/booking" element={<Booking />} />
-          <Route path="/Pool-booking" element={<Pool_Book />} />
-          
+          <Route path="/pool-booking" element={<Pool_Book />} />
+          <Route path="/room-booking" element={<Room_Book />} />
         </Routes>
       </div>
     </Router>
