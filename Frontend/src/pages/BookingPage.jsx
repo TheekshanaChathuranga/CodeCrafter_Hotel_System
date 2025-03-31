@@ -5,7 +5,12 @@ const rooms = [
   { id: 102, type: "Single Room" },
   { id: 101, type: "Double Room" },
   { id: 103, type: "Double Room" },
+  { id: 104, type: "Double Room" },
+ { id: 105, type: "Double Room" },
+  { id: 106, type: "Double Room" },
   { id: 107, type: "Triple Room" },
+  { id: 108, type: "Triple Room" },
+  { id: 109, type: "Triple Room" },
 ];
 
 export default function BookingPage() {

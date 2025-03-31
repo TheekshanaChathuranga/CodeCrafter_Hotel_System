@@ -16,7 +16,6 @@ const ConfirmationPage = () => {
           <p>Mobile: {state?.adminDetails?.mobile}</p>
           <p>Check-in: {state?.adminDetails?.checkIn}</p>
           <p>Check-out: {state?.adminDetails?.checkOut}</p>
-          <p>Arrival Date: {state?.adminDetails?.arrivalDate}</p>
 
           <h4 className="font-semibold mt-4">Room Details:</h4>
           {state?.selectedRooms?.map((room) => (
