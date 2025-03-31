@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import Room from "./models/Room.js";
+import OnlineBooing from "./models/OnlineBooking.js";
+import bookingRoutes from "./routes/bookings.js";
 
 dotenv.config();
 
@@ -13,6 +16,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use("/api",bookingRoutes);
 
 // Check if MONGODB_URI is defined
 if (!MONGODB_URI) {
