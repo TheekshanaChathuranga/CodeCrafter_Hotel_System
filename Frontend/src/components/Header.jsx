@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Routes } from "react-router-dom";
 export default function Header() {
   return (
     <div>
-      <header className="bg-blue-600 text-white p-4 shadow-md">
+      <header className="bg-gray-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo / Title */}
           <h1 className="text-2xl font-bold">The Lake & Resorts</h1>
