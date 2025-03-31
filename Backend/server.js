@@ -3,6 +3,14 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
+import roomRoutes from "./routes/room.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// Convert __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -37,6 +45,8 @@ mongoose
 // });
 
 app.use('/api/auth', authRoutes);
+app.use("/api/rooms", roomRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
