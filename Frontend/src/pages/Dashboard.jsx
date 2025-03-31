@@ -1,17 +1,17 @@
-// import React from "react";
-// import Navbar from "../components/Navbar";
-// import Sidebar from "../components/Sidebar";
+import React from "react";
+import AdminNavbar from "../components/AdminNavbar";
+import AdminSidebar from "../components/AdminSidebar";
 
-// const Dashboard = () => {
-//   return (
+const Dashboard = () => {
+  return (
     
-//     <div className= "flex h-screen bg-gray-100 w-full">
-//       <Sidebar />
-//       <div className="flex-1">
-//         <Navbar />
-//       </div>
-//     </div>
-//   );
-// };
+    <div className= "flex h-screen bg-gray-100 w-full">
+      <AdminSidebar />
+      <div className="flex-1">
+        <AdminNavbar />
+      </div>
+    </div>
+  );
+};
 
-// export default Dashboard;
+export default Dashboard;

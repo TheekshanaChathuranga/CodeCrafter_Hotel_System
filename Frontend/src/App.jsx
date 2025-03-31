@@ -6,6 +6,8 @@ import Contact from "./pages/Contact";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import AdminRooms from "./pages/AdminRooms";
 
 const App = () => {
   return (
@@ -17,6 +19,8 @@ const App = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/rooms" element={<AdminRooms />} />
         </Routes>
       </div>
     </Router>
