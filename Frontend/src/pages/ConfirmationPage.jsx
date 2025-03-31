@@ -14,6 +14,7 @@ const ConfirmationPage = () => {
           <h4 className="font-semibold">Booking Details:</h4>
           <p>Name: {state?.adminDetails?.name}</p>
           <p>Mobile: {state?.adminDetails?.mobile}</p>
+          <p>Whatsapp: {state?.adminDetails?.whatsapp || "N/A"}</p> 
           <p>Check-in: {state?.adminDetails?.checkIn}</p>
           <p>Check-out: {state?.adminDetails?.checkOut}</p>
 
