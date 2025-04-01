@@ -1,12 +1,15 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import commonjs from 'vite-plugin-commonjs';
+
 
 export default defineConfig({
   base: '/',
   plugins: [
     react(),          // Add React plugin for JSX support
-    tailwindcss(),    // Keep Tailwind CSS plugin
+    tailwindcss(),
+    commonjs(),    // Keep Tailwind CSS plugin
   ],
   server: {
     proxy: {
