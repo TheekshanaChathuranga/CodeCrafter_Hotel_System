@@ -3,11 +3,16 @@ import mongoose from "mongoose";
 const roomSchema = new mongoose.Schema({
   roomNumber: { 
     type: String, 
+<<<<<<< Updated upstream
     required: true, 
+=======
+    required: true,
+>>>>>>> Stashed changes
     unique: true 
   },
   type: { 
     type: String, 
+<<<<<<< Updated upstream
     required: true, 
     enum: ['Single', 'Double', 'Triple'] 
   },
@@ -19,6 +24,19 @@ const roomSchema = new mongoose.Schema({
   hasAC: { 
     type: Boolean, 
     required: true 
+=======
+    required: true,
+    enum: ["Single", "Double", "Suite", "Family"] 
+  },
+  acOption: {
+    type: String,
+    required: true,
+    enum: ["AC", "Non-AC"]
+  },
+  hasAC: {
+    type: Boolean,
+    required: true
+>>>>>>> Stashed changes
   },
   pricePerNight: { 
     type: Number, 
@@ -28,16 +46,25 @@ const roomSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
+<<<<<<< Updated upstream
   roomStatus: { 
     type: String, 
     required: true, 
     enum: ['Available', 'Not Available'] 
+=======
+  roomStatus: {
+    type: String,
+    required: true,
+    enum: ["Available", "Occupied", "Maintenance"],
+    default: "Available"
+>>>>>>> Stashed changes
   },
   description: { 
     type: String, 
     required: true 
   },
   images: [{
+<<<<<<< Updated upstream
     type: String
   }]
 }, {
@@ -49,4 +76,16 @@ const roomSchema = new mongoose.Schema({
 roomSchema.index({ roomNumber: 1, type: 1, roomStatus: 1 });
 
 const Room = mongoose.model('Room', roomSchema);
+=======
+    type: String,
+    required: true
+  }],
+  createdAt: { 
+    type: Date, 
+    default: Date.now 
+  }
+});
+
+const Room = mongoose.model("Room", roomSchema);
+>>>>>>> Stashed changes
 export default Room;

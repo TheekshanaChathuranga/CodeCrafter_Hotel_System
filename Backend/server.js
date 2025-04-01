@@ -7,12 +7,17 @@ import { fileURLToPath } from 'url';
 
 // Routes
 import authRoutes from "./routes/auth.js";
+<<<<<<< Updated upstream
 import bookingRoutes from "./routes/bookings.js";
 import roomRoutes from "./routes/rooms.js"; // Add this import
 
 // Configure __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+=======
+import roomRoutes from "./routes/rooms.js";
+
+>>>>>>> Stashed changes
 
 dotenv.config();
 
@@ -26,6 +31,12 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+<<<<<<< Updated upstream
+=======
+app.use("/api/rooms", roomRoutes);
+
+
+>>>>>>> Stashed changes
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

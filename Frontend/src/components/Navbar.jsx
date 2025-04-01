@@ -40,6 +40,7 @@ const Navbar = () => {
             <Link to="/event-booking" className="hover:text-blue-400 transition-colors">Event Booking</Link>
             <Link to="/about" className="hover:text-blue-400 transition-colors">About Us</Link>
             <Link to="/contact" className="hover:text-blue-400 transition-colors">Contact</Link>
+            <Link className="mr-4 hover:text-gray-300" to="/rooms">Rooms</Link>
           </div>
 
           {/* Mobile Menu Button (optional) */}
