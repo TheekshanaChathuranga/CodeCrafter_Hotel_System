@@ -1,14 +1,94 @@
-// // import React from 'react';
+// import React, { useEffect, useState } from 'react';
+// import Header from '../components/Header.jsx';
 
-// // export default function Room_page() {
-// //   return (
-// //     <div>
-// //       <h1>This is the Room booking page</h1>
-// //     </div>
-// //   );
-// // }
-// // frontend/src/pages/room_page.jsx
-// // frontend/src/pages/room_page.jsx
+// export default function Room_Book() {
+//   const [rooms, setRooms] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState('');
+
+//   useEffect(() => {
+//     const fetchRooms = async () => {
+//       try {
+//         const response = await fetch('http://localhost:5000/api/rooms');
+//         if (!response.ok) throw new Error('Failed to fetch rooms');
+//         const data = await response.json();
+//         setRooms(data);
+//       } catch (err) {
+//         setError(err.message);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+//     fetchRooms();
+//   }, []);
+
+//   if (loading) return <div className="text-center p-8">Loading rooms...</div>;
+//   if (error) return <div className="text-center text-red-500 p-8">Error: {error}</div>;
+
+//   return (
+//     <div>
+//       <Header />
+//       <main className="container mx-auto px-4 py-8">
+//         <h1 className="text-3xl font-bold text-center mb-8">Available Rooms</h1>
+        
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//           {rooms.map((room) => (
+//             <div key={room._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+//               <div className="relative h-48">
+//                 {room.images.length > 0 ? (
+//                   <img 
+//                     src={room.images[0]} 
+//                     alt={`Room ${room.roomNumber}`}
+//                     className="w-full h-full object-cover"
+//                   />
+//                 ) : (
+//                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+//                     <span className="text-gray-500">No Image Available</span>
+//                   </div>
+//                 )}
+//               </div>
+              
+//               <div className="p-6">
+//                 <div className="flex justify-between items-start mb-4">
+//                   <div>
+//                     <h2 className="text-xl font-bold">Room {room.roomNumber}</h2>
+//                     <p className="text-gray-600">{room.type} Room</p>
+//                   </div>
+//                   <span className={`px-3 py-1 rounded-full text-sm ${
+//                     room.roomStatus === 'Available' 
+//                       ? 'bg-green-100 text-green-800' 
+//                       : 'bg-red-100 text-red-800'
+//                   }`}>
+//                     {room.roomStatus}
+//                   </span>
+//                 </div>
+
+//                 <div className="space-y-2 mb-4">
+//                   <p className="text-sm">
+//                     <span className="font-semibold">AC:</span> {room.acOption}
+//                   </p>
+//                   <p className="text-sm">
+//                     <span className="font-semibold">Price:</span> 
+//                     LKR {room.pricePerNight.toLocaleString()} per night / 
+//                     LKR {room.pricePerDay.toLocaleString()} per day
+//                   </p>
+//                 </div>
+
+//                 <p className="text-gray-600 text-sm mb-4">{room.description}</p>
+
+//                 <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:bg-gray-400"
+//                   disabled={room.roomStatus !== 'Available'}>
+//                   {room.roomStatus === 'Available' ? 'Book Now' : 'Not Available'}
+//                 </button>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+// //////////////////////////////////////////////////////////////////////
 // import React, { useState, useEffect } from 'react';
 // import { useNavigate } from 'react-router-dom';
 
@@ -39,18 +119,18 @@
 //         'https://example.com/room1-2.jpg'
 //       ]
 //     },
-//     {
-//       id: 2,
-//       name: "Executive Suite",
-//       price: 350,
-//       description: "Luxurious suite with separate living area and jacuzzi",
-//       amenities: ["Wi-Fi", "AC", "Kitchenette", "Smart TV"],
-//       capacity: 4,
-//       images: [
-//         'https://example.com/room2-1.jpg',
-//         'https://example.com/room2-2.jpg'
-//       ]
-//     }
+//     // {
+//     //   id: 2,
+//     //   name: "Executive Suite",
+//     //   price: 350,
+//     //   description: "Luxurious suite with separate living area and jacuzzi",
+//     //   amenities: ["Wi-Fi", "AC", "Kitchenette", "Smart TV"],
+//     //   capacity: 4,
+//     //   images: [
+//     //     'https://example.com/room2-1.jpg',
+//     //     'https://example.com/room2-2.jpg'
+//     //   ]
+//     // }
 //   ];
 
 //   const validateForm = () => {
@@ -270,6 +350,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Header from '../components/Header.jsx';
+
+
 
 export default function Room_Book() {
   const navigate = useNavigate();
@@ -293,9 +376,10 @@ export default function Room_Book() {
       try {
         const response = await axios.get('http://localhost:5000/api/rooms');
         setRooms(response.data);
-        setLoading(false);
       } catch (err) {
         setError('Failed to load rooms. Please try again later.');
+        console.error('Fetch error:', err);
+      } finally {
         setLoading(false);
       }
     };
@@ -324,7 +408,7 @@ export default function Room_Book() {
       await axios.post('http://localhost:5000/api/bookings', {
         room: selectedRoom._id,
         ...formData,
-        totalPrice: selectedRoom.price * calculateNights()
+        totalPrice: selectedRoom.pricePerNight * calculateNights()
       });
       setShowSuccess(true);
       setShowBookingForm(false);
@@ -341,7 +425,6 @@ export default function Room_Book() {
     return Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)) || 0;
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -350,7 +433,6 @@ export default function Room_Book() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -360,164 +442,167 @@ export default function Room_Book() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section with Back Button */}
-        <div className="mb-12">
-          <div className="flex justify-start">
-            <button 
-              onClick={() => navigate(-1)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              ← Back to Home
-            </button>
+    <div>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-12">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Rooms</h1>
+              <p className="text-xl text-gray-600">Discover your perfect stay</p>
+            </div>
           </div>
-          
-          <div className="text-center mt-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Rooms</h1>
-            <p className="text-xl text-gray-600">Discover your perfect stay</p>
-          </div>
-        </div>
 
-
-        {/* Rooms Grid */}
-        <div className="grid gap-8 md:grid-cols-2">
-          {rooms.map(room => (
-            <div key={room._id} className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Image Section */}
-              <div className="relative h-64">
-                <img
-                  src={room.image}
-                  alt={room.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-4 right-4 bg-white/90 px-4 py-2 rounded-lg">
-                  <span className="text-xl font-bold text-blue-600">
-                    ${room.price}<span className="text-sm">/night</span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Details Section */}
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{room.name}</h2>
-                <p className="text-gray-600 mb-4">{room.description}</p>
-                
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Amenities</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {room.amenities?.map((amenity, index) => (
-                      <span 
-                        key={index}
-                        className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                      >
-                        {amenity}
-                      </span>
-                    ))}
+          {/* Rooms Grid */}
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {rooms.map(room => (
+              <div key={room._id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                {/* Image Section */}
+                <div className="relative h-64">
+                  {room.images?.length > 0 ? (
+                    <img
+                      src={`http://localhost:5000/${room.images[0]}`}
+                      alt={`Room ${room.roomNumber}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/images/fallback-room.jpg';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500">No Image Available</span>
+                    </div>
+                  )}
+                  <div className="absolute bottom-4 right-4 bg-white/90 px-4 py-2 rounded-lg shadow-sm">
+                    <span className="text-xl font-bold text-blue-600">
+                      LKR {room.pricePerNight?.toLocaleString()}
+                      <span className="text-sm">/night</span>
+                    </span>
                   </div>
                 </div>
 
+                {/* Details Section */}
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h2 className="text-xl font-bold">Room {room.roomNumber}</h2>
+                      <p className="text-gray-600">{room.type} ({room.acOption})</p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      room.roomStatus === 'Available' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {room.roomStatus}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-600 text-sm mb-4">{room.description}</p>
+
+                  <button
+                    onClick={() => {
+                      setSelectedRoom(room);
+                      setShowBookingForm(true);
+                    }}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                    disabled={room.roomStatus !== 'Available'}
+                  >
+                    {room.roomStatus === 'Available' ? 'Book Now' : 'Not Available'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Booking Modal */}
+          {showBookingForm && selectedRoom && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                <h2 className="text-2xl font-bold mb-4">Book Room {selectedRoom.roomNumber}</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block mb-2 font-medium">Check-in Date</label>
+                    <input
+                      type="date"
+                      name="checkIn"
+                      value={formData.checkIn}
+                      onChange={(e) => setFormData({...formData, checkIn: e.target.value})}
+                      className="w-full p-2 border rounded-lg"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    {errors.checkIn && <p className="text-red-500 text-sm mt-1">{errors.checkIn}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 font-medium">Check-out Date</label>
+                    <input
+                      type="date"
+                      name="checkOut"
+                      value={formData.checkOut}
+                      onChange={(e) => setFormData({...formData, checkOut: e.target.value})}
+                      className="w-full p-2 border rounded-lg"
+                      min={formData.checkIn || new Date().toISOString().split('T')[0]}
+                    />
+                    {errors.checkOut && <p className="text-red-500 text-sm mt-1">{errors.checkOut}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block mb-2 font-medium">Guests</label>
+                    <input
+                      type="number"
+                      name="guests"
+                      value={formData.guests}
+                      onChange={(e) => setFormData({...formData, guests: e.target.value})}
+                      className="w-full p-2 border rounded-lg"
+                      min="1"
+                      max="4"
+                    />
+                    {errors.guests && <p className="text-red-500 text-sm mt-1">{errors.guests}</p>}
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="font-semibold">
+                      Total: LKR {(selectedRoom.pricePerNight * calculateNights()).toLocaleString()}
+                    </p>
+                    <p className="text-sm text-gray-600">{calculateNights()} nights</p>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowBookingForm(false)}
+                      className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                    >
+                      Confirm Booking
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Success Modal */}
+          {showSuccess && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+              <div className="bg-white p-6 rounded-xl text-center max-w-sm">
+                <h3 className="text-2xl font-bold mb-4 text-green-600">Booking Confirmed!</h3>
+                <p className="mb-4">Your reservation for Room {selectedRoom?.roomNumber} is complete.</p>
                 <button
-                  onClick={() => {
-                    setSelectedRoom(room);
-                    setShowBookingForm(true);
-                  }}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => setShowSuccess(false)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
                 >
-                  Book Now
+                  Close
                 </button>
               </div>
             </div>
-          ))}
+          )}
         </div>
-
-        {/* Booking Modal */}
-        {showBookingForm && selectedRoom && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl p-6 max-w-md w-full">
-              <h2 className="text-2xl font-bold mb-4">Book {selectedRoom.name}</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Form fields */}
-                <div>
-                  <label className="block mb-2 font-medium">Check-in Date</label>
-                  <input
-                    type="date"
-                    name="checkIn"
-                    value={formData.checkIn}
-                    onChange={(e) => setFormData({...formData, checkIn: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  {errors.checkIn && <p className="text-red-500 text-sm mt-1">{errors.checkIn}</p>}
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-medium">Check-out Date</label>
-                  <input
-                    type="date"
-                    name="checkOut"
-                    value={formData.checkOut}
-                    onChange={(e) => setFormData({...formData, checkOut: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                    min={formData.checkIn || new Date().toISOString().split('T')[0]}
-                  />
-                  {errors.checkOut && <p className="text-red-500 text-sm mt-1">{errors.checkOut}</p>}
-                </div>
-
-                <div>
-                  <label className="block mb-2 font-medium">Guests</label>
-                  <input
-                    type="number"
-                    name="guests"
-                    value={formData.guests}
-                    onChange={(e) => setFormData({...formData, guests: e.target.value})}
-                    className="w-full p-2 border rounded-lg"
-                    min="1"
-                    max={selectedRoom.capacity}
-                  />
-                  {errors.guests && <p className="text-red-500 text-sm mt-1">{errors.guests}</p>}
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="font-semibold">Total: ${selectedRoom.price * calculateNights()}</p>
-                  <p className="text-sm text-gray-600">{calculateNights()} nights</p>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowBookingForm(false)}
-                    className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-                  >
-                    Confirm
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Success Modal */}
-        {showSuccess && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-xl text-center max-w-sm">
-              <h3 className="text-2xl font-bold mb-4 text-green-600">Booking Confirmed!</h3>
-              <p className="mb-4">Your reservation for {selectedRoom?.name} is complete.</p>
-              <button
-                onClick={() => setShowSuccess(false)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
