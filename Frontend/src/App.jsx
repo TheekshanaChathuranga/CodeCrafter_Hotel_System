@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import EventBooking from "./pages/EventBooking";
+import EventList from "./pages/EventList";
 
 const App = () => {
   return (
@@ -19,6 +20,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/event-booking" element={<EventBooking />} />
+          <Route path="/event-list" element={<EventList />} />
+          <Route path="/" element={<EventBooking />} />
         </Routes>
       </div>
     </Router>

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const API_BASE_URL = "http://localhost:5000";
 
 const EventBooking = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     name: "",
     phone1: "",
     phone2: "",
-    noOfGuests: 0, // New field for No of Guests
+    noOfGuests: 0,
     eventType: "",
     date: "",
     checkIn: "",
@@ -22,29 +25,27 @@ const EventBooking = () => {
   const [extraFields, setExtraFields] = useState([
     { no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
   ]);
-  const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/events`);
-      const fetchedEvents = response.data || [];
-      const sanitizedEvents = fetchedEvents.map((event) => ({
-        ...event,
-        tableData: event.tableData || [],
-        extraFields: event.extraFields || [],
-      }));
-      setEvents(sanitizedEvents);
-    } catch (error) {
-      console.error("Error fetching events:", error.message, error.response?.data);
-      setEvents([]);
-      alert(`Failed to fetch events: ${error.message}`);
+    if (location.state?.event) {
+      const event = location.state.event;
+      setEditingEvent(event);
+      setFormData({
+        name: event.name || "",
+        phone1: event.phone1 || "",
+        phone2: event.phone2 || "",
+        noOfGuests: event.noOfGuests || 0,
+        eventType: event.eventType || "",
+        date: event.date?.slice(0, 10) || "",
+        checkIn: event.checkIn?.slice(0, 10) || "",
+        checkOut: event.checkOut?.slice(0, 10) || "",
+        email: event.email || "",
+      });
+      setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+      setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
     }
-  };
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -154,15 +155,13 @@ const EventBooking = () => {
       };
 
       if (editingEvent) {
-        const response = await axios.put(
+        await axios.put(
           `${API_BASE_URL}/api/events/${editingEvent._id}`,
           dataToSubmit
         );
-        setEvents(events.map((ev) => (ev._id === editingEvent._id ? response.data : ev)));
         setEditingEvent(null);
       } else {
-        const response = await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
-        setEvents([...events, response.data]);
+        await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
       }
 
       setFormData({
@@ -185,34 +184,6 @@ const EventBooking = () => {
     }
   };
 
-  const handleEdit = (event) => {
-    setEditingEvent(event);
-    setFormData({
-      name: event.name || "",
-      phone1: event.phone1 || "",
-      phone2: event.phone2 || "",
-      noOfGuests: event.noOfGuests || 0,
-      eventType: event.eventType || "",
-      date: event.date?.slice(0, 10) || "",
-      checkIn: event.checkIn?.slice(0, 10) || "",
-      checkOut: event.checkOut?.slice(0, 10) || "",
-      email: event.email || "",
-    });
-    setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-    setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/api/events/${id}`);
-      setEvents(events.filter((ev) => ev._id !== id));
-      alert("Event deleted!");
-    } catch (error) {
-      console.error("Error deleting event:", error.message, error.response?.data);
-      alert(`Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`);
-    }
-  };
-
   const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
   const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
   const serviceCharge = totalAmount * 0.1;
@@ -221,394 +192,345 @@ const EventBooking = () => {
   const finalTotalRatePP = formData.noOfGuests > 0 ? (grandTotal / formData.noOfGuests).toFixed(2) : "0.00";
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{editingEvent ? "Edit Event" : "Book Your Event"}</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label>Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label>Phone Number 1:</label>
-          <input
-            type="tel"
-            name="phone1"
-            value={formData.phone1}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label>Phone Number 2 (Additional):</label>
-          <input
-            type="tel"
-            name="phone2"
-            value={formData.phone2}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
-        </div>
-        <div>
-          <label>No of Guests:</label>
-          <input
-            type="number"
-            name="noOfGuests"
-            value={formData.noOfGuests}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            min="1"
-            required
-          />
-        </div>
-        <div>
-          <label>Event Type:</label>
-          <select
-            name="eventType"
-            value={formData.eventType}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          >
-            <option value="">Select Event Type</option>
-            <option value="wedding">Wedding</option>
-            <option value="birthday">Birthday</option>
-            <option value="seminar">Seminar</option>
-            <option value="party">Party</option>
-          </select>
-        </div>
-        <div>
-          <label>Date:</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label>Check-In:</label>
-          <input
-            type="date"
-            name="checkIn"
-            value={formData.checkIn}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label>Check-Out:</label>
-          <input
-            type="date"
-            name="checkOut"
-            value={formData.checkOut}
-            onChange={handleChange}
-            className="border p-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label>Email (Optional):</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className="border p-2 w-full"
-          />
-        </div>
-
-        <div className="mt-4">
-          <label>Upload Excel File (Optional):</label>
-          <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="border p-2" />
-        </div>
-
-        <div className="mt-4">
-          <h2 className="text-xl font-bold mb-2">Add Items</h2>
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr>
-                <th className="border p-2">No</th>
-                <th className="border p-2">Description</th>
-                <th className="border p-2">Unit</th>
-                <th className="border p-2">Quantity</th>
-                <th className="border p-2">Rate</th>
-                <th className="border p-2">Amount</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, index) => (
-                <tr key={index}>
-                  <td className="border p-2">{row.no}</td>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      value={row.description}
-                      onChange={(e) => handleTableChange(index, "description", e.target.value)}
-                      className="border p-1 w-full"
-                      placeholder="e.g., Egg Fried Rice (Basmathee)"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      value={row.unit}
-                      onChange={(e) => handleTableChange(index, "unit", e.target.value)}
-                      className="border p-1 w-full"
-                      maxLength={5}
-                      placeholder="e.g., KG"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={row.quantity}
-                      onChange={(e) => handleTableChange(index, "quantity", parseFloat(e.target.value))}
-                      className="border p-1 w-full"
-                      placeholder="e.g., 100"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={row.rate}
-                      onChange={(e) => handleTableChange(index, "rate", parseFloat(e.target.value))}
-                      className="border p-1 w-full"
-                      placeholder="e.g., 650.00"
-                    />
-                  </td>
-                  <td className="border p-2">{row.amount?.toFixed(2) || "0.00"}</td>
-                  <td className="border p-2">
-                    <button
-                      type="button"
-                      onClick={() => removeRow(index)}
-                      className="bg-red-500 text-white p-1 rounded"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={addRow}
-            className="bg-green-500 text-white p-2 rounded mt-2 mr-2"
-          >
-            Add Row
-          </button>
-        </div>
-
-        <div className="mt-2">
-          <p className="text-lg font-bold">Total Amount: {totalAmount.toFixed(2)}</p>
-          <p className="text-lg font-bold">Service Charge (10%): {serviceCharge.toFixed(2)}</p>
-          <p className="text-lg font-bold">Extra Amount: {extraAmount.toFixed(2)}</p>
-          <p className="text-lg font-bold">Grand Total: {grandTotal.toFixed(2)}</p>
-          <p className="text-lg font-bold">Grand Total Rate PP: {grandTotalRatePP}</p>
-        </div>
-
-        <div className="mt-4">
-          <h2 className="text-xl font-bold mb-2">Extra Charges</h2>
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr>
-                <th className="border p-2">No</th>
-                <th className="border p-2">Description</th>
-                <th className="border p-2">Unit</th>
-                <th className="border p-2">Quantity</th>
-                <th className="border p-2">Rate</th>
-                <th className="border p-2">Amount</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {extraFields.map((row, index) => (
-                <tr key={index}>
-                  <td className="border p-2">{row.no}</td>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      value={row.description}
-                      onChange={(e) => handleExtraChange(index, "description", e.target.value)}
-                      className="border p-1 w-full"
-                      placeholder="e.g., Pool Side Reservation"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="text"
-                      value={row.unit}
-                      onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
-                      className="border p-1 w-full"
-                      maxLength={5}
-                      placeholder="e.g., KG"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={row.quantity}
-                      onChange={(e) => handleExtraChange(index, "quantity", parseFloat(e.target.value))}
-                      className="border p-1 w-full"
-                      placeholder="e.g., 100"
-                    />
-                  </td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={row.rate}
-                      onChange={(e) => handleExtraChange(index, "rate", parseFloat(e.target.value))}
-                      className="border p-1 w-full"
-                      placeholder="e.g., 5000"
-                    />
-                  </td>
-                  <td className="border p-2">{row.amount?.toFixed(2) || "0.00"}</td>
-                  <td className="border p-2">
-                    <button
-                      type="button"
-                      onClick={() => removeExtraRow(index)}
-                      className="bg-red-500 text-white p-1 rounded"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button
-            type="button"
-            onClick={addExtraRow}
-            className="bg-green-500 text-white p-2 rounded mt-2 mr-2"
-          >
-            Add Extra Row
-          </button>
-        </div>
-
-        <div className="mt-2">
-          <p className="text-lg font-bold">Final Total: {grandTotal.toFixed(2)}</p>
-          <p className="text-lg font-bold">Final Total Rate PP: {finalTotalRatePP}</p>
-        </div>
-
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          {editingEvent ? "Update Booking" : "Submit Booking"}
-        </button>
-        {editingEvent && (
-          <button
-            type="button"
-            onClick={() => setEditingEvent(null)}
-            className="bg-gray-500 text-white p-2 rounded ml-2"
-          >
-            Cancel Edit
-          </button>
-        )}
-      </form>
-
-      <h2 className="text-xl font-bold mt-8">Your Events</h2>
-      <div className="mt-4">
-        {events.length > 0 ? (
-          events.map((event) => (
-            <div key={event._id} className="border p-4 mb-2">
-              <div>
-                <p><strong>Name:</strong> {event.name}</p>
-                <p><strong>No of Guests:</strong> {event.noOfGuests}</p>
-                <p><strong>Event Type:</strong> {event.eventType}</p>
-                <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-                <p><strong>Check-In:</strong> {new Date(event.checkIn).toLocaleDateString()}</p>
-                <p><strong>Check-Out:</strong> {new Date(event.checkOut).toLocaleDateString()}</p>
-                <h3 className="text-lg font-bold mt-2">Items</h3>
-                <table className="w-full border-collapse border">
-                  <thead>
-                    <tr>
-                      <th className="border p-2">No</th>
-                      <th className="border p-2">Description</th>
-                      <th className="border p-2">Unit</th>
-                      <th className="border p-2">Quantity</th>
-                      <th className="border p-2">Rate</th>
-                      <th className="border p-2">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {event.tableData.map((row, index) => (
-                      <tr key={index}>
-                        <td className="border p-2">{row.no}</td>
-                        <td className="border p-2">{row.description}</td>
-                        <td className="border p-2">{row.unit}</td>
-                        <td className="border p-2">{row.quantity}</td>
-                        <td className="border p-2">{row.rate}</td>
-                        <td className="border p-2">{row.amount?.toFixed(2) || "0.00"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p><strong>Total Amount:</strong> {event.totalAmount?.toFixed(2) || "0.00"}</p>
-                <p><strong>Service Charge:</strong> {event.serviceCharge?.toFixed(2) || "0.00"}</p>
-                <p><strong>Extra Amount:</strong> {event.extraAmount?.toFixed(2) || "0.00"}</p>
-                <p><strong>Grand Total:</strong> {event.grandTotal?.toFixed(2) || "0.00"}</p>
-                <p><strong>Grand Total Rate PP:</strong> {(event.noOfGuests > 0 ? event.grandTotal / event.noOfGuests : 0).toFixed(2)}</p>
-                <h3 className="text-lg font-bold mt-2">Extra Charges</h3>
-                <table className="w-full border-collapse border">
-                  <thead>
-                    <tr>
-                      <th className="border p-2">No</th>
-                      <th className="border p-2">Description</th>
-                      <th className="border p-2">Unit</th>
-                      <th className="border p-2">Quantity</th>
-                      <th className="border p-2">Rate</th>
-                      <th className="border p-2">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {event.extraFields.map((row, index) => (
-                      <tr key={index}>
-                        <td className="border p-2">{row.no}</td>
-                        <td className="border p-2">{row.description}</td>
-                        <td className="border p-2">{row.unit}</td>
-                        <td className="border p-2">{row.quantity}</td>
-                        <td className="border p-2">{row.rate}</td>
-                        <td className="border p-2">{row.amount?.toFixed(2) || "0.00"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <p><strong>Final Total:</strong> {event.finalTotal?.toFixed(2) || "0.00"}</p>
-                <p><strong>Final Total Rate PP:</strong> {(event.noOfGuests > 0 ? event.finalTotal / event.noOfGuests : 0).toFixed(2)}</p>
-              </div>
-              <div className="mt-2">
-                <button
-                  onClick={() => handleEdit(event)}
-                  className="bg-yellow-500 text-white p-2 rounded mr-2"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(event._id)}
-                  className="bg-red-500 text-white p-2 rounded"
-                >
-                  Delete
-                </button>
-              </div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl w-full">
+        <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center">
+          {editingEvent ? "Edit Event" : "Book Your Event"}
+        </h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name:</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              />
             </div>
-          ))
-        ) : (
-          <p>No events booked yet.</p>
-        )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone Number 1:</label>
+              <input
+                type="tel"
+                name="phone1"
+                value={formData.phone1}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Phone Number 2 (Additional):</label>
+              <input
+                type="tel"
+                name="phone2"
+                value={formData.phone2}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">No of Guests:</label>
+              <input
+                type="number"
+                name="noOfGuests"
+                value={formData.noOfGuests}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                min="1"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Event Type:</label>
+              <select
+                name="eventType"
+                value={formData.eventType}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              >
+                <option value="">Select Event Type</option>
+                <option value="wedding">Wedding</option>
+                <option value="birthday">Birthday</option>
+                <option value="seminar">Seminar</option>
+                <option value="party">Party</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Date:</label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Check-In:</label>
+              <input
+                type="date"
+                name="checkIn"
+                value={formData.checkIn}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Check-Out:</label>
+              <input
+                type="date"
+                name="checkOut"
+                value={formData.checkOut}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">Email (Optional):</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Upload Excel File (Optional):</label>
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileUpload}
+              className="mt-1 block w-full text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-blue-600 mb-4">Add Items</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-blue-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {tableData.map((row, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="text"
+                          value={row.description}
+                          onChange={(e) => handleTableChange(index, "description", e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., Egg Fried Rice (Basmathee)"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="text"
+                          value={row.unit}
+                          onChange={(e) => handleTableChange(index, "unit", e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          maxLength={5}
+                          placeholder="e.g., KG"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={row.quantity}
+                          onChange={(e) => handleTableChange(index, "quantity", parseFloat(e.target.value))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., 100"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={row.rate}
+                          onChange={(e) => handleTableChange(index, "rate", parseFloat(e.target.value))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., 650.00"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => removeRow(index)}
+                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition duration-200"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              type="button"
+              onClick={addRow}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            >
+              Add Row
+            </button>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-md">
+            <p className="text-lg font-semibold text-blue-800">Total Amount: {totalAmount.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-blue-800">Service Charge (10%): {serviceCharge.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-blue-800">Extra Amount: {extraAmount.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-blue-800">Grand Total: {grandTotal.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-blue-800">Grand Total Rate PP: {grandTotalRatePP}</p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold text-blue-600 mb-4">Extra Charges</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-blue-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {extraFields.map((row, index) => (
+                    <tr key={index}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="text"
+                          value={row.description}
+                          onChange={(e) => handleExtraChange(index, "description", e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., Pool Side Reservation"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="text"
+                          value={row.unit}
+                          onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          maxLength={5}
+                          placeholder="e.g., KG"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={row.quantity}
+                          onChange={(e) => handleExtraChange(index, "quantity", parseFloat(e.target.value))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., 100"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={row.rate}
+                          onChange={(e) => handleExtraChange(index, "rate", parseFloat(e.target.value))}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                          placeholder="e.g., 5000"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => removeExtraRow(index)}
+                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition duration-200"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              type="button"
+              onClick={addExtraRow}
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            >
+              Add Extra Row
+            </button>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-md">
+            <p className="text-lg font-semibold text-blue-800">Final Total: {grandTotal.toFixed(2)}</p>
+            <p className="text-lg font-semibold text-blue-800">Final Total Rate PP: {finalTotalRatePP}</p>
+          </div>
+
+          <div className="flex space-x-3 justify-end">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            >
+              {editingEvent ? "Update Booking" : "Submit Booking"}
+            </button>
+            {editingEvent && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingEvent(null);
+                  setFormData({
+                    name: "",
+                    phone1: "",
+                    phone2: "",
+                    noOfGuests: 0,
+                    eventType: "",
+                    date: "",
+                    checkIn: "",
+                    checkOut: "",
+                    email: "",
+                  });
+                  setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+                  setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+                }}
+                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-200"
+              >
+                Cancel Edit
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate("/event-list")}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
+            >
+              View Your Events
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
