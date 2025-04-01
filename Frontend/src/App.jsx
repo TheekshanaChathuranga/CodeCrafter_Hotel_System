@@ -7,7 +7,8 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
-import AdminRooms from "./pages/AdminRooms";
+import ManageRooms from "./pages/ManageRooms";
+import ManagePools from "./pages/ManagePools"; 
 
 const App = () => {
   return (
@@ -20,7 +21,9 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/rooms" element={<AdminRooms />} />
+          <Route path="/admin/rooms" element={<ManageRooms />} />
+          <Route path="/admin/pools" element={<ManagePools />} /> 
+
         </Routes>
       </div>
     </Router>
