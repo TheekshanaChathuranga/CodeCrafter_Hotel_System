@@ -102,49 +102,44 @@ const Room_Book = () => {
 
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    
+
+    // Create form data object
+    const formData = {
+      roomNumber: selectedRoom.roomNumber,
+      roomType: selectedRoom.type,
+      checkIn: bookingDates.checkIn,
+      checkOut: bookingDates.checkOut,
+      fullName: e.target.elements.fullName.value,
+      phoneNumber: e.target.elements.phoneNumber.value,
+      nicNumber: e.target.elements.nicNumber.value || undefined,
+      whatsappNumber: e.target.elements.whatsappNumber.value || undefined,
+      adults: parseInt(e.target.elements.adults.value),
+      children: parseInt(e.target.elements.children.value) || 0,
+      specialRequests: e.target.elements.specialRequests.value || undefined,
+    };
+
     try {
-      // Validate dates
-      if (!bookingDates.checkIn || !bookingDates.checkOut) {
-        throw new Error("Please select both check-in and check-out dates");
-      }
-  
-      // Create form data object with ISO dates
-      const formData = {
-        roomNumber: selectedRoom.roomNumber,
-        roomType: selectedRoom.type,
-        checkIn: bookingDates.checkIn.toISOString(),
-        checkOut: bookingDates.checkOut.toISOString(),
-        fullName: e.target.elements.fullName.value,
-        phoneNumber: e.target.elements.phoneNumber.value,
-        nicNumber: e.target.elements.nicNumber.value || undefined,
-        whatsappNumber: e.target.elements.whatsappNumber.value || undefined,
-        adults: parseInt(e.target.elements.adults.value),
-        children: parseInt(e.target.elements.children.value) || 0,
-        specialRequests: e.target.elements.specialRequests.value || undefined
-      };
-  
-      // Debug log
-      console.log("Submitting booking:", formData);
-  
+      // Send booking data to backend
       const response = await axios.post(
-        'http://localhost:5000/api/bookings',
+        "http://localhost:5000/api/bookings",
         formData
       );
-  
+
       if (response.status === 201) {
         alert(`Booking confirmed for Room ${selectedRoom.roomNumber}!\n
           Check-in: ${new Date(formData.checkIn).toLocaleDateString()}\n
           Check-out: ${new Date(formData.checkOut).toLocaleDateString()}`);
-        
-        // Reset form
+
+        // Reset form state
         setShowBookingForm(false);
         setSelectedRoom(null);
         setBookingDates({ checkIn: null, checkOut: null });
       }
     } catch (error) {
-      console.error('Booking error:', error);
-      alert(`Booking failed: ${error.response?.data?.message || error.message}`);
+      console.error("Booking error:", error);
+      alert(
+        `Booking failed: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
@@ -192,142 +187,148 @@ const Room_Book = () => {
 
       {/* Booking Form (shown when a room is selected) */}
       {showBookingForm && selectedRoom && (
-  <div className="max-w-6xl mx-auto px-4 py-8 bg-white shadow-lg rounded-lg my-8">
-    <h2 className="text-2xl font-bold mb-4">
-      Booking Room {selectedRoom.roomNumber}
-    </h2>
-    <form onSubmit={handleBookingSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-700 mb-2">
-            Check-in Date <span className="text-red-500">*</span>
-          </label>
-          <Calendar
-            date={bookingDates.checkIn}
-            onChange={(date) => handleDateSelect(date, "checkIn")}
-            minDate={new Date()}
-            className="border rounded-lg p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-2">
-            Check-out Date <span className="text-red-500">*</span>
-          </label>
-          <Calendar
-            date={bookingDates.checkOut}
-            onChange={(date) => handleDateSelect(date, "checkOut")}
-            minDate={bookingDates.checkIn || new Date()}
-            className="border rounded-lg p-2"
-          />
-        </div>
-      </div>
+        <div className="max-w-6xl mx-auto px-4 py-8 bg-white shadow-lg rounded-lg my-8">
+          <h2 className="text-2xl font-bold mb-4">
+            Booking Room {selectedRoom.roomNumber}
+          </h2>
+          <form onSubmit={handleBookingSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Check-in Date <span className="text-red-500">*</span>
+                </label>
+                <Calendar
+                  date={bookingDates.checkIn}
+                  onChange={(date) => handleDateSelect(date, "checkIn")}
+                  minDate={new Date()}
+                  className="border rounded-lg p-2"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Check-out Date <span className="text-red-500">*</span>
+                </label>
+                <Calendar
+                  date={bookingDates.checkOut}
+                  onChange={(date) => handleDateSelect(date, "checkOut")}
+                  minDate={bookingDates.checkIn || new Date()}
+                  className="border rounded-lg p-2"
+                />
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-700 mb-2">
-            Full Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="fullName"
-            type="text"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-2">NIC Number</label>
-          <input
-            name="nicNumber"
-            type="text"
-            placeholder="Optional"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="fullName"
+                  type="text"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">NIC Number</label>
+                <input
+                  name="nicNumber"
+                  type="text"
+                  placeholder="Optional"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-700 mb-2">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="phoneNumber"
-            type="tel"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-2">WhatsApp Number</label>
-          <input
-            name="whatsappNumber"
-            type="tel"
-            placeholder="Optional (if different from phone number)"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="phoneNumber"
+                  type="tel"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  WhatsApp Number
+                </label>
+                <input
+                  name="whatsappNumber"
+                  type="tel"
+                  placeholder="Optional (if different from phone number)"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-gray-700 mb-2">
-            Number of Adults <span className="text-red-500">*</span>
-          </label>
-          <select
-            name="adults"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">Select</option>
-            <option value="1">1 Adult</option>
-            <option value="2">2 Adults</option>
-            <option value="3">3 Adults</option>
-            <option value="4">4+ Adults</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-gray-700 mb-2">Number of Children</label>
-          <select
-            name="children"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="0">0 Children</option>
-            <option value="1">1 Child</option>
-            <option value="2">2 Children</option>
-            <option value="3">3 Children</option>
-            <option value="4+">4+ Children</option>
-          </select>
-        </div>
-      </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Number of Adults <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="adults"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select</option>
+                  <option value="1">1 Adult</option>
+                  <option value="2">2 Adults</option>
+                  <option value="3">3 Adults</option>
+                  <option value="4">4+ Adults</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  Number of Children
+                </label>
+                <select
+                  name="children"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="0">0 Children</option>
+                  <option value="1">1 Child</option>
+                  <option value="2">2 Children</option>
+                  <option value="3">3 Children</option>
+                  <option value="4+">4+ Children</option>
+                </select>
+              </div>
+            </div>
 
-      <div>
-        <label className="block text-gray-700 mb-2">Special Requests</label>
-        <textarea
-          name="specialRequests"
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          rows="3"
-          placeholder="Any special requirements or notes..."
-        ></textarea>
-      </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                Special Requests
+              </label>
+              <textarea
+                name="specialRequests"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows="3"
+                placeholder="Any special requirements or notes..."
+              ></textarea>
+            </div>
 
-      <div className="pt-4">
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-        >
-          Confirm Booking
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowBookingForm(false)}
-          className="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
-)}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Confirm Booking
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBookingForm(false)}
+                className="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -432,7 +433,7 @@ const Room_Book = () => {
                 <div className="h-64 bg-gray-200 flex items-center justify-center relative">
                   {room.images && room.images.length > 0 ? (
                     <img
-                      src={room.images[0]}
+                      src={`http://localhost:5000${room.images[0]}`}
                       alt={`Room ${room.roomNumber}`}
                       className="w-full h-full object-cover"
                     />
