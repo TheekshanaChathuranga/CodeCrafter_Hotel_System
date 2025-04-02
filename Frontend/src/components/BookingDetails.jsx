@@ -56,11 +56,11 @@ export default function BookingDetails() {
   const deleteBooking = () => {
     axios.delete(`http://localhost:5000/api/bookings/${bookingId}`)
       .then(() => {
-        alert("Booking deleted successfully.");
+        alert("Booking cancelled successfully.");
         navigate("/bookings");
       })
       .catch((error) => {
-        console.error("Error deleting booking:", error);
+        console.error("Error cancelling booking:", error);
         alert("Failed to delete booking.");
       });
   };

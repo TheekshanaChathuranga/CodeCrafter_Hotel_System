@@ -24,6 +24,22 @@ export default function Home() {
             View Bookings
           </button>
         </div>
+
+        {/* New Pool Booking Section */}
+        <div className="bg-white shadow-lg rounded-lg p-6 text-center">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">Pool Booking</h3>
+          <button className="px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition" onClick={() => navigate("/pool-booking")}>
+            Book Pool
+          </button>
+        </div>
+
+        {/* New View Pool Bookings Section */}
+        <div className="bg-white shadow-lg rounded-lg p-6 text-center">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">View Pool Bookings</h3>
+          <button className="px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition" onClick={() => navigate("/pool-bookings")}>
+            View Pool Bookings
+          </button>
+        </div>
       </div>
     </div>
   );
