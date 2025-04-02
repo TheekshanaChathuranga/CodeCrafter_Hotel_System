@@ -2,12 +2,15 @@
 //final code
 // pages/Room_Book.jsx
 // pages/Room_Book.jsx
-import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import { Calendar } from 'react-date-range';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import 'react-date-range/dist/styles.css'; // main style file
-import 'react-date-range/dist/theme/default.css'; // theme css file
+
+import axios from "axios"; // Add axios import at the top
+
+import React, { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import { Calendar } from "react-date-range";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import "react-date-range/dist/styles.css"; // main style file
+import "react-date-range/dist/theme/default.css"; // theme css file
 
 const Room_Book = () => {
   const navigate = useNavigate(); // Initialize navigate
@@ -19,22 +22,22 @@ const Room_Book = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [bookingDates, setBookingDates] = useState({
     checkIn: null,
-    checkOut: null
+    checkOut: null,
   });
   const [filters, setFilters] = useState({
-    type: 'all',
-    acOption: 'all',
-    minPrice: '',
-    maxPrice: ''
+    type: "all",
+    acOption: "all",
+    minPrice: "",
+    maxPrice: "",
   });
 
   // Fetch rooms from backend
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/rooms');
+        const response = await fetch("http://localhost:5000/api/rooms");
         if (!response.ok) {
-          throw new Error('Failed to fetch rooms');
+          throw new Error("Failed to fetch rooms");
         }
         const data = await response.json();
         setRooms(data);
@@ -52,55 +55,97 @@ const Room_Book = () => {
   // Apply filters
   useEffect(() => {
     let result = rooms;
-    
-    if (filters.type !== 'all') {
-      result = result.filter(room => room.type === filters.type);
+
+    if (filters.type !== "all") {
+      result = result.filter((room) => room.type === filters.type);
     }
-    
-    if (filters.acOption !== 'all') {
-      result = result.filter(room => room.acOption === filters.acOption);
+
+    if (filters.acOption !== "all") {
+      result = result.filter((room) => room.acOption === filters.acOption);
     }
-    
+
     if (filters.minPrice) {
-      result = result.filter(room => room.pricePerNight >= Number(filters.minPrice));
+      result = result.filter(
+        (room) => room.pricePerNight >= Number(filters.minPrice)
+      );
     }
-    
+
     if (filters.maxPrice) {
-      result = result.filter(room => room.pricePerNight <= Number(filters.maxPrice));
+      result = result.filter(
+        (room) => room.pricePerNight <= Number(filters.maxPrice)
+      );
     }
-    
+
     setFilteredRooms(result);
   }, [filters, rooms]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleDateSelect = (date, type) => {
-    setBookingDates(prev => ({
+    setBookingDates((prev) => ({
       ...prev,
-      [type]: date
+      [type]: date,
     }));
   };
 
   const handleBookNow = (room) => {
     setSelectedRoom(room);
     setShowBookingForm(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleBookingSubmit = (e) => {
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the booking data to your backend
-    alert(`Booking submitted for Room ${selectedRoom.roomNumber} from ${bookingDates.checkIn?.toLocaleDateString()} to ${bookingDates.checkOut?.toLocaleDateString()}`);
-    // Reset form
-    setShowBookingForm(false);
-    setSelectedRoom(null);
-    setBookingDates({ checkIn: null, checkOut: null });
+    
+    try {
+      // Validate dates
+      if (!bookingDates.checkIn || !bookingDates.checkOut) {
+        throw new Error("Please select both check-in and check-out dates");
+      }
+  
+      // Create form data object with ISO dates
+      const formData = {
+        roomNumber: selectedRoom.roomNumber,
+        roomType: selectedRoom.type,
+        checkIn: bookingDates.checkIn.toISOString(),
+        checkOut: bookingDates.checkOut.toISOString(),
+        fullName: e.target.elements.fullName.value,
+        phoneNumber: e.target.elements.phoneNumber.value,
+        nicNumber: e.target.elements.nicNumber.value || undefined,
+        whatsappNumber: e.target.elements.whatsappNumber.value || undefined,
+        adults: parseInt(e.target.elements.adults.value),
+        children: parseInt(e.target.elements.children.value) || 0,
+        specialRequests: e.target.elements.specialRequests.value || undefined
+      };
+  
+      // Debug log
+      console.log("Submitting booking:", formData);
+  
+      const response = await axios.post(
+        'http://localhost:5000/api/bookings',
+        formData
+      );
+  
+      if (response.status === 201) {
+        alert(`Booking confirmed for Room ${selectedRoom.roomNumber}!\n
+          Check-in: ${new Date(formData.checkIn).toLocaleDateString()}\n
+          Check-out: ${new Date(formData.checkOut).toLocaleDateString()}`);
+        
+        // Reset form
+        setShowBookingForm(false);
+        setSelectedRoom(null);
+        setBookingDates({ checkIn: null, checkOut: null });
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      alert(`Booking failed: ${error.response?.data?.message || error.message}`);
+    }
   };
 
   if (loading) {
@@ -128,15 +173,15 @@ const Room_Book = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       {/* Hero Section */}
-      <div className="relative h-95 bg-[url('img/RoomPage.jpeg')] bg-cover bg-center">   
-      <button 
-              onClick={() => navigate(-1)}
-              className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-            >
-              Go Back   
-            </button> 
+      <div className="relative h-95 bg-[url('img/RoomPage.jpeg')] bg-cover bg-center">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+        >
+          Go Back
+        </button>
         <div className="absolute inset-0 bg-black/50 flex items-center">
           <div className="max-w-6xl mx-auto px-4 text-center text-white">
             <h1 className="text-4xl font-bold mb-4">Room Booking</h1>
@@ -147,85 +192,142 @@ const Room_Book = () => {
 
       {/* Booking Form (shown when a room is selected) */}
       {showBookingForm && selectedRoom && (
-        <div className="max-w-6xl mx-auto px-4 py-8 bg-white shadow-lg rounded-lg my-8">
-          <h2 className="text-2xl font-bold mb-4">Booking Room {selectedRoom.roomNumber}</h2>
-          <form onSubmit={handleBookingSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-gray-700 mb-2">Check-in Date</label>
-                <Calendar
-                  date={bookingDates.checkIn}
-                  onChange={(date) => handleDateSelect(date, 'checkIn')}
-                  minDate={new Date()}
-                  className="border rounded-lg p-2"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Check-out Date</label>
-                <Calendar
-                  date={bookingDates.checkOut}
-                  onChange={(date) => handleDateSelect(date, 'checkOut')}
-                  minDate={bookingDates.checkIn || new Date()}
-                  className="border rounded-lg p-2"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-gray-700 mb-2">Full Name</label>
-                <input 
-                  type="text" 
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Email</label>
-                <input 
-                  type="email" 
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-gray-700 mb-2">Phone Number</label>
-                <input 
-                  type="tel" 
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Special Requests</label>
-                <input 
-                  type="text" 
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            
-            <div className="pt-4">
-              <button 
-                type="submit" 
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Confirm Booking
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setShowBookingForm(false)}
-                className="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+  <div className="max-w-6xl mx-auto px-4 py-8 bg-white shadow-lg rounded-lg my-8">
+    <h2 className="text-2xl font-bold mb-4">
+      Booking Room {selectedRoom.roomNumber}
+    </h2>
+    <form onSubmit={handleBookingSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-gray-700 mb-2">
+            Check-in Date <span className="text-red-500">*</span>
+          </label>
+          <Calendar
+            date={bookingDates.checkIn}
+            onChange={(date) => handleDateSelect(date, "checkIn")}
+            minDate={new Date()}
+            className="border rounded-lg p-2"
+          />
         </div>
-      )}
+        <div>
+          <label className="block text-gray-700 mb-2">
+            Check-out Date <span className="text-red-500">*</span>
+          </label>
+          <Calendar
+            date={bookingDates.checkOut}
+            onChange={(date) => handleDateSelect(date, "checkOut")}
+            minDate={bookingDates.checkIn || new Date()}
+            className="border rounded-lg p-2"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-gray-700 mb-2">
+            Full Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="fullName"
+            type="text"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 mb-2">NIC Number</label>
+          <input
+            name="nicNumber"
+            type="text"
+            placeholder="Optional"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-gray-700 mb-2">
+            Phone Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            name="phoneNumber"
+            type="tel"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-gray-700 mb-2">WhatsApp Number</label>
+          <input
+            name="whatsappNumber"
+            type="tel"
+            placeholder="Optional (if different from phone number)"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-gray-700 mb-2">
+            Number of Adults <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="adults"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          >
+            <option value="">Select</option>
+            <option value="1">1 Adult</option>
+            <option value="2">2 Adults</option>
+            <option value="3">3 Adults</option>
+            <option value="4">4+ Adults</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-gray-700 mb-2">Number of Children</label>
+          <select
+            name="children"
+            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="0">0 Children</option>
+            <option value="1">1 Child</option>
+            <option value="2">2 Children</option>
+            <option value="3">3 Children</option>
+            <option value="4+">4+ Children</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-gray-700 mb-2">Special Requests</label>
+        <textarea
+          name="specialRequests"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          rows="3"
+          placeholder="Any special requirements or notes..."
+        ></textarea>
+      </div>
+
+      <div className="pt-4">
+        <button
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          Confirm Booking
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowBookingForm(false)}
+          className="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+)}
 
       {/* Filters */}
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -234,8 +336,8 @@ const Room_Book = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-gray-700 mb-2">Room Type</label>
-              <select 
-                name="type" 
+              <select
+                name="type"
                 value={filters.type}
                 onChange={handleFilterChange}
                 className="w-full px-4 py-2 border rounded-lg"
@@ -246,11 +348,11 @@ const Room_Book = () => {
                 <option value="Triple">Triple</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-gray-700 mb-2">AC Option</label>
-              <select 
-                name="acOption" 
+              <select
+                name="acOption"
                 value={filters.acOption}
                 onChange={handleFilterChange}
                 className="w-full px-4 py-2 border rounded-lg"
@@ -260,11 +362,13 @@ const Room_Book = () => {
                 <option value="Non-AC">Non-AC</option>
               </select>
             </div>
-            
+
             <div>
-              <label className="block text-gray-700 mb-2">Min Price (LKR)</label>
-              <input 
-                type="number" 
+              <label className="block text-gray-700 mb-2">
+                Min Price (LKR)
+              </label>
+              <input
+                type="number"
                 name="minPrice"
                 value={filters.minPrice}
                 onChange={handleFilterChange}
@@ -272,11 +376,13 @@ const Room_Book = () => {
                 className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
-            
+
             <div>
-              <label className="block text-gray-700 mb-2">Max Price (LKR)</label>
-              <input 
-                type="number" 
+              <label className="block text-gray-700 mb-2">
+                Max Price (LKR)
+              </label>
+              <input
+                type="number"
                 name="maxPrice"
                 value={filters.maxPrice}
                 onChange={handleFilterChange}
@@ -290,18 +396,24 @@ const Room_Book = () => {
 
       {/* Rooms Listing */}
       <div className="max-w-6xl mx-auto px-4 pb-16">
-        <h2 className="text-2xl font-bold mb-6">Available Rooms ({filteredRooms.length})</h2>
-        
+        <h2 className="text-2xl font-bold mb-6">
+          Available Rooms ({filteredRooms.length})
+        </h2>
+
         {filteredRooms.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-xl text-gray-600">No rooms match your filters.</p>
-            <button 
-              onClick={() => setFilters({
-                type: 'all',
-                acOption: 'all',
-                minPrice: '',
-                maxPrice: ''
-              })}
+            <p className="text-xl text-gray-600">
+              No rooms match your filters.
+            </p>
+            <button
+              onClick={() =>
+                setFilters({
+                  type: "all",
+                  acOption: "all",
+                  minPrice: "",
+                  maxPrice: "",
+                })
+              }
               className="mt-4 text-blue-600 hover:text-blue-800"
             >
               Reset filters
@@ -310,17 +422,17 @@ const Room_Book = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredRooms.map((room) => (
-              <div 
-                key={room._id} 
+              <div
+                key={room._id}
                 className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all hover:shadow-xl ${
-                  room.roomStatus !== 'Available' ? 'opacity-70' : ''
+                  room.roomStatus !== "Available" ? "opacity-70" : ""
                 }`}
               >
                 {/* Room Image */}
                 <div className="h-64 bg-gray-200 flex items-center justify-center relative">
                   {room.images && room.images.length > 0 ? (
-                    <img 
-                      src={room.images[0]} 
+                    <img
+                      src={room.images[0]}
                       alt={`Room ${room.roomNumber}`}
                       className="w-full h-full object-cover"
                     />
@@ -331,30 +443,32 @@ const Room_Book = () => {
                     {room.roomNumber}
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="text-xl font-bold">{room.type} Room</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      room.roomStatus === 'Available' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        room.roomStatus === "Available"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
                       {room.roomStatus}
                     </span>
                   </div>
-                  
+
                   <div className="flex items-center mb-2">
                     <span className="text-gray-600 mr-4">{room.acOption}</span>
                     <span className="text-blue-600 font-semibold">
                       LKR {room.pricePerNight.toLocaleString()}/night
                     </span>
                   </div>
-                  
+
                   <p className="text-gray-700 mb-4 line-clamp-3">
-                    {room.description || 'No description available'}
+                    {room.description || "No description available"}
                   </p>
-                  
+
                   <div className="flex flex-wrap gap-2 mb-4">
                     {room.hasAC && (
                       <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
@@ -365,20 +479,24 @@ const Room_Book = () => {
                       {room.type}
                     </span>
                     <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">
-                      {room.pricePerDay ? `LKR ${room.pricePerDay}/day` : 'Daily rate not set'}
+                      {room.pricePerDay
+                        ? `LKR ${room.pricePerDay}/day`
+                        : "Daily rate not set"}
                     </span>
                   </div>
-                  
+
                   <button
                     onClick={() => handleBookNow(room)}
-                    disabled={room.roomStatus !== 'Available'}
+                    disabled={room.roomStatus !== "Available"}
                     className={`w-full text-center px-6 py-2 rounded-lg font-semibold transition-colors ${
-                      room.roomStatus === 'Available'
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      room.roomStatus === "Available"
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
                   >
-                    {room.roomStatus === 'Available' ? 'Book Now' : 'Not Available'}
+                    {room.roomStatus === "Available"
+                      ? "Book Now"
+                      : "Not Available"}
                   </button>
                 </div>
               </div>
@@ -386,7 +504,7 @@ const Room_Book = () => {
           </div>
         )}
       </div>
-      
+
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
