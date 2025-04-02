@@ -18,6 +18,7 @@ const EventBooking = () => {
     checkIn: "",
     checkOut: "",
     email: "",
+    notes: "", // Added notes field
   });
   const [tableData, setTableData] = useState([
     { no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
@@ -41,6 +42,7 @@ const EventBooking = () => {
         checkIn: event.checkIn?.slice(0, 10) || "",
         checkOut: event.checkOut?.slice(0, 10) || "",
         email: event.email || "",
+        notes: event.notes || "", // Populate notes field when editing
       });
       setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
       setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
@@ -174,6 +176,7 @@ const EventBooking = () => {
         checkIn: "",
         checkOut: "",
         email: "",
+        notes: "", // Reset notes field
       });
       setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
       setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
@@ -302,6 +305,16 @@ const EventBooking = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
               />
             </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700">Add Notes (Optional):</label>
+              <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 h-32 resize-y"
+                placeholder="e.g., Special requests, additional details, or instructions"
+              />
+            </div>
           </div>
 
           <div>
@@ -339,7 +352,7 @@ const EventBooking = () => {
                           value={row.description}
                           onChange={(e) => handleTableChange(index, "description", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Egg Fried Rice (Basmathee)"
+                          placeholder="e.g., Egg Fr R"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -429,7 +442,7 @@ const EventBooking = () => {
                           value={row.description}
                           onChange={(e) => handleExtraChange(index, "description", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Pool Side Reservation"
+                          placeholder="e.g., Pool Res"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -439,7 +452,7 @@ const EventBooking = () => {
                           onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           maxLength={5}
-                          placeholder="e.g., KG"
+                
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -513,6 +526,7 @@ const EventBooking = () => {
                     checkIn: "",
                     checkOut: "",
                     email: "",
+                    notes: "",
                   });
                   setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
                   setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);

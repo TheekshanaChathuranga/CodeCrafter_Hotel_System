@@ -72,6 +72,12 @@ const EventList = () => {
                     <p className="text-sm font-medium text-gray-700"><strong>Check-Out:</strong> {new Date(event.checkOut).toLocaleDateString()}</p>
                   </div>
                 </div>
+                {event.notes && (
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-blue-600">Notes:</h3>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{event.notes}</p>
+                  </div>
+                )}
                 <h3 className="text-lg font-semibold text-blue-600 mb-2">Items</h3>
                 <div className="overflow-x-auto mb-4">
                   <table className="min-w-full divide-y divide-gray-200">

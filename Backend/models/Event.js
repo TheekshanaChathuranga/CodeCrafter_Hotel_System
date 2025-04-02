@@ -10,6 +10,7 @@ const eventSchema = new mongoose.Schema({
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },
   email: { type: String },
+  notes: { type: String },
   tableData: [
     {
       no: Number,
