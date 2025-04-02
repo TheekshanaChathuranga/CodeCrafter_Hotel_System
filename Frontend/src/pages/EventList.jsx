@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Popup from "./Popup"; // Assuming Popup.jsx is in src folder
 
 const API_BASE_URL = "http://localhost:5000";
 
 const EventList = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [popup, setPopup] = useState({ message: "", type: "" });
+  const [searchForm, setSearchForm] = useState({
+    name: "",
+    eventType: "",
+  });
 
   useEffect(() => {
     fetchEvents();
@@ -22,10 +29,38 @@ const EventList = () => {
         extraFields: event.extraFields || [],
       }));
       setEvents(sanitizedEvents);
+      setFilteredEvents(sanitizedEvents); // Initially show all events
     } catch (error) {
       console.error("Error fetching events:", error.message, error.response?.data);
       setEvents([]);
-      alert(`Failed to fetch events: ${error.message}`);
+      setFilteredEvents([]);
+      setPopup({ message: `Failed to fetch events: ${error.message}`, type: "error" });
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const { name, value } = e.target;
+    setSearchForm({ ...searchForm, [name]: value });
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchForm.name || !searchForm.eventType) {
+      setPopup({ message: "Please fill in both Name and Event Type!", type: "warning" });
+      return;
+    }
+
+    const filtered = events.filter((event) => {
+      const nameMatch = event.name.toLowerCase().includes(searchForm.name.toLowerCase());
+      const eventTypeMatch = event.eventType.toLowerCase() === searchForm.eventType.toLowerCase();
+      return nameMatch && eventTypeMatch;
+    });
+
+    setFilteredEvents(filtered);
+    if (filtered.length === 0) {
+      setPopup({ message: "No matching events found.", type: "warning" });
+    } else {
+      setPopup({ message: "Events filtered successfully!", type: "success" });
     }
   };
 
@@ -36,11 +71,16 @@ const EventList = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${API_BASE_URL}/api/events/${id}`);
-      setEvents(events.filter((ev) => ev._id !== id));
-      alert("Event deleted!");
+      const updatedEvents = events.filter((ev) => ev._id !== id);
+      setEvents(updatedEvents);
+      setFilteredEvents(updatedEvents);
+      setPopup({ message: "Event deleted successfully!", type: "success" });
     } catch (error) {
       console.error("Error deleting event:", error.message, error.response?.data);
-      alert(`Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`);
+      setPopup({
+        message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
+        type: "error",
+      });
     }
   };
 
@@ -48,6 +88,7 @@ const EventList = () => {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-5xl mx-auto">
         <h2 className="text-3xl font-bold text-blue-600 mb-6 text-center">Your Events</h2>
+
         <div className="mb-6">
           <button
             onClick={() => navigate("/event-booking")}
@@ -56,9 +97,52 @@ const EventList = () => {
             Back to Event Booking
           </button>
         </div>
+
+        {/* Search Form */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h3 className="text-xl font-semibold text-blue-600 mb-4">Search Events</h3>
+          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name:</label>
+              <input
+                type="text"
+                name="name"
+                value={searchForm.name}
+                onChange={handleSearchChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                placeholder="Enter name to search"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Event Type:</label>
+              <select
+                name="eventType"
+                value={searchForm.eventType}
+                onChange={handleSearchChange}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                required
+              >
+                <option value="">Select Event Type</option>
+                <option value="wedding">Wedding</option>
+                <option value="birthday">Birthday</option>
+                <option value="seminar">Seminar</option>
+                <option value="party">Party</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 w-full md:w-auto"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+        </div>
         <div className="space-y-6">
-          {events.length > 0 ? (
-            events.map((event) => (
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map((event) => (
               <div key={event._id} className="bg-white rounded-lg shadow-lg p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -160,10 +244,15 @@ const EventList = () => {
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-600">No events booked yet.</p>
+            <p className="text-center text-gray-600">No events to display.</p>
           )}
         </div>
       </div>
+      <Popup
+        message={popup.message}
+        type={popup.type}
+        onClose={() => setPopup({ message: "", type: "" })}
+      />
     </div>
   );
 };
