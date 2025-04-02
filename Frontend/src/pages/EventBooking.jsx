@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { useNavigate, useLocation } from "react-router-dom";
-import Popup from "./Popup";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -19,7 +18,7 @@ const EventBooking = () => {
     checkIn: "",
     checkOut: "",
     email: "",
-    notes: "",
+    notes: "", // Added notes field
   });
   const [tableData, setTableData] = useState([
     { no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
@@ -28,7 +27,6 @@ const EventBooking = () => {
     { no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
   ]);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [popup, setPopup] = useState({ message: "", type: "" });
 
   useEffect(() => {
     if (location.state?.event) {
@@ -44,7 +42,7 @@ const EventBooking = () => {
         checkIn: event.checkIn?.slice(0, 10) || "",
         checkOut: event.checkOut?.slice(0, 10) || "",
         email: event.email || "",
-        notes: event.notes || "",
+        notes: event.notes || "", // Populate notes field when editing
       });
       setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
       setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
@@ -78,7 +76,7 @@ const EventBooking = () => {
 
   const removeRow = (index) => {
     if (tableData.length === 1) {
-      setPopup({ message: "Cannot remove the last row!", type: "warning" });
+      alert("Cannot remove the last row!");
       return;
     }
     const updatedData = tableData.filter((_, i) => i !== index);
@@ -108,7 +106,7 @@ const EventBooking = () => {
 
   const removeExtraRow = (index) => {
     if (extraFields.length === 1) {
-      setPopup({ message: "Cannot remove the last row!", type: "warning" });
+      alert("Cannot remove the last row!");
       return;
     }
     const updatedExtras = extraFields.filter((_, i) => i !== index);
@@ -164,10 +162,8 @@ const EventBooking = () => {
           dataToSubmit
         );
         setEditingEvent(null);
-        setPopup({ message: "Event updated successfully!", type: "success" });
       } else {
         await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
-        setPopup({ message: "Booking submitted successfully!", type: "success" });
       }
 
       setFormData({
@@ -180,16 +176,14 @@ const EventBooking = () => {
         checkIn: "",
         checkOut: "",
         email: "",
-        notes: "",
+        notes: "", // Reset notes field
       });
       setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
       setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+      alert(editingEvent ? "Event updated!" : "Booking submitted!");
     } catch (error) {
       console.error("Error submitting booking:", error.message, error.response?.data);
-      setPopup({
-        message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
-        type: "error",
-      });
+      alert(`Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`);
     }
   };
 
@@ -358,7 +352,7 @@ const EventBooking = () => {
                           value={row.description}
                           onChange={(e) => handleTableChange(index, "description", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Egg Fried Rice (Basmathee)"
+                          placeholder="e.g., Egg Fr R"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -448,7 +442,7 @@ const EventBooking = () => {
                           value={row.description}
                           onChange={(e) => handleExtraChange(index, "description", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Additional Lighting Setup"
+                          placeholder="e.g., Pool Res"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -458,7 +452,7 @@ const EventBooking = () => {
                           onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           maxLength={5}
-                          placeholder="e.g., Set"
+                
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -468,7 +462,7 @@ const EventBooking = () => {
                           value={row.quantity}
                           onChange={(e) => handleExtraChange(index, "quantity", parseFloat(e.target.value))}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 2"
+                          placeholder="e.g., 100"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -478,7 +472,7 @@ const EventBooking = () => {
                           value={row.rate}
                           onChange={(e) => handleExtraChange(index, "rate", parseFloat(e.target.value))}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 3000.00"
+                          placeholder="e.g., 5000"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
@@ -552,11 +546,6 @@ const EventBooking = () => {
           </div>
         </form>
       </div>
-      <Popup
-        message={popup.message}
-        type={popup.type}
-        onClose={() => setPopup({ message: "", type: "" })}
-      />
     </div>
   );
 };
