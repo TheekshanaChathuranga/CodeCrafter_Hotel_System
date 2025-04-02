@@ -29,18 +29,18 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
+            <img src="/src/img/logo.jpg" alt="Logo" className="h-8 w-8" />
             <span className="text-xl font-bold">Lake Resort</span>
           </div>
           
           {/* Desktop Menu */}
           <div className="hidden md:flex space-x-8">
-      
+            <Link to ="/" className="hover:text-blue-400 transition-colors ">Home</Link>
             <Link to="/room-booking" className="hover:text-blue-400 transition-colors">Room Booking</Link>
             <Link to="/pool-booking" className="hover:text-blue-400 transition-colors">Pool Booking</Link>
             <Link to="/event-booking" className="hover:text-blue-400 transition-colors">Event Booking</Link>
             <Link to="/about" className="hover:text-blue-400 transition-colors">About Us</Link>
             <Link to="/contact" className="hover:text-blue-400 transition-colors">Contact</Link>
-            <Link className="mr-4 hover:text-gray-300" to="/rooms">Rooms</Link>
           </div>
 
           {/* Mobile Menu Button (optional) */}

@@ -1,91 +1,67 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const roomSchema = new mongoose.Schema({
   roomNumber: { 
     type: String, 
-<<<<<<< Updated upstream
-    required: true, 
-=======
-    required: true,
->>>>>>> Stashed changes
-    unique: true 
+    required: [true, "Room number is required"], 
+    unique: true,
+    trim: true
   },
   type: { 
     type: String, 
-<<<<<<< Updated upstream
-    required: true, 
+    required: [true, "Room type is required"], 
     enum: ['Single', 'Double', 'Triple'] 
   },
   acOption: { 
     type: String, 
-    required: true, 
-    enum: ['AC', 'Non-AC']  // Removed 'Both' option
+    required: [true, "AC option is required"], 
+    enum: ['AC', 'Non-AC', 'Both'],
+    default: 'AC'
   },
   hasAC: { 
     type: Boolean, 
-    required: true 
-=======
     required: true,
-    enum: ["Single", "Double", "Suite", "Family"] 
-  },
-  acOption: {
-    type: String,
-    required: true,
-    enum: ["AC", "Non-AC"]
-  },
-  hasAC: {
-    type: Boolean,
-    required: true
->>>>>>> Stashed changes
+    default: true 
   },
   pricePerNight: { 
     type: Number, 
-    required: true 
+    required: [true, "Price per night is required"],
+    min: [0, "Price cannot be negative"]
   },
   pricePerDay: { 
     type: Number, 
-    required: true 
+    required: [true, "Price per day is required"],
+    min: [0, "Price cannot be negative"]
   },
-<<<<<<< Updated upstream
   roomStatus: { 
     type: String, 
-    required: true, 
-    enum: ['Available', 'Not Available'] 
-=======
-  roomStatus: {
-    type: String,
-    required: true,
-    enum: ["Available", "Occupied", "Maintenance"],
-    default: "Available"
->>>>>>> Stashed changes
+    enum: ['Available', 'Not Available'],
+    required: [true, "Room status is required"],
+    default: 'Available'
   },
   description: { 
-    type: String, 
-    required: true 
-  },
-  images: [{
-<<<<<<< Updated upstream
-    type: String
-  }]
-}, {
-  timestamps: true,  // This automatically adds createdAt and updatedAt fields
-  versionKey: false  // This removes the __v field
-});
-
-// Add index for frequently queried fields
-roomSchema.index({ roomNumber: 1, type: 1, roomStatus: 1 });
-
-const Room = mongoose.model('Room', roomSchema);
-=======
     type: String,
-    required: true
-  }],
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
+    trim: true
+  },
+  images: { 
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(v) {
+        return v.length <= 5; // Maximum 5 images
+      },
+      message: 'Maximum 5 images allowed'
+    }
   }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
+// Add index for better performance
+roomSchema.index({ roomNumber: 1 }, { unique: true });
+
+// Create and export the model
 const Room = mongoose.model("Room", roomSchema);
->>>>>>> Stashed changes
 export default Room;
