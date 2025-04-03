@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiEdit, FiTrash2, FiPlus, FiX, FiUpload, FiClock } from "react-icons/fi";
+import { useNotifications } from "../../context/NotificationContext";
 
 const AdminPools = () => {
   const [pools, setPools] = useState([]);
@@ -20,6 +21,7 @@ const AdminPools = () => {
   const [loading, setLoading] = useState(false);
   const [deletedImages, setDeletedImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
+  const { showNotification } = useNotifications();
 
   useEffect(() => {
     fetchPools();
@@ -211,7 +213,7 @@ const AdminPools = () => {
             resetForm();
             setShowForm(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+          className="bg-[#16A085] hover:bg-[#138D75] text-white px-4 py-2 rounded-lg flex items-center"
         >
           <FiPlus className="mr-2" /> Add Pool
         </button>
@@ -398,14 +400,14 @@ const AdminPools = () => {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className="px-4 py-2 bg-[#ECF0F1] text-[#333333] rounded-md hover:bg-[#BDC3C7]"
                     disabled={loading}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+                    className="px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75]"
                     disabled={loading}
                   >
                     {loading ? (
