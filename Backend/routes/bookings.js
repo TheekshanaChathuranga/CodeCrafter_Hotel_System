@@ -27,6 +27,11 @@ router.post('/', async (req, res) => {
         roomNumber: selectedRoom.roomNumber,
         acType: selectedRoom.acType,
       },
+      packageType: {
+        name: req.body.packageType.name,
+        price: req.body.packageType.price,
+        description: req.body.packageType.description || null // Optional field
+      }
     });
 
     // Save booking to the database

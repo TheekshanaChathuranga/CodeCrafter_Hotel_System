@@ -12,6 +12,7 @@ const bookingSchema = new mongoose.Schema({
     roomNumber: { type: Number, required: true },
     acType: { type: String, required: true },
   },
+  packageType: { type: String, required: true }, // Ensure packageType is required
 });
 
 const Booking = mongoose.model('Booking', bookingSchema);

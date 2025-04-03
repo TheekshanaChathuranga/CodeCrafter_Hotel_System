@@ -26,10 +26,15 @@ export default function BookingPage() {
   const [selectedRoomType, setSelectedRoomType] = useState(""); // Added room type state
   const [selectedRoom, setSelectedRoom] = useState("");
   const [acType, setAcType] = useState("");
+  const [packageType, setPackageType] = useState(""); // Added package type state
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [errors, setErrors] = useState({});
   const [tooltip, setTooltip] = useState("");
+  const [paymentType, setPaymentType] = useState(""); // Added payment type state
+  const [advanceAmount, setAdvanceAmount] = useState(""); // Added advance amount state
+  const [totalAmount, setTotalAmount] = useState(0); // Added total amount state
+  const [remainingAmount, setRemainingAmount] = useState(0); // Added remaining amount state
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -59,15 +64,33 @@ export default function BookingPage() {
     }
   };
 
+  const handlePackageChange = (e) => {
+    const selectedPackage = e.target.value;
+    setPackageType(selectedPackage);
+
+    if (selectedPackage === "f/b" || selectedPackage === "h/b") {
+      setSelectedRoomType("Double Room"); // Auto-select room type as Double Room
+      setAcType("AC"); // Auto-select AC type
+      setSelectedRoom(""); // Reset room number
+    } else {
+      setSelectedRoomType(""); // Allow manual selection for "normal"
+      setAcType(""); // Allow manual selection for "normal"
+      setSelectedRoom(""); // Reset room number
+    }
+  };
+
   const validateFields = () => {
     const newErrors = {};
     const now = new Date();
     const checkInDate = new Date(adminDetails.checkIn);
     const checkOutDate = new Date(adminDetails.checkOut);
 
+    if (!packageType) newErrors.packageType = "Package selection is required."; // Validate package type
     if (!adminDetails.name) newErrors.name = "Name is required.";
     if (!adminDetails.mobile) newErrors.mobile = "Mobile number is required.";
+    else if (!/^\d{10}$/.test(adminDetails.mobile)) newErrors.mobile = "Mobile number must be exactly 10 digits."; // Validate mobile number
     if (adminDetails.email && !/\S+@\S+\.\S+/.test(adminDetails.email)) newErrors.email = "Invalid email format."; // Email validation
+    if (adminDetails.whatsapp && !/^\d{10}$/.test(adminDetails.whatsapp)) newErrors.whatsapp = "WhatsApp number must be exactly 10 digits."; // Validate WhatsApp number
     if (!adminDetails.checkIn) newErrors.checkIn = "Check-in date is required.";
     else if (checkInDate < now) newErrors.checkIn = "Check-in time cannot be in the past.";
     if (!adminDetails.checkOut) newErrors.checkOut = "Check-out date is required.";
@@ -96,20 +119,71 @@ export default function BookingPage() {
       whatsapp: "",
       checkIn: "",
       checkOut: "",
+      packageType: "",
     });
     setSelectedRoomType(""); // Reset room type
     setSelectedRoom("");
     setAcType("");
+    setPackageType(""); // Reset package type
     setErrors({});
     setShowConfirmation(false);
   };
 
+  const calculateTotalAmount = () => {
+    let amount = 0;
+    if (selectedRoomType === "Single Room") {
+      amount = acType === "AC" ? 5000 : 4000;
+    } else if (selectedRoomType === "Double Room") {
+      amount = acType === "AC" ? 7500 : 5000;
+    } else if (selectedRoomType === "Triple Room") {
+      amount = acType === "AC" ? 9000 : 7500;
+    }
+    setTotalAmount(amount);
+    return amount;
+  };
+
+  const handlePaymentTypeChange = (e) => {
+    const selectedPaymentType = e.target.value;
+    setPaymentType(selectedPaymentType);
+
+    if (selectedPaymentType === "full") {
+      const total = calculateTotalAmount();
+      setAdvanceAmount(total); // Auto-fill full payment
+      setRemainingAmount(0); // No remaining amount
+    } else if (selectedPaymentType === "advance") {
+      calculateTotalAmount(); // Calculate total amount for advance
+      setAdvanceAmount(""); // Allow user to input advance amount
+      setRemainingAmount(totalAmount); // Initially, remaining is the total amount
+    } else {
+      setAdvanceAmount(""); // No input for no payment
+      setRemainingAmount(totalAmount); // Entire amount remains unpaid
+    }
+  };
+
+  const handleAdvanceAmountChange = (e) => {
+    const advance = parseInt(e.target.value, 10) || 0;
+    setAdvanceAmount(advance);
+    setRemainingAmount(totalAmount - advance); // Calculate remaining amount
+  };
+
   const confirmBooking = () => {
+    if (!validateFields()) {
+      alert("❌ Please correct the highlighted errors.");
+      return;
+    }
+
     setLoading(true);
 
     const bookingDetails = {
       adminDetails,
       selectedRoom: { roomNumber: selectedRoom, acType },
+      packageType,
+      paymentDetails: {
+        paymentType,
+        advanceAmount,
+        remainingAmount,
+        totalAmount,
+      },
     };
 
     fetch("http://localhost:5000/api/bookings", {
@@ -121,7 +195,9 @@ export default function BookingPage() {
       .then((data) => {
         setLoading(false);
         alert("✅ Booking successful!");
-        navigate("/confirmation", { state: { adminDetails, selectedRoom, acType } });
+        navigate("/confirmation", {
+          state: { adminDetails, selectedRoom, acType, packageType, paymentDetails: bookingDetails.paymentDetails },
+        });
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -159,6 +235,11 @@ export default function BookingPage() {
             <p><strong>Check-out:</strong> {adminDetails.checkOut}</p>
             <p><strong>Room No:</strong> {selectedRoom}</p>
             <p><strong>AC Type:</strong> {acType}</p>
+            <p><strong>Package:</strong> {packageType}</p> {/* Display package type */}
+            <p><strong>Payment Type:</strong> {paymentType}</p>
+            <p><strong>Advance Amount:</strong> {advanceAmount || "N/A"}</p>
+            <p><strong>Remaining Amount:</strong> {remainingAmount}</p>
+            <p><strong>Total Amount:</strong> {totalAmount}</p>
           </div>
 
           <div className="flex justify-between mt-5">
@@ -230,9 +311,22 @@ export default function BookingPage() {
             {errors.checkOut && <p className="text-red-500 text-sm">{errors.checkOut}</p>}
 
             <select
+              className={`border p-2 rounded ${errors.packageType ? "border-red-500" : ""}`}
+              value={packageType}
+              onChange={handlePackageChange}
+            >
+              <option value="">Select Package *</option>
+              <option value="f/b">Full Board (f/b)</option>
+              <option value="h/b">Half Board (h/b)</option>
+              <option value="normal">Normal</option>
+            </select>
+            {errors.packageType && <p className="text-red-500 text-sm">{errors.packageType}</p>}
+
+            <select
               className={`border p-2 rounded ${errors.selectedRoomType ? "border-red-500" : ""}`}
               value={selectedRoomType}
               onChange={handleRoomTypeChange}
+              disabled={packageType === "f/b" || packageType === "h/b"} // Disable manual selection for f/b and h/b
             >
               <option value="">Select Room Type *</option>
               <option value="Single Room">Single Room</option>
@@ -266,13 +360,41 @@ export default function BookingPage() {
               className={`border p-2 rounded ${errors.acType ? "border-red-500" : ""}`}
               value={acType}
               onChange={(e) => setAcType(e.target.value)}
-              disabled={selectedRoom === "102"} // Disable AC type selection for room 102
+              disabled={packageType === "f/b" || packageType === "h/b" || selectedRoom === "102"} // Disable for f/b, h/b, and room 102
             >
               <option value="">Select AC/Non-AC *</option>
               <option value="AC">AC</option>
               <option value="Non-AC">Non-AC</option>
             </select>
             {errors.acType && <p className="text-red-500 text-sm">{errors.acType}</p>}
+
+            <select
+              className="border p-2 rounded"
+              value={paymentType}
+              onChange={handlePaymentTypeChange}
+            >
+              <option value="">Select Payment Type *</option>
+              <option value="advance">Advance Payment</option>
+              <option value="full">Full Payment</option>
+              <option value="none">No Payment</option>
+            </select>
+
+            {paymentType === "advance" && (
+              <input
+                type="number"
+                placeholder="Enter Advance Amount (Rs)"
+                className="border p-2 rounded"
+                value={advanceAmount}
+                onChange={handleAdvanceAmountChange}
+              />
+            )}
+
+            {paymentType && (
+              <div className="bg-gray-100 p-2 rounded">
+                <p><strong>Total Amount:</strong> Rs {totalAmount}</p>
+                <p><strong>Remaining Amount:</strong> Rs {remainingAmount}</p>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between mt-5">

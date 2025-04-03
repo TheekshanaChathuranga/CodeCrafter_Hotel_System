@@ -111,6 +111,7 @@ export default function BookingDetails() {
         )}
         <p><strong>Room No:</strong> {booking.selectedRoom.roomNumber}</p>
         <p><strong>AC Type:</strong> {booking.selectedRoom.acType}</p>
+        <p><strong>Package:</strong> {booking.packageType}</p> {/* Display package type */}
       </div>
 
       {!isEditing ? (
