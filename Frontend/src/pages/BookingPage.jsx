@@ -6,7 +6,7 @@ const rooms = [
   { id: 101, type: "Double Room" },
   { id: 103, type: "Double Room" },
   { id: 104, type: "Double Room" },
- { id: 105, type: "Double Room" },
+  { id: 105, type: "Double Room" },
   { id: 106, type: "Double Room" },
   { id: 107, type: "Triple Room" },
   { id: 108, type: "Triple Room" },
@@ -26,25 +26,47 @@ export default function BookingPage() {
   const [acType, setAcType] = useState("");
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [tooltip, setTooltip] = useState("");
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     setAdminDetails({ ...adminDetails, [e.target.name]: e.target.value });
   };
 
+  const validateFields = () => {
+    const newErrors = {};
+    if (!adminDetails.name) newErrors.name = "Name is required.";
+    if (!adminDetails.mobile) newErrors.mobile = "Mobile number is required.";
+    if (!adminDetails.checkIn) newErrors.checkIn = "Check-in date is required.";
+    if (!adminDetails.checkOut) newErrors.checkOut = "Check-out date is required.";
+    if (!selectedRoom) newErrors.selectedRoom = "Room selection is required.";
+    if (!acType) newErrors.acType = "AC/Non-AC selection is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleBooking = () => {
-    if (!selectedRoom || !acType || !adminDetails.name || !adminDetails.mobile || !adminDetails.checkIn || !adminDetails.checkOut) {
-      alert("❌ Please fill in all required fields.");
+    if (!validateFields()) {
+      alert("❌ Please correct the highlighted errors.");
       return;
     }
-
     setShowConfirmation(true);
   };
-  const bookingDetails = {
-    adminDetails,
-    selectedRoom: { roomNumber: selectedRoom, acType },
+
+  const resetForm = () => {
+    setAdminDetails({
+      name: "",
+      mobile: "",
+      whatsapp: "",
+      checkIn: "",
+      checkOut: "",
+    });
+    setSelectedRoom("");
+    setAcType("");
+    setErrors({});
+    setShowConfirmation(false);
   };
-  
 
   const confirmBooking = () => {
     setLoading(true);
@@ -103,13 +125,55 @@ export default function BookingPage() {
         <div>
           <h3 className="text-lg font-semibold mb-2">Guest & Room Details</h3>
           <div className="grid grid-cols-1 gap-4">
-            <input type="text" name="name" placeholder="Name *" className="border p-2 rounded" onChange={handleInputChange} required />
-            <input type="text" name="mobile" placeholder="Mobile No *" className="border p-2 rounded" onChange={handleInputChange} required />
-            <input type="text" name="whatsapp" placeholder="WhatsApp No (Optional)" className="border p-2 rounded" onChange={handleInputChange} />
-            <input type="datetime-local" name="checkIn" className="border p-2 rounded" onChange={handleInputChange} required />
-            <input type="datetime-local" name="checkOut" className="border p-2 rounded" onChange={handleInputChange} required />
+            <input
+              type="text"
+              name="name"
+              placeholder="Name *"
+              className={`border p-2 rounded ${errors.name ? "border-red-500" : ""}`}
+              onChange={handleInputChange}
+              value={adminDetails.name}
+            />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            <input
+              type="text"
+              name="mobile"
+              placeholder="Mobile No *"
+              className={`border p-2 rounded ${errors.mobile ? "border-red-500" : ""}`}
+              onChange={handleInputChange}
+              value={adminDetails.mobile}
+            />
+            {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
+            <input
+              type="text"
+              name="whatsapp"
+              placeholder="WhatsApp No (Optional)"
+              className="border p-2 rounded"
+              onChange={handleInputChange}
+              value={adminDetails.whatsapp}
+            />
+            <input
+              type="datetime-local"
+              name="checkIn"
+              className={`border p-2 rounded ${errors.checkIn ? "border-red-500" : ""}`}
+              onChange={handleInputChange}
+              value={adminDetails.checkIn}
+            />
+            {errors.checkIn && <p className="text-red-500 text-sm">{errors.checkIn}</p>}
+            <input
+              type="datetime-local"
+              name="checkOut"
+              className={`border p-2 rounded ${errors.checkOut ? "border-red-500" : ""}`}
+              onChange={handleInputChange}
+              value={adminDetails.checkOut}
+            />
+            {errors.checkOut && <p className="text-red-500 text-sm">{errors.checkOut}</p>}
 
-            <select className="border p-2 rounded" value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value)} required>
+            <select
+              className={`border p-2 rounded ${errors.selectedRoom ? "border-red-500" : ""}`}
+              value={selectedRoom}
+              onChange={(e) => setSelectedRoom(e.target.value)}
+              onMouseOut={() => setTooltip("")}
+            >
               <option value="">Select Room Number *</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id}>
@@ -117,17 +181,29 @@ export default function BookingPage() {
                 </option>
               ))}
             </select>
+            {errors.selectedRoom && <p className="text-red-500 text-sm">{errors.selectedRoom}</p>}
+            {tooltip && <p className="text-gray-500 text-sm">{tooltip}</p>}
 
-            <select className="border p-2 rounded" value={acType} onChange={(e) => setAcType(e.target.value)} required>
+            <select
+              className={`border p-2 rounded ${errors.acType ? "border-red-500" : ""}`}
+              value={acType}
+              onChange={(e) => setAcType(e.target.value)}
+            >
               <option value="">Select AC/Non-AC *</option>
               <option value="AC">AC</option>
               <option value="Non-AC">Non-AC</option>
             </select>
+            {errors.acType && <p className="text-red-500 text-sm">{errors.acType}</p>}
           </div>
 
-          <button className="mt-5 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 w-full" onClick={handleBooking}>
-            Next: Confirm Booking
-          </button>
+          <div className="flex justify-between mt-5">
+            <button className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600" onClick={handleBooking}>
+              Next: Confirm Booking
+            </button>
+            <button className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500" onClick={resetForm}>
+              Reset
+            </button>
+          </div>
         </div>
       )}
     </div>
