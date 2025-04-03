@@ -17,11 +17,13 @@ export default function BookingPage() {
   const [adminDetails, setAdminDetails] = useState({
     name: "",
     mobile: "",
+    email: "", // Added email field
     whatsapp: "",
     checkIn: "",
     checkOut: "",
   });
 
+  const [selectedRoomType, setSelectedRoomType] = useState(""); // Added room type state
   const [selectedRoom, setSelectedRoom] = useState("");
   const [acType, setAcType] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,10 +53,12 @@ export default function BookingPage() {
 
     if (!adminDetails.name) newErrors.name = "Name is required.";
     if (!adminDetails.mobile) newErrors.mobile = "Mobile number is required.";
+    if (adminDetails.email && !/\S+@\S+\.\S+/.test(adminDetails.email)) newErrors.email = "Invalid email format."; // Email validation
     if (!adminDetails.checkIn) newErrors.checkIn = "Check-in date is required.";
     else if (checkInDate < now) newErrors.checkIn = "Check-in time cannot be in the past.";
     if (!adminDetails.checkOut) newErrors.checkOut = "Check-out date is required.";
     else if (checkOutDate <= checkInDate) newErrors.checkOut = "Checkout time must be after check-in time.";
+    if (!selectedRoomType) newErrors.selectedRoomType = "Room type selection is required."; // Validate room type
     if (!selectedRoom) newErrors.selectedRoom = "Room selection is required.";
     if (!acType) newErrors.acType = "AC/Non-AC selection is required.";
 
@@ -74,10 +78,12 @@ export default function BookingPage() {
     setAdminDetails({
       name: "",
       mobile: "",
+      email: "", // Reset email field
       whatsapp: "",
       checkIn: "",
       checkOut: "",
     });
+    setSelectedRoomType(""); // Reset room type
     setSelectedRoom("");
     setAcType("");
     setErrors({});
@@ -109,6 +115,19 @@ export default function BookingPage() {
       });
   };
 
+  const handleRoomTypeChange = (e) => {
+    setSelectedRoomType(e.target.value);
+    setSelectedRoom(""); // Reset room selection when room type changes
+    setAcType(""); // Reset AC type when room type changes
+  };
+
+  const handleRoomChange = (e) => {
+    setSelectedRoom(e.target.value);
+    if (e.target.value === "102") {
+      setAcType("Non-AC"); // Automatically set AC type to Non-AC for room 102
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold text-center mb-4">Hotel Room Booking</h2>
@@ -120,6 +139,7 @@ export default function BookingPage() {
           <div className="bg-gray-100 p-4 rounded-lg">
             <p><strong>Name:</strong> {adminDetails.name}</p>
             <p><strong>Mobile:</strong> {adminDetails.mobile}</p>
+            <p><strong>Email:</strong> {adminDetails.email || "N/A"}</p> {/* Display email */}
             <p><strong>WhatsApp:</strong> {adminDetails.whatsapp || "N/A"}</p>
             <p><strong>Check-in:</strong> {adminDetails.checkIn}</p>
             <p><strong>Check-out:</strong> {adminDetails.checkOut}</p>
@@ -160,6 +180,15 @@ export default function BookingPage() {
             />
             {errors.mobile && <p className="text-red-500 text-sm">{errors.mobile}</p>}
             <input
+              type="email"
+              name="email"
+              placeholder="Email (Optional)"
+              className={`border p-2 rounded ${errors.email ? "border-red-500" : ""}`}
+              onChange={handleInputChange}
+              value={adminDetails.email}
+            />
+            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+            <input
               type="text"
               name="whatsapp"
               placeholder="WhatsApp No (Optional)"
@@ -187,25 +216,43 @@ export default function BookingPage() {
             {errors.checkOut && <p className="text-red-500 text-sm">{errors.checkOut}</p>}
 
             <select
+              className={`border p-2 rounded ${errors.selectedRoomType ? "border-red-500" : ""}`}
+              value={selectedRoomType}
+              onChange={handleRoomTypeChange}
+            >
+              <option value="">Select Room Type *</option>
+              <option value="Single Room">Single Room</option>
+              <option value="Double Room">Double Room</option>
+              <option value="Triple Room">Triple Room</option>
+            </select>
+            {errors.selectedRoomType && <p className="text-red-500 text-sm">{errors.selectedRoomType}</p>}
+
+            <select
               className={`border p-2 rounded ${errors.selectedRoom ? "border-red-500" : ""}`}
               value={selectedRoom}
-              onChange={(e) => setSelectedRoom(e.target.value)}
-              onMouseOut={() => setTooltip("")}
+              onChange={handleRoomChange}
             >
               <option value="">Select Room Number *</option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.id} - {room.type}
-                </option>
-              ))}
+              {rooms
+                .filter((room) => {
+                  if (selectedRoomType === "Single Room") return room.type === "Single Room";
+                  if (selectedRoomType === "Double Room") return room.type === "Double Room";
+                  if (selectedRoomType === "Triple Room") return room.type === "Triple Room";
+                  return false;
+                })
+                .map((room) => (
+                  <option key={room.id} value={room.id}>
+                    {room.id} - {room.type}
+                  </option>
+                ))}
             </select>
             {errors.selectedRoom && <p className="text-red-500 text-sm">{errors.selectedRoom}</p>}
-            {tooltip && <p className="text-gray-500 text-sm">{tooltip}</p>}
 
             <select
               className={`border p-2 rounded ${errors.acType ? "border-red-500" : ""}`}
               value={acType}
               onChange={(e) => setAcType(e.target.value)}
+              disabled={selectedRoom === "102"} // Disable AC type selection for room 102
             >
               <option value="">Select AC/Non-AC *</option>
               <option value="AC">AC</option>

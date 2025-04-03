@@ -5,10 +5,12 @@ import axios from "axios";
 export default function ViewBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Added navigate hook
+  const [searchRoom, setSearchRoom] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/bookings")
+    axios
+      .get("http://localhost:5000/api/bookings")
       .then((response) => {
         setBookings(response.data);
         setLoading(false);
@@ -19,10 +21,15 @@ export default function ViewBookings() {
       });
   }, []);
 
+  const filteredBookings = bookings.filter((booking) =>
+    booking.selectedRoom.roomNumber.toString().includes(searchRoom)
+  );
+
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
+      {/* Header Buttons */}
       <div className="flex justify-between mb-6">
         <button
           className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 cursor-pointer"
@@ -37,20 +44,49 @@ export default function ViewBookings() {
           Manual Booking
         </button>
       </div>
+
+      {/* Search Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by Room Number"
+          value={searchRoom}
+          onChange={(e) => setSearchRoom(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg"
+        />
+      </div>
+
+      {/* Title */}
       <h2 className="text-2xl font-bold text-center mb-4">All Bookings</h2>
 
-      {bookings.length === 0 ? <p>No bookings found.</p> : (
+      {/* Bookings List */}
+      {filteredBookings.length === 0 ? (
+        <p>No bookings found.</p>
+      ) : (
         <div className="space-y-4">
-          {bookings.map((booking) => (
-            <div key={booking._id} className="p-4 bg-gray-100 rounded-lg flex justify-between items-center">
+          {filteredBookings.map((booking) => (
+            <div
+              key={booking._id}
+              className="p-4 bg-gray-100 rounded-lg flex justify-between items-center"
+            >
               <div>
-                <p><strong>Guest:</strong> {booking.adminDetails.name}</p>
-                <p><strong>Room No:</strong> {booking.selectedRoom.roomNumber}</p>
-                <p><strong>Check-in:</strong> {new Date(booking.adminDetails.checkIn).toLocaleString()}</p>
-                <p><strong>Check-out:</strong> {new Date(booking.adminDetails.checkOut).toLocaleString()}</p>
+                <p>
+                  <strong>Guest:</strong> {booking.adminDetails.name}
+                </p>
+                <p>
+                  <strong>Room No:</strong> {booking.selectedRoom.roomNumber}
+                </p>
+                <p>
+                  <strong>Check-in:</strong>{" "}
+                  {new Date(booking.adminDetails.checkIn).toLocaleString()}
+                </p>
+                <p>
+                  <strong>Check-out:</strong>{" "}
+                  {new Date(booking.adminDetails.checkOut).toLocaleString()}
+                </p>
               </div>
-              <Link 
-                to={`/booking-details/${booking._id}`} 
+              <Link
+                to={`/booking-details/${booking._id}`}
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 cursor-pointer"
               >
                 View Details
