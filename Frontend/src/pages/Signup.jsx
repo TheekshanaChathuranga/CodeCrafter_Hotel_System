@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { FiUser, FiMail, FiLock, FiLogIn } from "react-icons/fi";
+import { useNotifications } from "../context/NotificationContext";
 
 const Signup = () => {
   const [username, setName] = useState("");
@@ -10,21 +11,25 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
+  const { showNotification } = useNotifications();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     
-    try {
-      const { success, message } = await signup({ username, email, password });
-      alert(message);
-      if (success) navigate("/login");
-    } catch (error) {
-      alert(error.response?.data?.message || "Signup failed!");
-    } finally {
-      setIsLoading(false);
+    // Now uses return instead of throw
+    const result = await signup({ username, email, password });
+    console.log("Final result:", result);
+  
+    if (result.success) {
+      showNotification(result.message, "success");
+      navigate("/login");
+    } else {
+      showNotification(result.message, "error");
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -32,22 +37,23 @@ const Signup = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100"
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: "#ECF0F1" }}
     >
       <div className="w-full max-w-md px-6 py-8">
         <motion.div
           whileHover={{ scale: 1.02 }}
           className="bg-white rounded-xl shadow-2xl overflow-hidden"
         >
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-center">
+          <div className="p-6 text-center" style={{ backgroundColor: "#2C3E50" }}>
             <h1 className="text-3xl font-bold text-white">Create Account</h1>
-            <p className="text-blue-100 mt-2">Join our community today</p>
+            <p className="mt-2" style={{ color: "#ECF0F1" }}>Reserve your spot today!</p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
                   Full Name
                 </label>
                 <div className="relative">
@@ -61,12 +67,13 @@ const Signup = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     placeholder="John Doe"
                     required
+                    style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
                   Email Address
                 </label>
                 <div className="relative">
@@ -80,12 +87,13 @@ const Signup = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     placeholder="your@email.com"
                     required
+                    style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
                   Password
                 </label>
                 <div className="relative">
@@ -99,9 +107,10 @@ const Signup = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                     placeholder="••••••••"
                     required
+                    style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs" style={{ color: "#333333" }}>
                   Use 8 or more characters with a mix of letters, numbers & symbols
                 </p>
               </div>
@@ -112,11 +121,12 @@ const Signup = () => {
                 id="terms"
                 name="terms"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 focus:ring-blue-500 border-gray-300 rounded"
                 required
+                style={{ color: "#16A085" }}
               />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                I agree to the <a href="#" className="text-blue-600 hover:text-blue-500">Terms</a> and <a href="#" className="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+              <label htmlFor="terms" className="ml-2 block text-sm" style={{ color: "#333333" }}>
+                I agree to the <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Terms</a> and <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Privacy Policy</a>
               </label>
             </div>
 
@@ -124,9 +134,10 @@ const Signup = () => {
               type="submit"
               whileTap={{ scale: 0.98 }}
               disabled={isLoading}
-              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-                isLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                isLoading ? "opacity-75" : "hover:bg-opacity-90"
               }`}
+              style={{ backgroundColor: "#16A085" }}
             >
               {isLoading ? (
                 <>
@@ -145,10 +156,10 @@ const Signup = () => {
             </motion.button>
           </form>
 
-          <div className="px-8 py-4 bg-gray-50 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="px-8 py-4 text-center" style={{ backgroundColor: "#ECF0F1" }}>
+            <p className="text-sm" style={{ color: "#333333" }}>
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link to="/login" className="font-medium hover:underline" style={{ color: "#16A085" }}>
                 Login
               </Link>
             </p>

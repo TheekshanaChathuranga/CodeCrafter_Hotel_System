@@ -32,9 +32,13 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const { token, user } = await authApi.login(credentials);
-      localStorage.setItem('token', token); // Frontend stores token
-      setUser(user);
+      const { token, userId } = await authApi.login(credentials);
+      localStorage.setItem('token', token);
+      
+      const userData = await authApi.verifyToken(token);
+      setUser(userData);
+      console.log("User data after login his name:", userData.name); // Debugging line
+      
       return { success: true }; 
     } catch (error) {
       localStorage.removeItem('token');
@@ -42,21 +46,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // const signup = async (userData) => {
+  //   try {
+  //     const response = await authApi.signup(userData);
+  //     return { 
+  //       success: true,
+  //       message: response.data.message || "Signup successful!"
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       message: error.response?.data?.message || "Signup failed"
+  //     };
+  //   }
+  // };
+
   const signup = async (userData) => {
     try {
-      const response = await authApi.signup(userData);
-      return { 
-        success: true,
-        message: response.data.message || "Signup successful!"
-      };
+      // Directly return the API response
+      return await authApi.signup(userData);
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Signup failed"
+        message: error.message || "Signup failed"
       };
     }
   };
-
+  
   const logout = () => {
     localStorage.removeItem('token');
     setUser(null);
