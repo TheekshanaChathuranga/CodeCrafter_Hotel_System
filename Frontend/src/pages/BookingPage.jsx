@@ -32,16 +32,32 @@ export default function BookingPage() {
 
   const handleInputChange = (e) => {
     setAdminDetails({ ...adminDetails, [e.target.name]: e.target.value });
+
+    // Ensure checkout time cannot be earlier than check-in time
+    if (e.target.name === "checkIn" && adminDetails.checkOut) {
+      const checkInDate = new Date(e.target.value);
+      const checkOutDate = new Date(adminDetails.checkOut);
+      if (checkOutDate <= checkInDate) {
+        setAdminDetails({ ...adminDetails, checkOut: "" }); // Reset invalid checkout time
+      }
+    }
   };
 
   const validateFields = () => {
     const newErrors = {};
+    const now = new Date();
+    const checkInDate = new Date(adminDetails.checkIn);
+    const checkOutDate = new Date(adminDetails.checkOut);
+
     if (!adminDetails.name) newErrors.name = "Name is required.";
     if (!adminDetails.mobile) newErrors.mobile = "Mobile number is required.";
     if (!adminDetails.checkIn) newErrors.checkIn = "Check-in date is required.";
+    else if (checkInDate < now) newErrors.checkIn = "Check-in time cannot be in the past.";
     if (!adminDetails.checkOut) newErrors.checkOut = "Check-out date is required.";
+    else if (checkOutDate <= checkInDate) newErrors.checkOut = "Checkout time must be after check-in time.";
     if (!selectedRoom) newErrors.selectedRoom = "Room selection is required.";
     if (!acType) newErrors.acType = "AC/Non-AC selection is required.";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -157,6 +173,7 @@ export default function BookingPage() {
               className={`border p-2 rounded ${errors.checkIn ? "border-red-500" : ""}`}
               onChange={handleInputChange}
               value={adminDetails.checkIn}
+              min={new Date().toISOString().split("T")[0] + "T00:00"} // Restrict to today or later
             />
             {errors.checkIn && <p className="text-red-500 text-sm">{errors.checkIn}</p>}
             <input
@@ -165,6 +182,7 @@ export default function BookingPage() {
               className={`border p-2 rounded ${errors.checkOut ? "border-red-500" : ""}`}
               onChange={handleInputChange}
               value={adminDetails.checkOut}
+              min={adminDetails.checkIn || new Date().toISOString().split("T")[0] + "T00:00"} // Ensure checkout is not earlier than check-in
             />
             {errors.checkOut && <p className="text-red-500 text-sm">{errors.checkOut}</p>}
 
