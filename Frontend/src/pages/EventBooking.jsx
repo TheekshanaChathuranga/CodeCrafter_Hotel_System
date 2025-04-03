@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import * as XLSX from "xlsx";
 import { useNavigate, useLocation } from "react-router-dom";
 import Popup from "./Popup";
 
@@ -15,7 +14,6 @@ const EventBooking = () => {
     phone2: "",
     noOfGuests: 0,
     eventType: "",
-    date: "",
     checkIn: "",
     checkOut: "",
     email: "",
@@ -28,7 +26,16 @@ const EventBooking = () => {
     { no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
   ]);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [popup, setPopup] = useState({ message: "", type: "" });
+  const [popup, setPopup] = useState({ message: "", type: "", showConfirm: false });
+  const [errors, setErrors] = useState({});
+
+  const foodOptions = [
+    "Welcome Drink", "Kiribath", "Chicken fried rice", "Egg noodle", "White rice",
+    "Chicken Curry", "Dhall Curry", "Devilled Fish", "Fried Lake fish", "Egg slices",
+    "Desert Ice cream", "Cut Fruit"
+  ];
+
+  const unitOptions = ["Unit", "KG", "Plate", "Glass", "Set"]; // Options for Unit dropdown
 
   useEffect(() => {
     if (location.state?.event) {
@@ -40,7 +47,6 @@ const EventBooking = () => {
         phone2: event.phone2 || "",
         noOfGuests: event.noOfGuests || 0,
         eventType: event.eventType || "",
-        date: event.date?.slice(0, 10) || "",
         checkIn: event.checkIn?.slice(0, 10) || "",
         checkOut: event.checkOut?.slice(0, 10) || "",
         email: event.email || "",
@@ -51,154 +57,147 @@ const EventBooking = () => {
     }
   }, [location.state]);
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name) newErrors.name = "Name is required";
+    if (!formData.phone1) {
+      newErrors.phone1 = "Phone Number 1 is required";
+    } else if (!/^\d{10}$/.test(formData.phone1)) {
+      newErrors.phone1 = "Phone Number 1 must be exactly 10 digits";
+    }
+    if (formData.phone2 && !/^\d{10}$/.test(formData.phone2)) {
+      newErrors.phone2 = "Phone Number 2 must be exactly 10 digits";
+    }
+    if (!formData.noOfGuests || formData.noOfGuests < 1) newErrors.noOfGuests = "Number of Guests must be at least 1";
+    if (!formData.eventType) newErrors.eventType = "Event Type is required";
+    if (!formData.checkIn) newErrors.checkIn = "Check-In date is required";
+    if (!formData.checkOut) newErrors.checkOut = "Check-Out date is required";
+    if (formData.checkIn && formData.checkOut && new Date(formData.checkOut) <= new Date(formData.checkIn)) {
+      newErrors.checkOut = "Check-Out must be after Check-In";
+    }
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: name === "noOfGuests" ? parseInt(value) : value });
+    setFormData({ ...formData, [name]: name === "noOfGuests" ? parseInt(value) || 0 : value });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const handleTableChange = (index, field, value) => {
     const updatedData = [...tableData];
-    updatedData[index][field] = value;
-
+    updatedData[index][field] = field === "description" || field === "unit" ? value : parseFloat(value) || 0;
     if (field === "quantity" || field === "rate") {
-      const quantity = updatedData[index].quantity || 0;
-      const rate = updatedData[index].rate || 0;
-      updatedData[index].amount = quantity * rate;
+      updatedData[index].amount = updatedData[index].quantity * updatedData[index].rate;
     }
-
     setTableData(updatedData);
   };
 
   const addRow = () => {
-    setTableData([
-      ...tableData,
-      { no: tableData.length + 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
-    ]);
+    setTableData([...tableData, { no: tableData.length + 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
   };
 
   const removeRow = (index) => {
     if (tableData.length === 1) {
-      setPopup({ message: "Cannot remove the last row!", type: "warning" });
+      setPopup({ message: "Cannot remove the last row!", type: "warning", showConfirm: false });
       return;
     }
-    const updatedData = tableData.filter((_, i) => i !== index);
-    const reindexedData = updatedData.map((row, i) => ({ ...row, no: i + 1 }));
-    setTableData(reindexedData);
+    const updatedData = tableData.filter((_, i) => i !== index).map((row, i) => ({ ...row, no: i + 1 }));
+    setTableData(updatedData);
   };
 
   const handleExtraChange = (index, field, value) => {
     const updatedExtras = [...extraFields];
-    updatedExtras[index][field] = value;
-
+    updatedExtras[index][field] = field === "description" || field === "unit" ? value : parseFloat(value) || 0;
     if (field === "quantity" || field === "rate") {
-      const quantity = updatedExtras[index].quantity || 0;
-      const rate = updatedExtras[index].rate || 0;
-      updatedExtras[index].amount = quantity * rate;
+      updatedExtras[index].amount = updatedExtras[index].quantity * updatedExtras[index].rate;
     }
-
     setExtraFields(updatedExtras);
   };
 
   const addExtraRow = () => {
-    setExtraFields([
-      ...extraFields,
-      { no: `E${extraFields.length + 1}`, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
-    ]);
+    setExtraFields([...extraFields, { no: `E${extraFields.length + 1}`, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
   };
 
   const removeExtraRow = (index) => {
     if (extraFields.length === 1) {
-      setPopup({ message: "Cannot remove the last row!", type: "warning" });
+      setPopup({ message: "Cannot remove the last row!", type: "warning", showConfirm: false });
       return;
     }
-    const updatedExtras = extraFields.filter((_, i) => i !== index);
-    const reindexedExtras = updatedExtras.map((row, i) => ({ ...row, no: `E${i + 1}` }));
-    setExtraFields(reindexedExtras);
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
-
-      const newTableData = jsonData.map((row, index) => ({
-        no: index + 1,
-        description: row.Description || "",
-        unit: row.Unit || "",
-        quantity: row.Qty || 0,
-        rate: row.Rate || 0,
-        amount: (row.Qty || 0) * (row.Rate || 0),
-      }));
-
-      setTableData(newTableData);
-    };
-    reader.readAsArrayBuffer(file);
+    const updatedExtras = extraFields.filter((_, i) => i !== index).map((row, i) => ({ ...row, no: `E${i + 1}` }));
+    setExtraFields(updatedExtras);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
-      const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
-      const serviceCharge = totalAmount * 0.1;
-      const grandTotal = totalAmount + serviceCharge + extraAmount;
-
-      const dataToSubmit = {
-        ...formData,
-        tableData,
-        extraFields,
-        totalAmount,
-        serviceCharge,
-        grandTotal,
-        finalTotal: grandTotal,
-      };
-
-      if (editingEvent) {
-        await axios.put(
-          `${API_BASE_URL}/api/events/${editingEvent._id}`,
-          dataToSubmit
-        );
-        setEditingEvent(null);
-        setPopup({ message: "Event updated successfully!", type: "success" });
-      } else {
-        await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
-        setPopup({ message: "Booking submitted successfully!", type: "success" });
-      }
-
-      setFormData({
-        name: "",
-        phone1: "",
-        phone2: "",
-        noOfGuests: 0,
-        eventType: "",
-        date: "",
-        checkIn: "",
-        checkOut: "",
-        email: "",
-        notes: "",
-      });
-      setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-      setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-    } catch (error) {
-      console.error("Error submitting booking:", error.message, error.response?.data);
-      setPopup({
-        message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
-        type: "error",
-      });
+    if (!validateForm()) {
+      setPopup({ message: "Please correct the errors in the form!", type: "warning", showConfirm: false });
+      return;
     }
+
+    setPopup({
+      message: "Are you sure you want to submit this booking?",
+      type: "confirm",
+      showConfirm: true,
+      onConfirm: async () => {
+        try {
+          const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
+          const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
+          const serviceCharge = totalAmount * 0.1;
+          const grandTotal = totalAmount + serviceCharge + extraAmount;
+
+          const dataToSubmit = {
+            ...formData,
+            tableData,
+            extraFields,
+            totalAmount,
+            serviceCharge,
+            extraAmount,
+            grandTotal,
+          };
+
+          if (editingEvent) {
+            await axios.put(`${API_BASE_URL}/api/events/${editingEvent._id}`, dataToSubmit);
+            setEditingEvent(null);
+            setPopup({ message: "Event updated successfully!", type: "success", showConfirm: false });
+          } else {
+            await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
+            setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
+          }
+
+          setFormData({
+            name: "",
+            phone1: "",
+            phone2: "",
+            noOfGuests: 0,
+            eventType: "",
+            checkIn: "",
+            checkOut: "",
+            email: "",
+            notes: "",
+          });
+          setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+          setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+        } catch (error) {
+          console.error("Error submitting booking:", error.message, error.response?.data);
+          setPopup({
+            message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
+            type: "error",
+            showConfirm: false,
+          });
+        }
+      },
+    });
   };
 
   const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
   const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
   const serviceCharge = totalAmount * 0.1;
   const grandTotal = totalAmount + serviceCharge + extraAmount;
-  const grandTotalRatePP = formData.noOfGuests > 0 ? (grandTotal / formData.noOfGuests).toFixed(2) : "0.00";
-  const finalTotalRatePP = formData.noOfGuests > 0 ? (grandTotal / formData.noOfGuests).toFixed(2) : "0.00";
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
@@ -215,9 +214,9 @@ const EventBooking = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.name ? "border-red-500" : ""}`}
               />
+              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Phone Number 1:</label>
@@ -226,19 +225,22 @@ const EventBooking = () => {
                 name="phone1"
                 value={formData.phone1}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
+                maxLength="10"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.phone1 ? "border-red-500" : ""}`}
               />
+              {errors.phone1 && <p className="text-red-500 text-xs mt-1">{errors.phone1}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number 2 (Additional):</label>
+              <label className="block text-sm font-medium text-gray-700">Phone Number 2 (Optional):</label>
               <input
                 type="tel"
                 name="phone2"
                 value={formData.phone2}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                maxLength="10"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.phone2 ? "border-red-500" : ""}`}
               />
+              {errors.phone2 && <p className="text-red-500 text-xs mt-1">{errors.phone2}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">No of Guests:</label>
@@ -247,10 +249,10 @@ const EventBooking = () => {
                 name="noOfGuests"
                 value={formData.noOfGuests}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                 min="1"
-                required
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.noOfGuests ? "border-red-500" : ""}`}
               />
+              {errors.noOfGuests && <p className="text-red-500 text-xs mt-1">{errors.noOfGuests}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Event Type:</label>
@@ -258,8 +260,7 @@ const EventBooking = () => {
                 name="eventType"
                 value={formData.eventType}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.eventType ? "border-red-500" : ""}`}
               >
                 <option value="">Select Event Type</option>
                 <option value="wedding">Wedding</option>
@@ -267,17 +268,7 @@ const EventBooking = () => {
                 <option value="seminar">Seminar</option>
                 <option value="party">Party</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Date:</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
-              />
+              {errors.eventType && <p className="text-red-500 text-xs mt-1">{errors.eventType}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Check-In:</label>
@@ -286,9 +277,10 @@ const EventBooking = () => {
                 name="checkIn"
                 value={formData.checkIn}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
+                min={new Date().toISOString().split("T")[0]}
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.checkIn ? "border-red-500" : ""}`}
               />
+              {errors.checkIn && <p className="text-red-500 text-xs mt-1">{errors.checkIn}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Check-Out:</label>
@@ -297,9 +289,10 @@ const EventBooking = () => {
                 name="checkOut"
                 value={formData.checkOut}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
+                min={formData.checkIn || new Date().toISOString().split("T")[0]}
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.checkOut ? "border-red-500" : ""}`}
               />
+              {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Email (Optional):</label>
@@ -308,8 +301,9 @@ const EventBooking = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.email ? "border-red-500" : ""}`}
               />
+              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700">Add Notes (Optional):</label>
@@ -324,17 +318,7 @@ const EventBooking = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Upload Excel File (Optional):</label>
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              className="mt-1 block w-full text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold text-blue-600 mb-4">Add Items</h2>
+            <h2 className="text-xl font-semibold text-blue-600 mb-4">Add Food Items</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-blue-50">
@@ -353,30 +337,35 @@ const EventBooking = () => {
                     <tr key={index}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
+                        <select
                           value={row.description}
                           onChange={(e) => handleTableChange(index, "description", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Egg Fried Rice (Basmathee)"
-                        />
+                        >
+                          <option value="">Select Food Item</option>
+                          {foodOptions.map((option, i) => (
+                            <option key={i} value={option}>{option}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
+                        <select
                           value={row.unit}
                           onChange={(e) => handleTableChange(index, "unit", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          maxLength={5}
-                          placeholder="e.g., KG"
-                        />
+                        >
+                          <option value="">Select Unit</option>
+                          {unitOptions.map((option, i) => (
+                            <option key={i} value={option}>{option}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="number"
                           step="0.1"
                           value={row.quantity}
-                          onChange={(e) => handleTableChange(index, "quantity", parseFloat(e.target.value))}
+                          onChange={(e) => handleTableChange(index, "quantity", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           placeholder="e.g., 100"
                         />
@@ -386,12 +375,12 @@ const EventBooking = () => {
                           type="number"
                           step="0.01"
                           value={row.rate}
-                          onChange={(e) => handleTableChange(index, "rate", parseFloat(e.target.value))}
+                          onChange={(e) => handleTableChange(index, "rate", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           placeholder="e.g., 650.00"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           type="button"
@@ -420,7 +409,7 @@ const EventBooking = () => {
             <p className="text-lg font-semibold text-blue-800">Service Charge (10%): {serviceCharge.toFixed(2)}</p>
             <p className="text-lg font-semibold text-blue-800">Extra Amount: {extraAmount.toFixed(2)}</p>
             <p className="text-lg font-semibold text-blue-800">Grand Total: {grandTotal.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Grand Total Rate PP: {grandTotalRatePP}</p>
+            <p className="text-lg font-semibold text-blue-800">Grand Total Rate PP: {(formData.noOfGuests > 0 ? grandTotal / formData.noOfGuests : 0).toFixed(2)}</p>
           </div>
 
           <div>
@@ -452,21 +441,23 @@ const EventBooking = () => {
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
+                        <select
                           value={row.unit}
                           onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          maxLength={5}
-                          placeholder="e.g., Set"
-                        />
+                        >
+                          <option value="">Select Unit</option>
+                          {unitOptions.map((option, i) => (
+                            <option key={i} value={option}>{option}</option>
+                          ))}
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <input
                           type="number"
                           step="0.1"
                           value={row.quantity}
-                          onChange={(e) => handleExtraChange(index, "quantity", parseFloat(e.target.value))}
+                          onChange={(e) => handleExtraChange(index, "quantity", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           placeholder="e.g., 2"
                         />
@@ -476,12 +467,12 @@ const EventBooking = () => {
                           type="number"
                           step="0.01"
                           value={row.rate}
-                          onChange={(e) => handleExtraChange(index, "rate", parseFloat(e.target.value))}
+                          onChange={(e) => handleExtraChange(index, "rate", e.target.value)}
                           className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
                           placeholder="e.g., 3000.00"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           type="button"
@@ -505,11 +496,6 @@ const EventBooking = () => {
             </button>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-md">
-            <p className="text-lg font-semibold text-blue-800">Final Total: {grandTotal.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Final Total Rate PP: {finalTotalRatePP}</p>
-          </div>
-
           <div className="flex space-x-3 justify-end">
             <button
               type="submit"
@@ -528,7 +514,6 @@ const EventBooking = () => {
                     phone2: "",
                     noOfGuests: 0,
                     eventType: "",
-                    date: "",
                     checkIn: "",
                     checkOut: "",
                     email: "",
@@ -555,7 +540,9 @@ const EventBooking = () => {
       <Popup
         message={popup.message}
         type={popup.type}
-        onClose={() => setPopup({ message: "", type: "" })}
+        onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
+        onConfirm={popup.onConfirm}
+        showConfirm={popup.showConfirm}
       />
     </div>
   );

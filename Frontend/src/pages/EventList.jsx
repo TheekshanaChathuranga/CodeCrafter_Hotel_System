@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import Popup from "./Popup"; // Assuming Popup.jsx is in src folder
+import Popup from "./Popup";
 
 const API_BASE_URL = "http://localhost:5000";
 
@@ -9,7 +9,7 @@ const EventList = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
-  const [popup, setPopup] = useState({ message: "", type: "" });
+  const [popup, setPopup] = useState({ message: "", type: "", showConfirm: false });
   const [searchForm, setSearchForm] = useState({
     name: "",
     eventType: "",
@@ -25,16 +25,18 @@ const EventList = () => {
       const fetchedEvents = response.data || [];
       const sanitizedEvents = fetchedEvents.map((event) => ({
         ...event,
+        phone1: event.phone1 || "Not provided",
+        phone2: event.phone2 || "Not provided",
         tableData: event.tableData || [],
         extraFields: event.extraFields || [],
       }));
       setEvents(sanitizedEvents);
-      setFilteredEvents(sanitizedEvents); // Initially show all events
+      setFilteredEvents(sanitizedEvents);
     } catch (error) {
       console.error("Error fetching events:", error.message, error.response?.data);
       setEvents([]);
       setFilteredEvents([]);
-      setPopup({ message: `Failed to fetch events: ${error.message}`, type: "error" });
+      setPopup({ message: `Failed to fetch events: ${error.message}`, type: "error", showConfirm: false });
     }
   };
 
@@ -46,7 +48,7 @@ const EventList = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (!searchForm.name || !searchForm.eventType) {
-      setPopup({ message: "Please fill in both Name and Event Type!", type: "warning" });
+      setPopup({ message: "Please fill in both Name and Event Type!", type: "warning", showConfirm: false });
       return;
     }
 
@@ -58,9 +60,9 @@ const EventList = () => {
 
     setFilteredEvents(filtered);
     if (filtered.length === 0) {
-      setPopup({ message: "No matching events found.", type: "warning" });
+      setPopup({ message: "No matching events found.", type: "warning", showConfirm: false });
     } else {
-      setPopup({ message: "Events filtered successfully!", type: "success" });
+      setPopup({ message: "Events filtered successfully!", type: "success", showConfirm: false });
     }
   };
 
@@ -68,20 +70,28 @@ const EventList = () => {
     navigate("/event-booking", { state: { event } });
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_BASE_URL}/api/events/${id}`);
-      const updatedEvents = events.filter((ev) => ev._id !== id);
-      setEvents(updatedEvents);
-      setFilteredEvents(updatedEvents);
-      setPopup({ message: "Event deleted successfully!", type: "success" });
-    } catch (error) {
-      console.error("Error deleting event:", error.message, error.response?.data);
-      setPopup({
-        message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
-        type: "error",
-      });
-    }
+  const handleDelete = (id) => {
+    setPopup({
+      message: "Are you certain you wish to delete this event?",
+      type: "confirm",
+      showConfirm: true,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API_BASE_URL}/api/events/${id}`);
+          const updatedEvents = events.filter((ev) => ev._id !== id);
+          setEvents(updatedEvents);
+          setFilteredEvents(updatedEvents);
+          setPopup({ message: "Event deleted successfully!", type: "success", showConfirm: false });
+        } catch (error) {
+          console.error("Error deleting event:", error.message, error.response?.data);
+          setPopup({
+            message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
+            type: "error",
+            showConfirm: false,
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -98,7 +108,6 @@ const EventList = () => {
           </button>
         </div>
 
-        {/* Search Form */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h3 className="text-xl font-semibold text-blue-600 mb-4">Search Events</h3>
           <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -147,11 +156,14 @@ const EventList = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <p className="text-sm font-medium text-gray-700"><strong>Name:</strong> {event.name}</p>
+                    <p className="text-sm font-medium text-gray-700"><strong>Phone Number:</strong> {event.phone1}</p>
+                    {event.phone2 !== "Not provided" && (
+                      <p className="text-sm font-medium text-gray-700"><strong>Additional Phone:</strong> {event.phone2}</p>
+                    )}
                     <p className="text-sm font-medium text-gray-700"><strong>No of Guests:</strong> {event.noOfGuests}</p>
                     <p className="text-sm font-medium text-gray-700"><strong>Event Type:</strong> {event.eventType}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700"><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
                     <p className="text-sm font-medium text-gray-700"><strong>Check-In:</strong> {new Date(event.checkIn).toLocaleDateString()}</p>
                     <p className="text-sm font-medium text-gray-700"><strong>Check-Out:</strong> {new Date(event.checkOut).toLocaleDateString()}</p>
                   </div>
@@ -162,7 +174,7 @@ const EventList = () => {
                     <p className="text-sm text-gray-700 whitespace-pre-wrap">{event.notes}</p>
                   </div>
                 )}
-                <h3 className="text-lg font-semibold text-blue-600 mb-2">Items</h3>
+                <h3 className="text-lg font-semibold text-blue-600 mb-2">Food Items</h3>
                 <div className="overflow-x-auto mb-4">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-blue-50">
@@ -223,10 +235,6 @@ const EventList = () => {
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <p className="text-sm font-medium text-blue-800"><strong>Final Total:</strong> {event.finalTotal?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm font-medium text-blue-800"><strong>Final Total Rate PP:</strong> {(event.noOfGuests > 0 ? event.finalTotal / event.noOfGuests : 0).toFixed(2)}</p>
-                </div>
                 <div className="flex space-x-3 justify-end">
                   <button
                     onClick={() => handleEdit(event)}
@@ -251,7 +259,9 @@ const EventList = () => {
       <Popup
         message={popup.message}
         type={popup.type}
-        onClose={() => setPopup({ message: "", type: "" })}
+        onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
+        onConfirm={popup.onConfirm}
+        showConfirm={popup.showConfirm}
       />
     </div>
   );

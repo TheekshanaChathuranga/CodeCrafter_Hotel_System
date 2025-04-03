@@ -6,7 +6,6 @@ const eventSchema = new mongoose.Schema({
   phone2: { type: String },
   noOfGuests: {type: Number,required: true},
   eventType: { type: String, required: true },
-  date: { type: Date, required: true },
   checkIn: { type: Date, required: true },
   checkOut: { type: Date, required: true },
   email: { type: String },
