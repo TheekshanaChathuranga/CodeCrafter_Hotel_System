@@ -33,11 +33,25 @@ export default function BookingPage() {
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    setAdminDetails({ ...adminDetails, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === "checkIn") {
+      const checkInDate = new Date(value);
+      const defaultCheckOutDate = new Date(checkInDate);
+      defaultCheckOutDate.setDate(checkInDate.getDate() + 1); // Set to the next day
+      defaultCheckOutDate.setHours(12, 0, 0, 0); // Set time to 12:00 PM
+      setAdminDetails({
+        ...adminDetails,
+        checkIn: value,
+        checkOut: defaultCheckOutDate.toISOString().slice(0, 16), // Format for datetime-local input
+      });
+    } else {
+      setAdminDetails({ ...adminDetails, [name]: value });
+    }
 
     // Ensure checkout time cannot be earlier than check-in time
-    if (e.target.name === "checkIn" && adminDetails.checkOut) {
-      const checkInDate = new Date(e.target.value);
+    if (name === "checkIn" && adminDetails.checkOut) {
+      const checkInDate = new Date(value);
       const checkOutDate = new Date(adminDetails.checkOut);
       if (checkOutDate <= checkInDate) {
         setAdminDetails({ ...adminDetails, checkOut: "" }); // Reset invalid checkout time

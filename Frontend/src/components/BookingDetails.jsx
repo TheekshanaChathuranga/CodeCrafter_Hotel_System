@@ -8,6 +8,7 @@ export default function BookingDetails() {
   const [editData, setEditData] = useState({ checkIn: "", checkOut: "" });
   const { bookingId } = useParams();
   const navigate = useNavigate();
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     if (bookingId) {
@@ -53,7 +54,7 @@ export default function BookingDetails() {
     });
   };
 
-  const deleteBooking = () => {
+  const confirmDelete = () => {
     axios.delete(`http://localhost:5000/api/bookings/${bookingId}`)
       .then(() => {
         alert("Booking cancelled successfully.");
@@ -63,6 +64,14 @@ export default function BookingDetails() {
         console.error("Error cancelling booking:", error);
         alert("Failed to delete booking.");
       });
+  };
+
+  const handleCancelClick = () => {
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
   };
 
   if (!booking) return <div>Loading...</div>;
@@ -114,9 +123,23 @@ export default function BookingDetails() {
         </button>
       )}
       
-      <button onClick={deleteBooking} className="mt-5 ml-2 px-6 py-2 bg-red-500 text-white rounded-lg">
+      <button onClick={handleCancelClick} className="mt-5 ml-2 px-6 py-2 bg-red-500 text-white rounded-lg">
         Cancel Booking
       </button>
+
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="mb-4">Are you sure you want to cancel this booking?</p>
+            <button onClick={confirmDelete} className="px-4 py-2 bg-red-500 text-white rounded-lg mr-2">
+              Yes, Cancel
+            </button>
+            <button onClick={closePopup} className="px-4 py-2 bg-gray-300 rounded-lg">
+              No, Go Back
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
