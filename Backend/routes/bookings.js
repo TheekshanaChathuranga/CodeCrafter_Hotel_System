@@ -6,20 +6,18 @@ const router = express.Router();
 // POST route to create a booking
 router.post('/', async (req, res) => {
   try {
-    // Destructure the request body to get adminDetails and selectedRoom
-    const { adminDetails, selectedRoom } = req.body;
+    const { adminDetails, selectedRoom, packageType, paymentDetails } = req.body;
 
-    // Check if all required fields are present
-    if (!adminDetails || !selectedRoom) {
+    if (!adminDetails || !selectedRoom || !packageType || !paymentDetails) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Create a new booking document based on the data
     const newBooking = new Booking({
       adminDetails: {
         name: adminDetails.name,
         mobile: adminDetails.mobile,
-        whatsapp: adminDetails.whatsapp || null, // Make sure it's optional
+        email: adminDetails.email || null,
+        whatsapp: adminDetails.whatsapp || null,
         checkIn: adminDetails.checkIn,
         checkOut: adminDetails.checkOut,
       },
@@ -27,17 +25,16 @@ router.post('/', async (req, res) => {
         roomNumber: selectedRoom.roomNumber,
         acType: selectedRoom.acType,
       },
-      packageType: {
-        name: req.body.packageType.name,
-        price: req.body.packageType.price,
-        description: req.body.packageType.description || null // Optional field
-      }
+      packageType,
+      paymentDetails: {
+        paymentType: paymentDetails.paymentType || "N/A",
+        advanceAmount: paymentDetails.advanceAmount || 0,
+        remainingAmount: paymentDetails.remainingAmount || 0,
+        totalAmount: paymentDetails.totalAmount || 0,
+      },
     });
 
-    // Save booking to the database
     await newBooking.save();
-
-    // Send a response with the newly created booking
     res.status(201).json({ message: 'Booking created successfully', booking: newBooking });
   } catch (error) {
     console.error('Error creating booking:', error);

@@ -179,10 +179,10 @@ export default function BookingPage() {
       selectedRoom: { roomNumber: selectedRoom, acType },
       packageType,
       paymentDetails: {
-        paymentType,
-        advanceAmount,
-        remainingAmount,
-        totalAmount,
+        paymentType: paymentType || "N/A", // Ensure paymentType is included
+        advanceAmount: parseFloat(advanceAmount) || 0, // Ensure numeric values
+        remainingAmount: parseFloat(remainingAmount) || 0,
+        totalAmount: parseFloat(totalAmount) || 0,
       },
     };
 
@@ -191,7 +191,12 @@ export default function BookingPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bookingDetails),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to create booking");
+        }
+        return response.json();
+      })
       .then((data) => {
         setLoading(false);
         alert("✅ Booking successful!");
@@ -201,6 +206,7 @@ export default function BookingPage() {
       })
       .catch((error) => {
         console.error("Error:", error);
+        alert("❌ Booking failed. Please try again.");
         setLoading(false);
       });
   };

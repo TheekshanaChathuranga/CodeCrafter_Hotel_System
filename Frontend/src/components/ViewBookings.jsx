@@ -12,18 +12,24 @@ export default function ViewBookings() {
     axios
       .get("http://localhost:5000/api/bookings")
       .then((response) => {
-        setBookings(response.data);
+        if (response.status === 200) {
+          setBookings(response.data);
+        } else {
+          throw new Error("Failed to fetch bookings");
+        }
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching bookings:", error);
+        alert("❌ Failed to load bookings. Please try again.");
         setLoading(false);
       });
   }, []);
 
-  const filteredBookings = bookings.filter((booking) =>
-    booking.selectedRoom.roomNumber.toString().includes(searchRoom)
-  );
+  const filteredBookings = bookings.filter((booking) => {
+    // Ensure selectedRoom and roomNumber exist before filtering
+    return booking.selectedRoom?.roomNumber?.toString().includes(searchRoom);
+  });
 
   if (loading) return <div>Loading...</div>;
 
@@ -70,20 +76,21 @@ export default function ViewBookings() {
               className="p-4 bg-gray-100 rounded-lg flex justify-between items-center"
             >
               <div>
-                <p>
-                  <strong>Guest:</strong> {booking.adminDetails.name}
-                </p>
-                <p>
-                  <strong>Room No:</strong> {booking.selectedRoom.roomNumber}
-                </p>
+                <p><strong>Guest:</strong> {booking.adminDetails?.name || "N/A"}</p>
                 <p>
                   <strong>Check-in:</strong>{" "}
-                  {new Date(booking.adminDetails.checkIn).toLocaleString()}
+                  {booking.adminDetails?.checkIn
+                    ? new Date(booking.adminDetails.checkIn).toLocaleString()
+                    : "N/A"}
                 </p>
                 <p>
                   <strong>Check-out:</strong>{" "}
-                  {new Date(booking.adminDetails.checkOut).toLocaleString()}
+                  {booking.adminDetails?.checkOut
+                    ? new Date(booking.adminDetails.checkOut).toLocaleString()
+                    : "N/A"}
                 </p>
+                <p><strong>Package:</strong> {booking.packageType || "N/A"}</p>
+                <p><strong>Room No:</strong> {booking.selectedRoom?.roomNumber || "N/A"}</p> {/* Display room number */}
               </div>
               <Link
                 to={`/booking-details/${booking._id}`}

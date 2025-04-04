@@ -12,7 +12,13 @@ const bookingSchema = new mongoose.Schema({
     roomNumber: { type: Number, required: true },
     acType: { type: String, required: true },
   },
-  packageType: { type: String, required: true }, // Ensure packageType is required
+  packageType: { type: String, required: true },
+  paymentDetails: {
+    paymentType: { type: String, required: true },
+    advanceAmount: { type: Number, required: true },
+    remainingAmount: { type: Number, required: true },
+    totalAmount: { type: Number, required: true },
+  },
 });
 
 const Booking = mongoose.model('Booking', bookingSchema);

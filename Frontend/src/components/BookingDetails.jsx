@@ -12,20 +12,23 @@ export default function BookingDetails() {
 
   useEffect(() => {
     if (bookingId) {
-      axios.get(`http://localhost:5000/api/bookings/${bookingId}`)
+      axios
+        .get(`http://localhost:5000/api/bookings/${bookingId}`) // Ensure the endpoint includes bookingId
         .then((response) => {
-          setBooking(response.data);
-          setEditData({
-            checkIn: new Date(response.data.adminDetails.checkIn).toISOString().slice(0, 16),
-            checkOut: new Date(response.data.adminDetails.checkOut).toISOString().slice(0, 16),
-          });
+          if (response.status === 200) {
+            setBooking(response.data);
+            setEditData({
+              checkIn: new Date(response.data.adminDetails.checkIn).toISOString().slice(0, 16),
+              checkOut: new Date(response.data.adminDetails.checkOut).toISOString().slice(0, 16),
+            });
+          } else {
+            throw new Error("Failed to fetch booking details");
+          }
         })
         .catch((error) => {
           console.error("Error fetching booking:", error);
-          if (error.response && error.response.status === 404) {
-            alert("Booking not found.");
-            navigate("/bookings");
-          }
+          alert("❌ Failed to load booking details. Please try again.");
+          navigate("/bookings"); // Navigate back to bookings if an error occurs
         });
     }
   }, [bookingId, navigate]);
@@ -39,19 +42,24 @@ export default function BookingDetails() {
   };
 
   const handleSave = () => {
-    axios.put(`http://localhost:5000/api/bookings/${bookingId}`, {
-      checkIn: new Date(editData.checkIn).toISOString(),
-      checkOut: new Date(editData.checkOut).toISOString(),
-    })
-    .then(() => {
-      alert("Booking updated successfully.");
-      setIsEditing(false);
-      window.location.reload();
-    })
-    .catch((error) => {
-      console.error("Error updating booking:", error);
-      alert("Failed to update booking.");
-    });
+    axios
+      .put(`http://localhost:5000/api/bookings/${bookingId}`, {
+        checkIn: new Date(editData.checkIn).toISOString(),
+        checkOut: new Date(editData.checkOut).toISOString(),
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          alert("✅ Booking updated successfully.");
+          setIsEditing(false);
+          window.location.reload();
+        } else {
+          throw new Error("Failed to update booking");
+        }
+      })
+      .catch((error) => {
+        console.error("Error updating booking:", error);
+        alert("❌ Failed to update booking. Please try again.");
+      });
   };
 
   const confirmDelete = () => {
@@ -81,13 +89,14 @@ export default function BookingDetails() {
       <h2 className="text-2xl font-bold text-center mb-4">Booking Details</h2>
 
       <div className="bg-gray-100 p-4 rounded-lg">
-        <p><strong>Guest Name:</strong> {booking.adminDetails.name}</p>
-        <p><strong>Mobile:</strong> {booking.adminDetails.mobile}</p>
-        <p><strong>WhatsApp:</strong> {booking.adminDetails.whatsapp || "N/A"}</p>
+        <p><strong>Guest Name:</strong> {booking.adminDetails?.name || "N/A"}</p>
+        <p><strong>Mobile:</strong> {booking.adminDetails?.mobile || "N/A"}</p>
+        <p><strong>Email:</strong> {booking.adminDetails?.email || "N/A"}</p>
+        <p><strong>WhatsApp:</strong> {booking.adminDetails?.whatsapp || "N/A"}</p>
         {!isEditing ? (
           <>
-            <p><strong>Check-in:</strong> {new Date(booking.adminDetails.checkIn).toLocaleString()}</p>
-            <p><strong>Check-out:</strong> {new Date(booking.adminDetails.checkOut).toLocaleString()}</p>
+            <p><strong>Check-in:</strong> {booking.adminDetails?.checkIn ? new Date(booking.adminDetails.checkIn).toLocaleString() : "N/A"}</p>
+            <p><strong>Check-out:</strong> {booking.adminDetails?.checkOut ? new Date(booking.adminDetails.checkOut).toLocaleString() : "N/A"}</p>
           </>
         ) : (
           <>
@@ -109,9 +118,13 @@ export default function BookingDetails() {
             />
           </>
         )}
-        <p><strong>Room No:</strong> {booking.selectedRoom.roomNumber}</p>
-        <p><strong>AC Type:</strong> {booking.selectedRoom.acType}</p>
-        <p><strong>Package:</strong> {booking.packageType}</p> {/* Display package type */}
+        <p><strong>Room No:</strong> {booking.selectedRoom?.roomNumber || "N/A"}</p>
+        <p><strong>AC Type:</strong> {booking.selectedRoom?.acType || "N/A"}</p>
+        <p><strong>Package:</strong> {booking.packageType || "N/A"}</p>
+        <p><strong>Payment Type:</strong> {booking.paymentDetails?.paymentType || "N/A"}</p>
+        <p><strong>Advance Amount:</strong> Rs {booking.paymentDetails?.advanceAmount || "N/A"}</p>
+        <p><strong>Remaining Amount:</strong> Rs {booking.paymentDetails?.remainingAmount || "N/A"}</p>
+        <p><strong>Total Amount:</strong> Rs {booking.paymentDetails?.totalAmount || "N/A"}</p>
       </div>
 
       {!isEditing ? (
