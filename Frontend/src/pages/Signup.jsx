@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/UserAuthContext";
 import { motion } from "framer-motion";
 import { FiUser, FiMail, FiLock, FiLogIn } from "react-icons/fi";
-import { useNotifications } from "../context/NotificationContext";
+import { SnackbarProvider, useSnackbar } from 'notistack'
 
 const Signup = () => {
   const [username, setName] = useState("");
@@ -11,7 +11,7 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
-  const { showNotification } = useNotifications();
+  const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -23,10 +23,10 @@ const Signup = () => {
     console.log("Final result:", result);
   
     if (result.success) {
-      showNotification(result.message, "success");
+      enqueueSnackbar("Account created successfully!", { variant: "success" });
       navigate("/login");
     } else {
-      showNotification(result.message, "error");
+      enqueueSnackbar(result.message || "Signup failed", { variant: "error" });
     }
     
     setIsLoading(false);

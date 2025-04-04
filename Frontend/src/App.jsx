@@ -7,9 +7,10 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AdminLayout from "./layout/adminLayout";
-import ManageRooms from "./pages/admin/ManageRooms";
-import ManagePools from "./pages/admin/ManagePools";
+import ManagePools from "./pages/admin/PoolManagement";
+import ManageRooms from "./pages/admin/RoomManagement";
 import ProtectedRoute from "./components/protectedRoute";
+
 
 const App = () => {
   return (
