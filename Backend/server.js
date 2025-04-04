@@ -2,6 +2,9 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+
+
+import bookingRoutes from './routes/bookings.js';
 import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/room.js";
 import poolRoutes from "./routes/pool.js";
@@ -12,6 +15,7 @@ import { dirname } from "path";
 // Convert __dirname for ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 
 dotenv.config();
 
@@ -52,4 +56,7 @@ app.use("/api/pools", poolRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+
 });
+app.use('/api/bookings', bookingRoutes);
