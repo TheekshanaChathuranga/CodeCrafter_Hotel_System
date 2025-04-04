@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/UserAuthContext";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
-import { useNotifications } from "../context/NotificationContext";
+import { SnackbarProvider, useSnackbar } from 'notistack'
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,7 +11,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
-  const { showNotification } = useNotifications();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,19 +19,10 @@ const Login = () => {
     
     try {
       await login({ email, password });
-      showNotification("Login successful!", { 
-        severity: "success",
-        autoHideDuration: 3000
-      });
+      enqueueSnackbar("Login successful!", { variant: "success" });
       navigate("/");
     } catch (error) {
-      showNotification(
-        error.response?.data?.message || "Invalid credentials!", 
-        { 
-          severity: "error",
-          autoHideDuration: 5000 
-        }
-      );
+      enqueueSnackbar(error.message || "Login failed", { variant: "error" });
     } finally {
       setIsLoading(false);
     }
