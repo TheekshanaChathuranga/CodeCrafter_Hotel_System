@@ -27,7 +27,7 @@ const Home = () => {
           <div className="max-w-6xl mx-auto px-4 text-center text-white">
             <h1 className="text-5xl font-bold mb-4">The Lake Hotel & Resort</h1>
             <p className="text-2xl mb-8">Where Luxury Meets Nature</p>
-            <Link to="/booking" className="inline-block bg-blue-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
+            <Link to="room-booking" className="inline-block bg-blue-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
             >
               Book Your Stay
             </Link>
@@ -55,7 +55,7 @@ const Home = () => {
                   <span className="bg-gray-100 px-3 py-1 rounded-full text-sm">Luxury Bath</span>
                 </div>
                 <Link 
-                  to="/booking"
+                  to="room-booking"
                   className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
                 >
                   Book Now
