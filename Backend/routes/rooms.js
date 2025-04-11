@@ -1,32 +1,22 @@
-import express from "express";
-import Room from "../models/Room.js";
-
+const express = require("express");
 const router = express.Router();
 
-// Get all rooms
-router.get("/", async (req, res) => {
-  try {
-    const rooms = await Room.find();
-    res.status(200).json(rooms);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch rooms", error });
+const rooms = [
+  { id: 1, name: "Deluxe Room", price: 100 },
+  { id: 2, name: "Suite", price: 200 },
+];
+
+router.get("/", (req, res) => {
+  res.json(rooms);
+});
+
+router.get("/:id", (req, res) => {
+  const room = rooms.find((r) => r.id === parseInt(req.params.id));
+  if (room) {
+    res.json(room);
+  } else {
+    res.status(404).json({ message: "Room not found" });
   }
 });
 
-// Add a new room
-router.post("/", async (req, res) => {
-  try {
-    const { name, price, image, description } = req.body;
-    if (!name || !price || !image || !description) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const newRoom = new Room({ name, price, image, description });
-    await newRoom.save();
-    res.status(201).json({ message: "Room added successfully!", room: newRoom });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to add room", error });
-  }
-});
-
-export default router;
+module.exports = router;

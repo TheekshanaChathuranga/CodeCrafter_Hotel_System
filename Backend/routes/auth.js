@@ -81,4 +81,18 @@ router.get('/verify', async (req, res) => {
   }
 });
 
+// Mock authentication
+router.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  if (username === "admin" && password === "password") {
+    return res.json({ token: "admin-token", role: "admin" });
+  }
+  res.status(401).json({ message: "Invalid credentials" });
+});
+
+router.post("/signup", (req, res) => {
+  // Handle user registration
+  res.json({ message: "User registered successfully" });
+});
+
 export default router;

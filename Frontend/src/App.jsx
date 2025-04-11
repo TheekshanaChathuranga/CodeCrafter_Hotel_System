@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 import Profile from "./pages/Profile";
 import RoomDetails from "./pages/RoomDetails";
@@ -19,15 +20,22 @@ import ManageRooms from "./pages/admin/ManageRooms";
 import ManagePools from "./pages/admin/ManagePools";
 import ProtectedRoute from "./components/protectedRoute";
 
-
 export default function App() {
+  const [rooms, setRooms] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/rooms")
+      .then(response => setRooms(response.data))
+      .catch(error => console.error("Error fetching rooms:", error));
+  }, []);
+
   return (
     <div>
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
 
-        <Route path="/rooms" element={<RoomsList />} />
+        <Route path="/rooms" element={<RoomsList rooms={rooms} />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/rooms/:id" element={<RoomDetails />} />
         <Route path="/booking" element={<BookingPage />} />
@@ -56,7 +64,5 @@ export default function App() {
       </Routes>
     </div>
   );
-};
-
-export default App;
+}
 

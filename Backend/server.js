@@ -43,20 +43,12 @@ mongoose
   });
 
 // Routes
-// app.use("/api/rooms", roomRoutes);
-
-// app.get("/api/health", (req, res) => {
-//   res.status(200).json({ status: "OK", message: "Server is running" });
-// });
-
 app.use('/api/auth', authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/pools", poolRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-
-
 });
-app.use('/api/bookings', bookingRoutes);
