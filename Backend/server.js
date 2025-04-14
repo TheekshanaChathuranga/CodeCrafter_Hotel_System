@@ -2,20 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-
-
+import roomRoutes from "./routes/rooms.js";
 import bookingRoutes from './routes/bookings.js';
-import authRoutes from "./routes/auth.js";
-import roomRoutes from "./routes/room.js";
-import poolRoutes from "./routes/pool.js";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
-
-// Convert __dirname for ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 
 dotenv.config();
 
@@ -43,12 +31,15 @@ mongoose
   });
 
 // Routes
-app.use('/api/auth', authRoutes);
 app.use("/api/rooms", roomRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use("/api/pools", poolRoutes);
-app.use('/api/bookings', bookingRoutes);
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+
+
 });
+app.use('/api/bookings', bookingRoutes);
