@@ -6,8 +6,10 @@ const About = () => {
   const navigate = useNavigate(); // Initialize navigate
 
   return (
-    <div className="p-4 md:p-8 bg-gray-100">
+    <div className="bg-white min-h-screen flex flex-col">
       <Navbar />
+    <div className="p-4 md:p-8 bg-gray-100">
+      
       <button
         onClick={() => navigate(-1)}
         className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
@@ -62,27 +64,28 @@ const About = () => {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <img
-            src="https://via.placeholder.com/300x200?text=Lake+View"
+            src="src/img/Pool1.jpeg"
             alt="Lake View"
             className="rounded shadow hover:scale-105 transition-transform duration-300"
           />
           <img
-            src="https://via.placeholder.com/300x200?text=Nature+Trail"
+            src="src/img/Pool1.jpeg"
             alt="Nature Trail"
             className="rounded shadow hover:scale-105 transition-transform duration-300"
           />
           <img
-            src="https://via.placeholder.com/300x200?text=Spa+Experience"
+            src="src/img/Pool1.jpeg"
             alt="Spa Experience"
             className="rounded shadow hover:scale-105 transition-transform duration-300"
           />
           <img
-            src="https://via.placeholder.com/300x200?text=Fine+Dining"
+            src="src/img/Pool1.jpeg"
             alt="Fine Dining"
             className="rounded shadow hover:scale-105 transition-transform duration-300"
           />
         </div>
       </div>
+    </div>
     </div>
   );
 };

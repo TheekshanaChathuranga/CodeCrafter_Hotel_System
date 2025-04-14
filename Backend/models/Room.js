@@ -60,7 +60,7 @@ const roomSchema = new mongoose.Schema({
 });
 
 // Add index for better performance
-roomSchema.index({ roomNumber: 1 }, { unique: true });
+//roomSchema.index({ roomNumber: 1 }, { unique: true });
 
 // Create and export the model
 const Room = mongoose.model("Room", roomSchema);
