@@ -283,9 +283,9 @@ const BookingPage = () => {
               <div className="mt-4 border-t pt-4">
                 <p className="font-medium text-blue-700">Payment Details:</p>
                 <p><span className="text-gray-600">Payment Type:</span> {paymentType === 'full' ? 'Full Payment' : paymentType === 'advance' ? 'Advance Payment' : 'No Payment'}</p>
-                <p><span className="text-gray-600">Advance Amount:</span> ₹{advanceAmount || 0}</p>
-                <p><span className="text-gray-600">Remaining Amount:</span> ₹{remainingAmount}</p>
-                <p className="font-semibold"><span className="text-gray-600">Total Amount:</span> ₹{totalAmount}</p>
+                <p><span className="text-gray-600">Advance Amount:</span> Rs.{advanceAmount || 0}</p>
+                <p><span className="text-gray-600">Remaining Amount:</span> Rs.{remainingAmount}</p>
+                <p className="font-semibold"><span className="text-gray-600">Total Amount:</span> Rs.{totalAmount}</p>
               </div>
             </div>
 
@@ -492,7 +492,7 @@ const BookingPage = () => {
 
                 {paymentType === "advance" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Advance Amount (₹)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Advance Amount (Rs)</label>
                     <input
                       type="number"
                       placeholder="Enter advance amount"
@@ -510,17 +510,17 @@ const BookingPage = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="font-medium text-blue-700">Total Amount:</p>
-                        <p className="text-lg font-semibold">₹{totalAmount}</p>
+                        <p className="text-lg font-semibold">Rs.{totalAmount}</p>
                       </div>
                       <div>
                         <p className="font-medium text-blue-700">Remaining Amount:</p>
-                        <p className="text-lg font-semibold">₹{remainingAmount}</p>
+                        <p className="text-lg font-semibold">RS.{remainingAmount}</p>
                       </div>
                     </div>
                     {paymentType === "advance" && advanceAmount > 0 && (
                       <div className="mt-2">
                         <p className="font-medium text-blue-700">Advance Paid:</p>
-                        <p className="text-lg font-semibold text-green-600">₹{advanceAmount}</p>
+                        <p className="text-lg font-semibold text-green-600">Rs.{advanceAmount}</p>
                       </div>
                     )}
                   </div>

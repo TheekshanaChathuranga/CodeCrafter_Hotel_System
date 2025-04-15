@@ -56,13 +56,13 @@ const ConfirmationPage = () => {
                   <div>
                     <p><span className="text-gray-600">Payment Type:</span> {paymentDetails.paymentType === 'full' ? 'Full Payment' : paymentDetails.paymentType === 'advance' ? 'Advance Payment' : 'Pay at Hotel'}</p>
                     {paymentDetails.advanceAmount > 0 && (
-                      <p><span className="text-gray-600">Advance Paid:</span> ₹{paymentDetails.advanceAmount}</p>
+                      <p><span className="text-gray-600">Advance Paid:</span> Rs{paymentDetails.advanceAmount}</p>
                     )}
                   </div>
                   <div>
-                    <p><span className="text-gray-600">Total Amount:</span> ₹{paymentDetails.totalAmount}</p>
+                    <p><span className="text-gray-600">Total Amount:</span> Rs{paymentDetails.totalAmount}</p>
                     {paymentDetails.paymentType === 'advance' && (
-                      <p><span className="text-gray-600">Remaining Amount:</span> ₹{paymentDetails.remainingAmount}</p>
+                      <p><span className="text-gray-600">Remaining Amount:</span> Rs{paymentDetails.remainingAmount}</p>
                     )}
                   </div>
                 </div>

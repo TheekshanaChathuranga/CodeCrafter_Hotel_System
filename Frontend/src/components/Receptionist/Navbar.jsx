@@ -61,7 +61,7 @@ export default function Navbar() {
         {/* Right Side - Navigation Links (Desktop) */}
         <div className="hidden sm:flex items-center space-x-2 md:space-x-4 lg:space-x-6">
           <NavLink to="/" text="Dashboard" />
-          <NavLink to="/room-booking" text="Room Reservations" />
+          <NavLink to="/bookings" text="Room Reservations" />
           <NavLink to="/view-bookings" text="Booking Calendar" />
           <NavLink to="/pool-booking" text="Pool Sessions" />
           <NavLink to="/pool-reservations" text="Pool Schedule" />
@@ -75,7 +75,7 @@ export default function Navbar() {
         <div className="sm:hidden bg-[#2c5282] mt-2 rounded-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <MobileNavLink to="/" text="Dashboard" toggleMenu={toggleMenu} />
-            <MobileNavLink to="/room-booking" text="Room Reservations" toggleMenu={toggleMenu} />
+            <MobileNavLink to="/bookings" text="Room Reservations" toggleMenu={toggleMenu} />
             <MobileNavLink to="/view-bookings" text="Booking Calendar" toggleMenu={toggleMenu} />
             <MobileNavLink to="/pool-booking" text="Pool Sessions" toggleMenu={toggleMenu} />
             <MobileNavLink to="/pool-reservations" text="Pool Schedule" toggleMenu={toggleMenu} />

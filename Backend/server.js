@@ -49,6 +49,8 @@ const bookingSchema = new mongoose.Schema({
 const Booking = mongoose.model('Booking', bookingSchema);
 
 // API Routes
+
+// Create new booking
 app.post('/api/bookings', async (req, res) => {
   try {
     const booking = new Booking({
@@ -82,6 +84,7 @@ app.post('/api/bookings', async (req, res) => {
   }
 });
 
+// Get all bookings
 app.get('/api/bookings', async (req, res) => {
   try {
     const bookings = await Booking.find().sort({ createdAt: -1 });
@@ -92,6 +95,53 @@ app.get('/api/bookings', async (req, res) => {
   }
 });
 
+// Get single booking
+app.get('/api/bookings/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json(booking);
+  } catch (error) {
+    console.error('Error fetching booking:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update booking status
+app.patch('/api/bookings/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    );
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json(booking);
+  } catch (error) {
+    console.error('Error updating booking:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete booking
+app.delete('/api/bookings/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndDelete(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json({ message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get available rooms
 app.get('/api/rooms/available', async (req, res) => {
   try {
     const { checkIn, checkOut } = req.query;
