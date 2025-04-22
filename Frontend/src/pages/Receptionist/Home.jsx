@@ -170,7 +170,7 @@ export default function Home() {
                       <p className="text-xs md:text-sm text-gray-500">Checked in by Guest {item}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs md:text-sm font-medium">${item}50/night</p>
+                      <p className="text-xs md:text-sm font-medium">Rs.{item}5000/night</p>
                       <p className="text-xxs md:text-xs text-gray-500">Today at {item}:00 PM</p>
                     </div>
                   </div>
