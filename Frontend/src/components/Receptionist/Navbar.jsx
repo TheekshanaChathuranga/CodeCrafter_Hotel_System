@@ -59,14 +59,18 @@ export default function Navbar() {
         </div>
 
         {/* Right Side - Navigation Links (Desktop) */}
-        <div className="hidden sm:flex items-center space-x-2 md:space-x-4 lg:space-x-6">
-          <NavLink to="/" text="Dashboard" />
-          <NavLink to="/bookings" text="Room Reservations" />
-          <NavLink to="/view-bookings" text="Booking Calendar" />
-          <NavLink to="/pool-booking" text="Pool Sessions" />
-          <NavLink to="/pool-reservations" text="Pool Schedule" />
-          
-          <ProfileAvatar navigate={navigate} />
+        <div className="hidden sm:flex items-center space-x-1 md:space-x-2 lg:space-x-3">
+          <div className="flex space-x-1 md:space-x-2 lg:space-x-3">
+            <NavLink to="/" text="Dashboard" />
+            <NavLink to="/booking" text="Room Booking" />
+            <NavLink to="/bookings" text="Room Reservations" />
+            <NavLink to="/calendar" text="Calendar" />
+            <NavLink to="/pool-bookings" text="Pool Booking" />
+            <NavLink to="/pool-reservations" text="Pool Schedule" />
+          </div>
+          <div className="ml-2 md:ml-4">
+            <ProfileAvatar navigate={navigate} />
+          </div>
         </div>
       </div>
 
@@ -75,10 +79,11 @@ export default function Navbar() {
         <div className="sm:hidden bg-[#2c5282] mt-2 rounded-lg">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <MobileNavLink to="/" text="Dashboard" toggleMenu={toggleMenu} />
+            <MobileNavLink to="/booking" text="Room Booking" toggleMenu={toggleMenu} />
             <MobileNavLink to="/bookings" text="Room Reservations" toggleMenu={toggleMenu} />
             <MobileNavLink to="/view-bookings" text="Booking Calendar" toggleMenu={toggleMenu} />
-            <MobileNavLink to="/pool-booking" text="Pool Sessions" toggleMenu={toggleMenu} />
-            <MobileNavLink to="/pool-reservations" text="Pool Schedule" toggleMenu={toggleMenu} />
+            <MobileNavLink to="/pool-bookings" text="Pool Booking" toggleMenu={toggleMenu} />
+            <MobileNavLink to="/pool-reservations" text="Pool Reservations" toggleMenu={toggleMenu} />
             
             <div className="flex items-center px-3 py-2">
               <ProfileAvatar navigate={navigate} />
@@ -96,7 +101,7 @@ function NavLink({ to, text }) {
   return (
     <Link 
       to={to} 
-      className="px-3 py-2 rounded-md text-sm font-medium bg-[#2c5282] hover:bg-[#4299e1] transition-colors whitespace-nowrap"
+      className="px-2 py-1 md:px-3 md:py-2 rounded-md text-xs md:text-sm font-medium bg-[#2c5282] hover:bg-[#4299e1] transition-colors whitespace-nowrap"
     >
       {text}
     </Link>
@@ -119,11 +124,11 @@ function MobileNavLink({ to, text, toggleMenu }) {
 // Reusable profile avatar component
 function ProfileAvatar({ navigate }) {
   return (
-    <div className="relative group ml-2 md:ml-4">
+    <div className="relative group">
       <img 
         src="/assets/receptionist-avatar.png" 
         alt="Receptionist Profile" 
-        className="w-10 h-10 rounded-full cursor-pointer border-2 border-[#4299e1] hover:border-[#ebf8ff] transition-colors"
+        className="w-8 h-8 md:w-10 md:h-10 rounded-full cursor-pointer border-2 border-[#4299e1] hover:border-[#ebf8ff] transition-colors"
         onClick={() => navigate("/receptionist-profile")}
       />
       <span className="absolute -bottom-2 right-0 bg-[#e53e3e] text-xs text-white px-1 rounded-full">Staff</span>
