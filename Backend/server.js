@@ -42,8 +42,9 @@ const bookingSchema = new mongoose.Schema({
     remainingAmount: { type: Number, default: 0 },
     totalAmount: { type: Number, required: true }
   },
-  status: { type: String, default: 'confirmed' },
-  createdAt: { type: Date, default: Date.now }
+  status: { type: String, default: 'confirmed', enum: ['confirmed', 'cancelled', 'checked-in', 'checked-out', 'no-show'] },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
 
 const Booking = mongoose.model('Booking', bookingSchema);
@@ -114,7 +115,10 @@ app.patch('/api/bookings/:id', async (req, res) => {
   try {
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
-      { status: req.body.status },
+      { 
+        status: req.body.status,
+        updatedAt: Date.now()
+      },
       { new: true }
     );
     if (!booking) {
@@ -146,8 +150,9 @@ app.get('/api/rooms/available', async (req, res) => {
   try {
     const { checkIn, checkOut } = req.query;
     
-    // Find rooms that are booked during the requested period
+    // Find rooms that are booked during the requested period and not cancelled or checked-out
     const bookedRooms = await Booking.find({
+      status: { $nin: ['cancelled', 'checked-out'] },
       $or: [
         { 
           'bookingDetails.checkIn': { $lt: new Date(checkOut) },

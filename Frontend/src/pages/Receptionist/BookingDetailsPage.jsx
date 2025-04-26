@@ -11,6 +11,10 @@ const BookingDetailsPage = () => {
   const [error, setError] = useState(null);
   const [status, setStatus] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusModalMessage, setStatusModalMessage] = useState('');
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -30,23 +34,41 @@ const BookingDetailsPage = () => {
 
   const handleStatusUpdate = async () => {
     try {
-      await axios.patch(`http://localhost:5000/api/bookings/${id}`, { status });
-      setBooking({ ...booking, status });
+      const response = await axios.patch(`http://localhost:5000/api/bookings/${id}`, { status });
+      setBooking({ ...booking, status, updatedAt: new Date() });
       setIsEditing(false);
+      
+      // Set appropriate success message based on status change
+      let message = '';
+      if (status === 'cancelled') {
+        message = 'Booking cancelled successfully. The room is now available for new bookings.';
+      } else if (status === 'checked-out') {
+        message = 'Checked out successfully. The room is now available for new bookings.';
+      } else {
+        message = `Booking status updated to ${status} successfully.`;
+      }
+      
+      setStatusModalMessage(message);
+      setShowStatusModal(true);
     } catch (err) {
       setError(err.message);
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this booking?')) {
-      try {
-        await axios.delete(`http://localhost:5000/api/bookings/${id}`);
-        navigate('/bookings');
-      } catch (err) {
-        setError(err.message);
-      }
+    try {
+      await axios.delete(`http://localhost:5000/api/bookings/${id}`);
+      navigate('/bookings', { state: { message: 'Booking deleted successfully' } });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setShowDeleteModal(false);
     }
+  };
+
+  const handleEditNavigation = () => {
+    setShowEditModal(false);
+    navigate(`/bookings/${id}/edit`);
   };
 
   const formatDate = (dateString) => {
@@ -81,6 +103,72 @@ const BookingDetailsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Confirm Deletion</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this booking? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Delete Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Confirmation Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Edit Booking</h3>
+            <p className="text-gray-600 mb-6">You are about to edit this booking. Do you want to proceed?</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditNavigation}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Edit Booking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Update Success Modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-green-600 mb-4">Success!</h3>
+            <p className="text-gray-600 mb-6">{statusModalMessage}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-blue-800">Booking Details</h1>
         <div className="flex space-x-2">
@@ -91,13 +179,13 @@ const BookingDetailsPage = () => {
             Back to Bookings
           </button>
           <button
-            onClick={() => navigate(`/bookings/${id}/edit`)}
+            onClick={() => setShowEditModal(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Edit Booking
           </button>
           <button
-            onClick={handleDelete}
+            onClick={() => setShowDeleteModal(true)}
             className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           >
             Delete Booking
@@ -249,16 +337,16 @@ const BookingDetailsPage = () => {
             </div>
           </div>
           
-          {booking.status === 'cancelled' && (
+          {booking.updatedAt && (
             <div className="flex items-start">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-500 flex items-center justify-center text-white">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-900">Booking Cancelled</p>
-                <p className="text-sm text-gray-500">N/A</p>
+                <p className="text-sm font-medium text-gray-900">Status Updated</p>
+                <p className="text-sm text-gray-500">{formatDate(booking.updatedAt)} - Changed to {booking.status}</p>
               </div>
             </div>
           )}

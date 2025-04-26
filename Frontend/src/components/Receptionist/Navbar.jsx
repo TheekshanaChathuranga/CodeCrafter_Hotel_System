@@ -16,7 +16,7 @@ export default function Navbar() {
         {/* Left Side - Hotel Logo/Name */}
         <div className="flex items-center space-x-2">
           <img 
-            src="/assets/hotel-icon.png" 
+            src="Frontend/src/assets/hotel-icon.png" 
             alt="Hotel Logo" 
             className="w-10 h-10"
           />
