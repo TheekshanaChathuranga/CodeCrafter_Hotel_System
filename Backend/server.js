@@ -1,9 +1,11 @@
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.js";
-import eventRoutes from "./routes/events.js";
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth.js';
+import eventRoutes from './routes/events.js';
+import validateEvent from './middleware/validateEvent.js';
+import errorHandler from './middleware/errorHandler.js';
 
 dotenv.config();
 
@@ -12,12 +14,7 @@ const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
 // Middleware
-app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 // Check if MONGODB_URI is defined
@@ -27,13 +24,9 @@ if (!MONGODB_URI) {
 }
 
 // Connect to MongoDB
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => console.log("MongoDB connected successfully"))
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  });
+mongoose.connect(MONGODB_URI)
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
 // app.use("/api/rooms", roomRoutes);
@@ -44,6 +37,9 @@ mongoose
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

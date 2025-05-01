@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Popup from "./Popup";
-
-const API_BASE_URL = "http://localhost:5000";
+import eventService from '../services/eventService';
 
 const EventList = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState({ message: "", type: "", showConfirm: false });
-  const [searchForm, setSearchForm] = useState({
-    name: "",
-    eventType: "",
-  });
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -21,48 +17,16 @@ const EventList = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/events`);
-      const fetchedEvents = response.data || [];
-      const sanitizedEvents = fetchedEvents.map((event) => ({
-        ...event,
-        phone1: event.phone1 || "Not provided",
-        phone2: event.phone2 || "Not provided",
-        tableData: event.tableData || [],
-        extraFields: event.extraFields || [],
-      }));
-      setEvents(sanitizedEvents);
-      setFilteredEvents(sanitizedEvents);
+      const data = await eventService.getAllEvents();
+      setEvents(data);
     } catch (error) {
-      console.error("Error fetching events:", error.message, error.response?.data);
-      setEvents([]);
-      setFilteredEvents([]);
-      setPopup({ message: `Failed to fetch events: ${error.message}`, type: "error", showConfirm: false });
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    const { name, value } = e.target;
-    setSearchForm({ ...searchForm, [name]: value });
-  };
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (!searchForm.name || !searchForm.eventType) {
-      setPopup({ message: "Please fill in both Name and Event Type!", type: "warning", showConfirm: false });
-      return;
-    }
-
-    const filtered = events.filter((event) => {
-      const nameMatch = event.name.toLowerCase().includes(searchForm.name.toLowerCase());
-      const eventTypeMatch = event.eventType.toLowerCase() === searchForm.eventType.toLowerCase();
-      return nameMatch && eventTypeMatch;
-    });
-
-    setFilteredEvents(filtered);
-    if (filtered.length === 0) {
-      setPopup({ message: "No matching events found.", type: "warning", showConfirm: false });
-    } else {
-      setPopup({ message: "Events filtered successfully!", type: "success", showConfirm: false });
+      setPopup({
+        message: `Error fetching events: ${error.message}`,
+        type: "error",
+        showConfirm: false,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,22 +34,23 @@ const EventList = () => {
     navigate("/event-booking", { state: { event } });
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (eventId) => {
     setPopup({
-      message: "Are you certain you wish to delete this event?",
+      message: "Are you sure you want to delete this event?",
       type: "confirm",
       showConfirm: true,
       onConfirm: async () => {
         try {
-          await axios.delete(`${API_BASE_URL}/api/events/${id}`);
-          const updatedEvents = events.filter((ev) => ev._id !== id);
-          setEvents(updatedEvents);
-          setFilteredEvents(updatedEvents);
-          setPopup({ message: "Event deleted successfully!", type: "success", showConfirm: false });
-        } catch (error) {
-          console.error("Error deleting event:", error.message, error.response?.data);
+          await eventService.deleteEvent(eventId);
+          setEvents(events.filter((event) => event._id !== eventId));
           setPopup({
-            message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
+            message: "Event deleted successfully!",
+            type: "success",
+            showConfirm: false,
+          });
+        } catch (error) {
+          setPopup({
+            message: `Error deleting event: ${error.message}`,
             type: "error",
             showConfirm: false,
           });
@@ -94,175 +59,252 @@ const EventList = () => {
     });
   };
 
+  const handleViewDetails = (event) => {
+    setSelectedEvent(event);
+    setShowDetails(true);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h2 className="text-3xl font-bold text-blue-600 mb-6 text-center">Your Events</h2>
-
-        <div className="mb-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-blue-600">Your Events</h1>
           <button
             onClick={() => navigate("/event-booking")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Back to Event Booking
+            Create New Event
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h3 className="text-xl font-semibold text-blue-600 mb-4">Search Events</h3>
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name:</label>
-              <input
-                type="text"
-                name="name"
-                value={searchForm.name}
-                onChange={handleSearchChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                placeholder="Enter name to search"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Event Type:</label>
-              <select
-                name="eventType"
-                value={searchForm.eventType}
-                onChange={handleSearchChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                required
-              >
-                <option value="">Select Event Type</option>
-                <option value="wedding">Wedding</option>
-                <option value="birthday">Birthday</option>
-                <option value="seminar">Seminar</option>
-                <option value="party">Party</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 w-full md:w-auto"
-              >
-                Search
-              </button>
-            </div>
-          </form>
-        </div>
-        <div className="space-y-6">
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <div key={event._id} className="bg-white rounded-lg shadow-lg p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-700"><strong>Name:</strong> {event.name}</p>
-                    <p className="text-sm font-medium text-gray-700"><strong>Phone Number:</strong> {event.phone1}</p>
-                    {event.phone2 !== "Not provided" && (
-                      <p className="text-sm font-medium text-gray-700"><strong>Additional Phone:</strong> {event.phone2}</p>
-                    )}
-                    <p className="text-sm font-medium text-gray-700"><strong>No of Guests:</strong> {event.noOfGuests}</p>
-                    <p className="text-sm font-medium text-gray-700"><strong>Event Type:</strong> {event.eventType}</p>
+        {events.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <p className="text-gray-600">No events found. Create your first event!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {events.map((event) => (
+              <div key={event._id} className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="p-6">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">{event.name}</h2>
+                  <div className="space-y-2 text-gray-600">
+                    <p><span className="font-medium">Event Type:</span> {event.eventType}</p>
+                    <p><span className="font-medium">Hall:</span> {event.hall}</p>
+                    <p><span className="font-medium">Guests:</span> {event.noOfGuests}</p>
+                    <p><span className="font-medium">Check-In:</span> {formatDate(event.checkIn)}</p>
+                    <p><span className="font-medium">Check-Out:</span> {formatDate(event.checkOut)}</p>
+                    <p><span className="font-medium">Total Amount:</span> Rs. {event.grandTotal.toFixed(2)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-700"><strong>Check-In:</strong> {new Date(event.checkIn).toLocaleDateString()}</p>
-                    <p className="text-sm font-medium text-gray-700"><strong>Check-Out:</strong> {new Date(event.checkOut).toLocaleDateString()}</p>
+                  <div className="mt-4 flex space-x-2">
+                    <button
+                      onClick={() => handleViewDetails(event)}
+                      className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={() => handleEdit(event)}
+                      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(event._id)}
+                      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
                   </div>
-                </div>
-                {event.notes && (
-                  <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-blue-600">Notes:</h3>
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{event.notes}</p>
-                  </div>
-                )}
-                <h3 className="text-lg font-semibold text-blue-600 mb-2">Food Items</h3>
-                <div className="overflow-x-auto mb-4">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-blue-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {event.tableData.map((row, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unit}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.quantity}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.rate}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <p className="text-sm font-medium text-blue-800"><strong>Total Amount:</strong> {event.totalAmount?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm font-medium text-blue-800"><strong>Service Charge:</strong> {event.serviceCharge?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm font-medium text-blue-800"><strong>Extra Amount:</strong> {event.extraAmount?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm font-medium text-blue-800"><strong>Grand Total:</strong> {event.grandTotal?.toFixed(2) || "0.00"}</p>
-                  <p className="text-sm font-medium text-blue-800"><strong>Grand Total Rate PP:</strong> {(event.noOfGuests > 0 ? event.grandTotal / event.noOfGuests : 0).toFixed(2)}</p>
-                </div>
-                <h3 className="text-lg font-semibold text-blue-600 mb-2">Extra Charges</h3>
-                <div className="overflow-x-auto mb-4">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-blue-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {event.extraFields.map((row, index) => (
-                        <tr key={index}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.unit}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.quantity}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.rate}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount?.toFixed(2) || "0.00"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex space-x-3 justify-end">
-                  <button
-                    onClick={() => handleEdit(event)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(event._id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200"
-                  >
-                    Delete
-                  </button>
                 </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-600">No events to display.</p>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-      <Popup
-        message={popup.message}
-        type={popup.type}
-        onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
-        onConfirm={popup.onConfirm}
-        showConfirm={popup.showConfirm}
-      />
+
+      {/* Event Details Modal */}
+      {showDetails && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Event Details - {selectedEvent.name}</h2>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Basic Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Name</p>
+                        <p className="font-medium">{selectedEvent.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Event Type</p>
+                        <p className="font-medium">{selectedEvent.eventType}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Hall</p>
+                        <p className="font-medium">{selectedEvent.hall}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">No of Guests</p>
+                        <p className="font-medium">{selectedEvent.noOfGuests}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Check-In</p>
+                        <p className="font-medium">{formatDate(selectedEvent.checkIn)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Check-Out</p>
+                        <p className="font-medium">{formatDate(selectedEvent.checkOut)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Contact Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Primary Phone</p>
+                        <p className="font-medium">{selectedEvent.phone1}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Secondary Phone</p>
+                        <p className="font-medium">{selectedEvent.phone2 || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium">{selectedEvent.email || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedEvent.notes && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-3 text-blue-600">Notes</h3>
+                      <p className="text-gray-600 whitespace-pre-wrap">{selectedEvent.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-6">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Food Items</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="px-4 py-2 text-left">Description</th>
+                            <th className="px-4 py-2 text-left">Unit</th>
+                            <th className="px-4 py-2 text-right">Quantity</th>
+                            <th className="px-4 py-2 text-right">Rate</th>
+                            <th className="px-4 py-2 text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedEvent.tableData.map((item, index) => (
+                            <tr key={index} className="border-b">
+                              <td className="px-4 py-2">{item.description}</td>
+                              <td className="px-4 py-2">{item.unit}</td>
+                              <td className="px-4 py-2 text-right">{item.quantity}</td>
+                              <td className="px-4 py-2 text-right">Rs. {item.rate.toFixed(2)}</td>
+                              <td className="px-4 py-2 text-right">Rs. {item.amount.toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {selectedEvent.extraFields && selectedEvent.extraFields.length > 0 && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-3 text-blue-600">Extra Items</h3>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="px-4 py-2 text-left">Description</th>
+                              <th className="px-4 py-2 text-left">Unit</th>
+                              <th className="px-4 py-2 text-right">Quantity</th>
+                              <th className="px-4 py-2 text-right">Rate</th>
+                              <th className="px-4 py-2 text-right">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedEvent.extraFields.map((item, index) => (
+                              <tr key={index} className="border-b">
+                                <td className="px-4 py-2">{item.description}</td>
+                                <td className="px-4 py-2">{item.unit}</td>
+                                <td className="px-4 py-2 text-right">{item.quantity}</td>
+                                <td className="px-4 py-2 text-right">Rs. {item.rate.toFixed(2)}</td>
+                                <td className="px-4 py-2 text-right">Rs. {item.amount.toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600">Summary</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Total Amount:</span>
+                        <span className="font-medium">Rs. {selectedEvent.totalAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Service Charge (10%):</span>
+                        <span className="font-medium">Rs. {selectedEvent.serviceCharge.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Extra Amount:</span>
+                        <span className="font-medium">Rs. {selectedEvent.extraAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="text-lg font-semibold text-gray-800">Grand Total:</span>
+                        <span className="text-lg font-semibold text-blue-600">Rs. {selectedEvent.grandTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {popup.message && (
+        <Popup
+          message={popup.message}
+          type={popup.type}
+          showConfirm={popup.showConfirm}
+          onConfirm={popup.onConfirm}
+          onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
+        />
+      )}
     </div>
   );
 };

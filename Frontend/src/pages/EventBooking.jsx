@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import Popup from "./Popup";
-
-const API_BASE_URL = "http://localhost:5000";
+import BookingForm from "../components/forms/BookingForm";
+import TableRow from "../components/events/TableRow";
+import ExtraRow from "../components/events/ExtraRow";
+import SummarySection from "../components/events/SummarySection";
+import eventService from "../services/eventService";
 
 const EventBooking = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ const EventBooking = () => {
     phone2: "",
     noOfGuests: 0,
     eventType: "",
+    hall: "",
     checkIn: "",
     checkOut: "",
     email: "",
@@ -35,7 +38,13 @@ const EventBooking = () => {
     "Desert Ice cream", "Cut Fruit"
   ];
 
-  const unitOptions = ["Unit", "KG", "Plate", "Glass", "Set"]; // Options for Unit dropdown
+  const unitOptions = ["Unit", "KG", "Plate", "Glass", "Set"];
+
+  const formatDateForSubmission = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  };
 
   useEffect(() => {
     if (location.state?.event) {
@@ -47,8 +56,9 @@ const EventBooking = () => {
         phone2: event.phone2 || "",
         noOfGuests: event.noOfGuests || 0,
         eventType: event.eventType || "",
-        checkIn: event.checkIn?.slice(0, 10) || "",
-        checkOut: event.checkOut?.slice(0, 10) || "",
+        hall: event.hall || "",
+        checkIn: event.checkIn ? formatDateForSubmission(event.checkIn) : "",
+        checkOut: event.checkOut ? formatDateForSubmission(event.checkOut) : "",
         email: event.email || "",
         notes: event.notes || "",
       });
@@ -150,31 +160,85 @@ const EventBooking = () => {
           const serviceCharge = totalAmount * 0.1;
           const grandTotal = totalAmount + serviceCharge + extraAmount;
 
+          // Format dates properly
+          const formattedCheckIn = formatDateForSubmission(formData.checkIn);
+          const formattedCheckOut = formatDateForSubmission(formData.checkOut);
+
+          // Validate dates
+          if (new Date(formattedCheckOut) <= new Date(formattedCheckIn)) {
+            setPopup({
+              message: "Check-out date must be after check-in date",
+              type: "error",
+              showConfirm: false,
+            });
+            return;
+          }
+
           const dataToSubmit = {
             ...formData,
-            tableData,
-            extraFields,
+            checkIn: formattedCheckIn,
+            checkOut: formattedCheckOut,
+            tableData: tableData.map(row => ({
+              description: row.description,
+              unit: row.unit,
+              quantity: Number(row.quantity),
+              rate: Number(row.rate),
+              amount: Number(row.amount)
+            })),
+            extraFields: extraFields.map(row => ({
+              description: row.description,
+              unit: row.unit,
+              quantity: Number(row.quantity),
+              rate: Number(row.rate),
+              amount: Number(row.amount)
+            })),
             totalAmount,
             serviceCharge,
             extraAmount,
             grandTotal,
           };
 
+          console.log("Submitting data:", dataToSubmit);
+
           if (editingEvent) {
-            await axios.put(`${API_BASE_URL}/api/events/${editingEvent._id}`, dataToSubmit);
-            setEditingEvent(null);
-            setPopup({ message: "Event updated successfully!", type: "success", showConfirm: false });
+            try {
+              await eventService.updateEvent(editingEvent._id, dataToSubmit);
+              setEditingEvent(null);
+              setPopup({ message: "Event updated successfully!", type: "success", showConfirm: false });
+            } catch (error) {
+              console.error("Error updating event:", error);
+              const errorMessage = error.response?.data?.errors?.join('\n') || error.response?.data?.message || "Error updating event. Please try again.";
+              setPopup({
+                message: errorMessage,
+                type: "error",
+                showConfirm: false,
+              });
+              return;
+            }
           } else {
-            await axios.post(`${API_BASE_URL}/api/events`, dataToSubmit);
-            setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
+            try {
+              await eventService.createEvent(dataToSubmit);
+              setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
+            } catch (error) {
+              console.error("Error creating event:", error);
+              const errorMessage = error.response?.data?.errors?.join('\n') || error.response?.data?.message || "Error submitting booking. Please try again.";
+              setPopup({
+                message: errorMessage,
+                type: "error",
+                showConfirm: false,
+              });
+              return;
+            }
           }
 
+          // Reset form
           setFormData({
             name: "",
             phone1: "",
             phone2: "",
             noOfGuests: 0,
             eventType: "",
+            hall: "",
             checkIn: "",
             checkOut: "",
             email: "",
@@ -183,9 +247,9 @@ const EventBooking = () => {
           setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
           setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
         } catch (error) {
-          console.error("Error submitting booking:", error.message, error.response?.data);
+          console.error("Error submitting booking:", error);
           setPopup({
-            message: `Something went wrong! ${error.message}${error.response?.data?.message ? `: ${error.response.data.message}` : ""}`,
+            message: error.response?.data?.message || "Error submitting booking. Please try again.",
             type: "error",
             showConfirm: false,
           });
@@ -206,191 +270,34 @@ const EventBooking = () => {
           {editingEvent ? "Edit Event" : "Book Your Event"}
         </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Name:</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.name ? "border-red-500" : ""}`}
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number 1:</label>
-              <input
-                type="tel"
-                name="phone1"
-                value={formData.phone1}
-                onChange={handleChange}
-                maxLength="10"
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.phone1 ? "border-red-500" : ""}`}
-              />
-              {errors.phone1 && <p className="text-red-500 text-xs mt-1">{errors.phone1}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number 2 (Optional):</label>
-              <input
-                type="tel"
-                name="phone2"
-                value={formData.phone2}
-                onChange={handleChange}
-                maxLength="10"
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.phone2 ? "border-red-500" : ""}`}
-              />
-              {errors.phone2 && <p className="text-red-500 text-xs mt-1">{errors.phone2}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">No of Guests:</label>
-              <input
-                type="number"
-                name="noOfGuests"
-                value={formData.noOfGuests}
-                onChange={handleChange}
-                min="1"
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.noOfGuests ? "border-red-500" : ""}`}
-              />
-              {errors.noOfGuests && <p className="text-red-500 text-xs mt-1">{errors.noOfGuests}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Event Type:</label>
-              <select
-                name="eventType"
-                value={formData.eventType}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.eventType ? "border-red-500" : ""}`}
-              >
-                <option value="">Select Event Type</option>
-                <option value="wedding">Wedding</option>
-                <option value="birthday">Birthday</option>
-                <option value="seminar">Seminar</option>
-                <option value="party">Party</option>
-              </select>
-              {errors.eventType && <p className="text-red-500 text-xs mt-1">{errors.eventType}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Check-In:</label>
-              <input
-                type="date"
-                name="checkIn"
-                value={formData.checkIn}
-                onChange={handleChange}
-                min={new Date().toISOString().split("T")[0]}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.checkIn ? "border-red-500" : ""}`}
-              />
-              {errors.checkIn && <p className="text-red-500 text-xs mt-1">{errors.checkIn}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Check-Out:</label>
-              <input
-                type="date"
-                name="checkOut"
-                value={formData.checkOut}
-                onChange={handleChange}
-                min={formData.checkIn || new Date().toISOString().split("T")[0]}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.checkOut ? "border-red-500" : ""}`}
-              />
-              {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>}
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Email (Optional):</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.email ? "border-red-500" : ""}`}
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">Add Notes (Optional):</label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 h-32 resize-y"
-                placeholder="e.g., Special requests, additional details, or instructions"
-              />
-            </div>
-          </div>
+          <BookingForm formData={formData} errors={errors} handleChange={handleChange} />
 
-          <div>
-            <h2 className="text-xl font-semibold text-blue-600 mb-4">Add Food Items</h2>
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">Food Items</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-blue-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-2">No</th>
+                    <th className="px-4 py-2">Description</th>
+                    <th className="px-4 py-2">Unit</th>
+                    <th className="px-4 py-2">Quantity</th>
+                    <th className="px-4 py-2">Rate</th>
+                    <th className="px-4 py-2">Amount</th>
+                    <th className="px-4 py-2">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {tableData.map((row, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={row.description}
-                          onChange={(e) => handleTableChange(index, "description", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                        >
-                          <option value="">Select Food Item</option>
-                          {foodOptions.map((option, i) => (
-                            <option key={i} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={row.unit}
-                          onChange={(e) => handleTableChange(index, "unit", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                        >
-                          <option value="">Select Unit</option>
-                          {unitOptions.map((option, i) => (
-                            <option key={i} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={row.quantity}
-                          onChange={(e) => handleTableChange(index, "quantity", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 100"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={row.rate}
-                          onChange={(e) => handleTableChange(index, "rate", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 650.00"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => removeRow(index)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition duration-200"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
+                    <TableRow
+                      key={index}
+                      row={row}
+                      index={index}
+                      foodOptions={foodOptions}
+                      unitOptions={unitOptions}
+                      handleTableChange={handleTableChange}
+                      removeRow={removeRow}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -398,91 +305,37 @@ const EventBooking = () => {
             <button
               type="button"
               onClick={addRow}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Add Row
             </button>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-md">
-            <p className="text-lg font-semibold text-blue-800">Total Amount: {totalAmount.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Service Charge (10%): {serviceCharge.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Extra Amount: {extraAmount.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Grand Total: {grandTotal.toFixed(2)}</p>
-            <p className="text-lg font-semibold text-blue-800">Grand Total Rate PP: {(formData.noOfGuests > 0 ? grandTotal / formData.noOfGuests : 0).toFixed(2)}</p>
-          </div>
-
-          <div>
-            <h2 className="text-xl font-semibold text-blue-600 mb-4">Extra Charges</h2>
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4">Extra Items</h3>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-blue-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="px-4 py-2">No</th>
+                    <th className="px-4 py-2">Description</th>
+                    <th className="px-4 py-2">Unit</th>
+                    <th className="px-4 py-2">Quantity</th>
+                    <th className="px-4 py-2">Rate</th>
+                    <th className="px-4 py-2">Amount</th>
+                    <th className="px-4 py-2">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {extraFields.map((row, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.no}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={row.description}
-                          onChange={(e) => handleExtraChange(index, "description", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., Additional Lighting Setup"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={row.unit}
-                          onChange={(e) => handleExtraChange(index, "unit", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                        >
-                          <option value="">Select Unit</option>
-                          {unitOptions.map((option, i) => (
-                            <option key={i} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={row.quantity}
-                          onChange={(e) => handleExtraChange(index, "quantity", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 2"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={row.rate}
-                          onChange={(e) => handleExtraChange(index, "rate", e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-                          placeholder="e.g., 3000.00"
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.amount.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => removeExtraRow(index)}
-                          className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition duration-200"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
+                    <ExtraRow
+                      key={index}
+                      row={row}
+                      index={index}
+                      unitOptions={unitOptions}
+                      handleExtraChange={handleExtraChange}
+                      removeExtraRow={removeExtraRow}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -490,60 +343,45 @@ const EventBooking = () => {
             <button
               type="button"
               onClick={addExtraRow}
-              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Add Extra Row
             </button>
           </div>
 
-          <div className="flex space-x-3 justify-end">
-            <button
-              type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
-            >
-              {editingEvent ? "Update Booking" : "Submit Booking"}
-            </button>
-            {editingEvent && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingEvent(null);
-                  setFormData({
-                    name: "",
-                    phone1: "",
-                    phone2: "",
-                    noOfGuests: 0,
-                    eventType: "",
-                    checkIn: "",
-                    checkOut: "",
-                    email: "",
-                    notes: "",
-                  });
-                  setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-                  setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-                }}
-                className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-200"
-              >
-                Cancel Edit
-              </button>
-            )}
+          <SummarySection
+            totalAmount={totalAmount}
+            serviceCharge={serviceCharge}
+            extraAmount={extraAmount}
+            grandTotal={grandTotal}
+          />
+
+          <div className="flex justify-end space-x-4 mt-8">
             <button
               type="button"
-              onClick={() => navigate("/event-list")}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200"
+              onClick={() => navigate(-1)}
+              className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
             >
-              View Your Events
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              {editingEvent ? "Update Event" : "Submit Booking"}
             </button>
           </div>
         </form>
       </div>
-      <Popup
-        message={popup.message}
-        type={popup.type}
-        onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
-        onConfirm={popup.onConfirm}
-        showConfirm={popup.showConfirm}
-      />
+      {popup.message && (
+        <Popup
+          message={popup.message}
+          type={popup.type}
+          showConfirm={popup.showConfirm}
+          onConfirm={popup.onConfirm}
+          onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
+        />
+      )}
     </div>
   );
 };
