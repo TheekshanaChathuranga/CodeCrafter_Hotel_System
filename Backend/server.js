@@ -6,8 +6,8 @@ import dotenv from "dotenv";
 
 import bookingRoutes from './routes/bookings.js';
 import authRoutes from "./routes/auth.js";
-import roomRoutes from "./routes/room.js";
-import poolRoutes from "./routes/pool.js";
+import roomRoutes from "./routes/manageRoom.js";
+import poolRoutes from "./routes/managePool.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";

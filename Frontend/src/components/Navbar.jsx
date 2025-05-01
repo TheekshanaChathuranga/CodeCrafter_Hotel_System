@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 import React from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
+=======
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/UserAuthContext';
+>>>>>>> c14f77bbefb760989602ec8c9898b5b7c2ec0e2d
 
 export default function Navbar() {
   const navigate = useNavigate();

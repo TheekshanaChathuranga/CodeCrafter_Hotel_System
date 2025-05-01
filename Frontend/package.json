@@ -19,7 +19,11 @@
 
     "framer-motion": "^12.6.3",
     "lucide-react": "^0.485.0",
+<<<<<<< HEAD
 
+=======
+    "notistack": "^3.0.2",
+>>>>>>> c14f77bbefb760989602ec8c9898b5b7c2ec0e2d
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",

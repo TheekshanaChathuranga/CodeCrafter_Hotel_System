@@ -43,7 +43,6 @@ export const verifyToken = async (token) => {
     const response = await axios.get(`${API_URL}/auth/verify`, {
       headers: { Authorization: `Bearer ${token}` }
     });
-    console.log("menn verification response data:", response.data); // Debugging line
     return response.data.user;
   } catch (error) {
     throw error.response?.data?.message || 'Token verification failed';
