@@ -3,26 +3,88 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
 import { motion } from "framer-motion";
 import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
-import { SnackbarProvider, useSnackbar } from 'notistack'
+import { useSnackbar } from 'notistack';
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!email.trim()) {
+      newErrors.email = "Please enter your email.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    
+    if (!password.trim()) {
+      newErrors.password = "Please enter your password.";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
+    setErrors({}); // Clear previous errors
     
     try {
-      await login({ email, password });
-      enqueueSnackbar("Login successful!", { variant: "success" });
-      navigate("/");
+      const response = await login({ email, password });
+      
+      if (response.success) {
+        console.log("in login jsx"+response.success);
+        enqueueSnackbar("Login successful!", { variant: "success" });
+        navigate("/admin");
+      } else {
+        throw new Error("Authentication failed - no token received");
+      }
     } catch (error) {
-      enqueueSnackbar(error.message || "Login failed", { variant: "error" });
+      console.error("Login error:", error);
+      
+      // Default error message
+      let errorMessage = "Login failed";
+      let fieldErrors = {};
+      
+      // Check if this is an axios error with response
+      if (error.response) {
+        // Handle different status codes
+        switch (error.response.status) {
+          case 400:
+            errorMessage = "Incorrect email or password";
+            fieldErrors = {
+              email: errorMessage,
+              password: errorMessage
+            };
+            break;
+          case 404:
+            errorMessage = "No account found with this email";
+            fieldErrors = { email: errorMessage };
+            break;
+          case 401:
+            errorMessage = "Account disabled. Please contact support";
+            fieldErrors = { email: errorMessage };
+            break;
+          default:
+            errorMessage = error.response.data?.message || "Login failed";
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Update state with errors
+      setErrors(fieldErrors);
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -57,15 +119,22 @@ const Login = () => {
                     <FiMail className="text-gray-400" />
                   </div>
                   <input
-                    type="email"
+                    type="text"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors({...errors, email: ""});
+                    }}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="your@email.com"
-                    required
                     style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -79,13 +148,20 @@ const Login = () => {
                   <input
                     type="password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrors({...errors, password: ""});
+                    }}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="••••••••"
-                    required
                     style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
+                {errors.password && (
+                  <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                )}
               </div>
             </div>
 
@@ -135,7 +211,6 @@ const Login = () => {
               )}
             </motion.button>
           </form>
-
           <div className="px-8 py-4 text-center" style={{ backgroundColor: "#ECF0F1" }}>
             <p className="text-sm" style={{ color: "#333333" }}>
               Don't have an account?{" "}

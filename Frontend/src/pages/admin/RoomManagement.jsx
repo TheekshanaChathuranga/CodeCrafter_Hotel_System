@@ -6,7 +6,7 @@ import RoomList from "../../components/admin/RoomList";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { FiPlus } from "react-icons/fi";
 import ErrorDisplay from "../../components/ErrorDisplay";
-import { SnackbarProvider, useSnackbar } from 'notistack'
+import { SnackbarProvider, useSnackbar } from 'notistack';
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
@@ -23,7 +23,7 @@ const RoomManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState({});
   const [loading, setLoading] = useState(false);
   const [deletedImages, setDeletedImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
@@ -39,7 +39,7 @@ const RoomManagement = () => {
       const response = await axios.get("http://localhost:5000/api/rooms");
       setRooms(response.data);
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to fetch rooms");
+      setError({ general: error.response?.data?.error || "Failed to fetch rooms" });
     } finally {
       setLoading(false);
     }
@@ -48,27 +48,41 @@ const RoomManagement = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
-    setError("");
+    // Clear specific error when field changes
+    if (error[name]) {
+      setError(prev => {
+        const newError = { ...prev };
+        delete newError[name];
+        return newError;
+      });
+    }
   };
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+    const newErrors = {};
     
     const validFiles = files.filter(file => {
       const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        setError(`Invalid file type: ${file.name}. Only JPG, PNG, and WEBP are allowed.`);
+        newErrors.images = `Invalid file type: ${file.name}. Only JPG, PNG, and WEBP are allowed.`;
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        setError(`File too large: ${file.name}. Maximum size is 5MB.`);
+        newErrors.images = `File too large: ${file.name}. Maximum size is 5MB.`;
         return false;
       }
       return true;
     });
 
     if (validFiles.length + form.images.length > 3) {
-      setError("Maximum 3 images allowed");
+      newErrors.images = "Maximum 3 images allowed";
+      setError(prev => ({ ...prev, ...newErrors }));
+      return;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setError(prev => ({ ...prev, ...newErrors }));
       return;
     }
 
@@ -93,24 +107,57 @@ const RoomManagement = () => {
     
     setPreviewImages(newPreviews);
     setForm({...form, images: newImages});
+    
+    // Clear image errors when removing images
+    if (error.images) {
+      setError(prev => {
+        const newError = { ...prev };
+        delete newError.images;
+        return newError;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError({});
     setLoading(true);
-
-    if (!form.roomNumber || !form.type || !form.acOption || !form.pricePerNight || !form.pricePerDay || !form.description) {
-      setError("All fields are required");
-      setLoading(false);
-      return;
-    }
-
-    const numericPricePerNight = parseFloat(form.pricePerNight);
-    const numericPricePerDay = parseFloat(form.pricePerDay);
+  
+    // Basic validation
+    const errors = {};
     
-    if (isNaN(numericPricePerNight) || numericPricePerNight < 0 || isNaN(numericPricePerDay) || numericPricePerDay < 0) {
-      setError("Prices must be valid positive numbers");
+    if (!form.roomNumber.trim()) {
+      errors.roomNumber = "Room number is required";
+    }
+  
+    if (!form.type) {
+      errors.type = "Room type is required";
+    }
+  
+    if (!form.acOption) {
+      errors.acOption = "AC option is required";
+    }
+  
+    const numericPricePerNight = parseFloat(form.pricePerNight);
+    if (isNaN(numericPricePerNight)) {
+      errors.pricePerNight = "Price must be a valid number";
+    } else if (numericPricePerNight < 0) {
+      errors.pricePerNight = "Price cannot be negative";
+    }
+  
+    const numericPricePerDay = parseFloat(form.pricePerDay);
+    if (isNaN(numericPricePerDay)) {
+      errors.pricePerDay = "Price must be a valid number";
+    } else if (numericPricePerDay < 0) {
+      errors.pricePerDay = "Price cannot be negative";
+    }
+  
+    if (!form.description.trim()) {
+      errors.description = "Description is required";
+    }
+  
+    if (Object.keys(errors).length > 0) {
+      setError(errors);
       setLoading(false);
       return;
     }
@@ -128,7 +175,6 @@ const RoomManagement = () => {
       
       form.images.forEach((image) => {
         formData.append("images", image);
-        enqueueSnackbar("Login successful!", { variant: "success" });
       });
 
       if (isEditing) {
@@ -137,23 +183,27 @@ const RoomManagement = () => {
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        enqueueSnackbar("Room updated successfully", {variant: "success",});
-
+        enqueueSnackbar("Room updated successfully", { variant: "success" });
       } else {
         await axios.post(
           "http://localhost:5000/api/rooms/add",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        enqueueSnackbar("Room added successfully", {variant: "success",});
+        enqueueSnackbar("Room added successfully", { variant: "success" });
       }
 
       fetchRooms();
       resetForm();
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to save room");
+      const serverErrors = error.response?.data?.errors || {};
+      if (Object.keys(serverErrors).length > 0) {
+        setError(serverErrors);
+      } else {
+        setError({ general: error.response?.data?.error || "Failed to save room" });
+      }
       console.error("Error saving room:", error);
-      enqueueSnackbar("Failed to save room", { variant: "error" });
+      enqueueSnackbar(error.response?.data?.error || "Failed to save room", { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -174,6 +224,7 @@ const RoomManagement = () => {
     setPreviewImages(room.images.map(img => `http://localhost:5000${img}`));
     setShowForm(true);
     setIsEditing(true);
+    setError({});
   };
 
   const handleDelete = async () => {
@@ -184,14 +235,13 @@ const RoomManagement = () => {
     try {
       setLoading(true);
       await axios.delete(`http://localhost:5000/api/rooms/delete/${selectedRoom._id}`);
-      enqueueSnackbar("Room deleted successfully", {variant: "success",});
+      enqueueSnackbar("Room deleted successfully", { variant: "success" });
       fetchRooms();
       resetForm();
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to delete room");
+      setError({ general: error.response?.data?.error || "Failed to delete room" });
       console.error("Error deleting room:", error);
-      enqueueSnackbar("Failed to delete room", { variant: "error" });
-
+      enqueueSnackbar(error.response?.data?.error || "Failed to delete room", { variant: "error" });
     } finally {
       setLoading(false);
     }
@@ -205,7 +255,7 @@ const RoomManagement = () => {
       pricePerDay: "",
       description: "",
       acOption: "",
-      status: "Available",
+      roomStatus: "Available",
       images: []
     });
     setPreviewImages([]);
@@ -213,7 +263,7 @@ const RoomManagement = () => {
     setSelectedRoom(null);
     setIsEditing(false);
     setShowForm(false);
-    setError("");
+    setError({});
   };
 
   return (
@@ -231,7 +281,7 @@ const RoomManagement = () => {
         </button>
       </div>
 
-      <ErrorDisplay error={error} />
+      <ErrorDisplay error={error.general} />
       
       {loading && !showForm && <LoadingSpinner />}
 
@@ -247,6 +297,7 @@ const RoomManagement = () => {
           onImageChange={handleImageChange}
           onRemoveImage={removeImage}
           onDelete={handleDelete}
+          error={error}
         />
       )}
 

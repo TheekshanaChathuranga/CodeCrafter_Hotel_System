@@ -12,7 +12,8 @@ const RoomForm = ({
   onChange,
   onImageChange,
   onRemoveImage,
-  onDelete
+  onDelete,
+  error = {} // Default to empty object if no errors
 }) => {
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">
@@ -25,13 +26,22 @@ const RoomForm = ({
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
+              aria-label="Close form"
             >
               <FiX size={24} />
             </button>
           </div>
 
+          {/* General error message */}
+          {error.general && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+              {error.general}
+            </div>
+          )}
+
           <form onSubmit={onSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Room Number */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Room Number *
@@ -41,11 +51,16 @@ const RoomForm = ({
                   value={form.roomNumber}
                   onChange={onChange}
                   placeholder="101"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  className={`w-full px-3 py-2 border ${
+                    error.roomNumber ? 'border-red-500' : 'border-gray-300'
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
+                {error.roomNumber && (
+                  <p className="mt-1 text-sm text-red-600">{error.roomNumber}</p>
+                )}
               </div>
 
+              {/* Room Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Room Type *
@@ -54,16 +69,22 @@ const RoomForm = ({
                   name="type"
                   value={form.type}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  className={`w-full px-3 py-2 border ${
+                    error.type ? 'border-red-500' : 'border-gray-300'
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
                   <option value="">Select Type</option>
                   <option value="Single">Single</option>
                   <option value="Double">Double</option>
                   <option value="Triple">Triple</option>
+                  <option value="Suite">Suite</option>
                 </select>
+                {error.type && (
+                  <p className="mt-1 text-sm text-red-600">{error.type}</p>
+                )}
               </div>
 
+              {/* AC Option */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   AC Option *
@@ -72,16 +93,21 @@ const RoomForm = ({
                   name="acOption"
                   value={form.acOption}
                   onChange={onChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                  className={`w-full px-3 py-2 border ${
+                    error.acOption ? 'border-red-500' : 'border-gray-300'
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
                   <option value="">Select Option</option>
                   <option value="AC">AC Only</option>
                   <option value="Non-AC">Non-AC Only</option>
                   <option value="Both">Flexible (Can be AC or Non-AC)</option>
                 </select>
+                {error.acOption && (
+                  <p className="mt-1 text-sm text-red-600">{error.acOption}</p>
+                )}
               </div>
 
+              {/* Price Per Night */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Price (per night) *
@@ -98,12 +124,17 @@ const RoomForm = ({
                     value={form.pricePerNight}
                     onChange={onChange}
                     placeholder="100.00"
-                    className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    className={`block w-full pl-12 pr-3 py-2 border ${
+                      error.pricePerNight ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
+                {error.pricePerNight && (
+                  <p className="mt-1 text-sm text-red-600">{error.pricePerNight}</p>
+                )}
               </div>
 
+              {/* Price Per Day */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Price (per day) *
@@ -120,14 +151,21 @@ const RoomForm = ({
                     value={form.pricePerDay}
                     onChange={onChange}
                     placeholder="100.00"
-                    className="block w-full pl-12 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    className={`block w-full pl-12 pr-3 py-2 border ${
+                      error.pricePerDay ? 'border-red-500' : 'border-gray-300'
+                    } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
+                {error.pricePerDay && (
+                  <p className="mt-1 text-sm text-red-600">{error.pricePerDay}</p>
+                )}
               </div>
 
+              {/* Room Status */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Room Status *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Room Status *
+                </label>
                 <div className="flex items-center space-x-4">
                   <label className="inline-flex items-center">
                     <input
@@ -152,9 +190,13 @@ const RoomForm = ({
                     <span className="ml-2 text-gray-700">Not Available</span>
                   </label>
                 </div>
+                {error.roomStatus && (
+                  <p className="mt-1 text-sm text-red-600">{error.roomStatus}</p>
+                )}
               </div>
             </div>
 
+            {/* Description */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Description *
@@ -165,24 +207,39 @@ const RoomForm = ({
                 onChange={onChange}
                 rows="3"
                 placeholder="Room features and details..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                className={`w-full px-3 py-2 border ${
+                  error.description ? 'border-red-500' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
+              {error.description && (
+                <p className="mt-1 text-sm text-red-600">{error.description}</p>
+              )}
             </div>
 
-            <ImageUploader 
-              previewImages={previewImages}
-              onImageChange={onImageChange}
-              onRemoveImage={onRemoveImage}
-            />
+            {/* Image Uploader */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Room Images (Max 3)
+              </label>
+              <ImageUploader 
+                previewImages={previewImages}
+                onImageChange={onImageChange}
+                onRemoveImage={onRemoveImage}
+              />
+              {error.images && (
+                <p className="mt-1 text-sm text-red-600">{error.images}</p>
+              )}
+            </div>
 
+            {/* Form Actions */}
             <div className="flex justify-end space-x-3">
               {isEditing && (
                 <button
                   type="button"
                   onClick={onDelete}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center"
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center disabled:opacity-50"
                   disabled={loading}
+                  aria-label="Delete room"
                 >
                   <FiTrash2 className="mr-2" /> Delete
                 </button>
@@ -190,15 +247,17 @@ const RoomForm = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#ECF0F1] text-[#333333] rounded-md hover:bg-[#BDC3C7]"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
                 disabled={loading}
+                aria-label="Cancel"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75]"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center disabled:opacity-50"
                 disabled={loading}
+                aria-label={isEditing ? "Update room" : "Save room"}
               >
                 {loading ? (
                   <>
@@ -209,9 +268,7 @@ const RoomForm = ({
                     {isEditing ? "Updating..." : "Saving..."}
                   </>
                 ) : (
-                  <>
-                    {isEditing ? "Update Room" : "Save Room"}
-                  </>
+                  isEditing ? "Update Room" : "Save Room"
                 )}
               </button>
             </div>

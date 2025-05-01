@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom"; // Removed Router import
+import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -10,12 +10,16 @@ import AdminLayout from "./layout/adminLayout";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
 import ProtectedRoute from "./components/protectedRoute";
-
+import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 
 const App = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+
   return (
     <div>
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -35,8 +39,8 @@ const App = () => {
           <Route index element={<ManageRooms />} />
           <Route path="rooms" element={<ManageRooms />} />
           <Route path="pools" element={<ManagePools />} />
+          <Route path="reservations" element={<ReservationCalendar />} />
         </Route>
-        
       </Routes>
     </div>
   );

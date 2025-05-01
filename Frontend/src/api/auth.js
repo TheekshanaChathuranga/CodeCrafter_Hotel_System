@@ -2,15 +2,17 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+
 export const login = async (credentials) => {
   try {
     const response = await axios.post(`${API_URL}/auth/login`, credentials);
-    console.log("Login response:", response.data); // Debugging line
     return response.data;
   } catch (error) {
-    throw error.response?.data?.message || 'Login failed';
+    // Properly re-throw the full Axios error object
+    throw error;
   }
 };
+
 
 export const signup = async (userData) => {
   try {

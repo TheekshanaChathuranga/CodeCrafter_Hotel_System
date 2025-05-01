@@ -3,33 +3,107 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
 import { motion } from "framer-motion";
 import { FiUser, FiMail, FiLock, FiLogIn } from "react-icons/fi";
-import { SnackbarProvider, useSnackbar } from 'notistack'
+import { useSnackbar } from 'notistack';
 
 const Signup = () => {
-  const [username, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    agreeTerms: false
+  });
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Now uses return instead of throw
-    const result = await signup({ username, email, password });
-    console.log("Final result:", result);
-  
-    if (result.success) {
-      enqueueSnackbar("Account created successfully!", { variant: "success" });
-      navigate("/login");
-    } else {
-      enqueueSnackbar(result.message || "Signup failed", { variant: "error" });
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Full name is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Name must be at least 3 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (!passwordRegex.test(formData.password)) {
+      newErrors.password = "Password must be 8+ chars with letters and numbers";
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
     
-    setIsLoading(false);
+
+    if (!formData.agreeTerms) {
+      newErrors.agreeTerms = "You must agree to the terms";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await signup({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (result.success) {
+        enqueueSnackbar("Account created successfully!", { variant: "success" });
+        navigate("/login");
+      } else {
+        // Handle backend validation errors
+        if (result.message.includes("email")) {
+          setErrors({ email: result.message });
+        } else if (result.message.includes("password")) {
+          setErrors({ password: result.message });
+        }
+        enqueueSnackbar(result.message, { variant: "error" });
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      enqueueSnackbar("Registration failed. Please try again.", { variant: "error" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,83 +125,138 @@ const Signup = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            {errors.general && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+                <p>{errors.general}</p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
-                  Full Name
+                  Full Name *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiUser className="text-gray-400" />
                   </div>
                   <input
+                    name="username"
                     type="text"
-                    value={username}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={formData.username}
+                    onChange={handleChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors.username ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="John Doe"
-                    required
                     style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
+                {errors.username && (
+                  <p className="mt-1 text-xs text-red-500">{errors.username}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
-                  Email Address
+                  Email Address *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiMail className="text-gray-400" />
                   </div>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    name="email"
+                    type="text"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="your@email.com"
-                    required
                     style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
-                  Password
+                  Password *
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FiLock className="text-gray-400" />
                   </div>
                   <input
+                    name="password"
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    }`}
                     placeholder="••••••••"
-                    required
                     style={{ backgroundColor: "#ECF0F1" }}
                   />
                 </div>
-                <p className="mt-1 text-xs" style={{ color: "#333333" }}>
-                  Use 8 or more characters with a mix of letters, numbers & symbols
-                </p>
+                {errors.password ? (
+                  <p className="mt-1 text-xs text-red-500">{errors.password}</p>
+                ) : (
+                  <p className="mt-1 text-xs" style={{ color: "#333333" }}>
+                    Minimum 8 characters with letters and numbers
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                className="h-4 w-4 focus:ring-blue-500 border-gray-300 rounded"
-                required
-                style={{ color: "#16A085" }}
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm" style={{ color: "#333333" }}>
-                I agree to the <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Terms</a> and <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Privacy Policy</a>
+            <div>
+              <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
+                Confirm Password *
               </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiLock className="text-gray-400" />
+                </div>
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="••••••••"
+                  style={{ backgroundColor: "#ECF0F1" }}
+                />
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>
+              )}
+          </div>
+
+            <div className="flex items-start">
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  name="agreeTerms"
+                  type="checkbox"
+                  checked={formData.agreeTerms}
+                  onChange={handleChange}
+                  className="h-4 w-4 focus:ring-blue-500 border-gray-300 rounded"
+                  style={{ color: "#16A085" }}
+                />
+              </div>
+              <div className="ml-3">
+                <label htmlFor="terms" className="block text-sm" style={{ color: "#333333" }}>
+                  I agree to the <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Terms</a> and <a href="#" className="hover:underline" style={{ color: "#16A085" }}>Privacy Policy</a>
+                </label>
+                {errors.agreeTerms && (
+                  <p className="mt-1 text-xs text-red-500">{errors.agreeTerms}</p>
+                )}
+              </div>
             </div>
 
             <motion.button
