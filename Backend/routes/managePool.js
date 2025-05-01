@@ -157,6 +157,7 @@ router.put('/update/:id',
 // Delete pool
 router.delete('/delete/:id', async (req, res) => {
   try {
+    console.log("Deleting pool with ID:", req.params.id); 
     const pool = await Pool.findByIdAndDelete(req.params.id);
     if (!pool) {
       return res.status(404).json({ error: 'Pool not found' });

@@ -3,6 +3,7 @@ import { FiX, FiTrash2, FiClock } from 'react-icons/fi';
 import ImageUploader from './ImageUploader';
 import TimeInput from './TimeInput';
 
+
 const PoolForm = ({
   form,
   isEditing,
@@ -14,7 +15,8 @@ const PoolForm = ({
   onTimeChange,
   onImageChange,
   onRemoveImage,
-  onDelete
+  selectedPool,
+  onDelete,
 }) => {
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">

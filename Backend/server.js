@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/manageRoom.js";
 import poolRoutes from "./routes/managePool.js";
+import userRoutes from './routes/manageUser.js';
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -49,6 +50,7 @@ app.use('/api/auth', authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/pools", poolRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

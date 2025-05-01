@@ -6,6 +6,10 @@ import ErrorDisplay from "../../components/ErrorDisplay";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import PoolForm from "../../components/admin/PoolForm";
 import PoolList from "../../components/admin/PoolList";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, Typography
+} from '@mui/material';
 
 
 const PoolManagement = () => {
@@ -27,6 +31,8 @@ const PoolManagement = () => {
   const [deletedImages, setDeletedImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
 
   useEffect(() => {
     fetchPools();
@@ -126,6 +132,7 @@ const PoolManagement = () => {
       formData.append("openingTime", form.openingTime);
       formData.append("closingTime", form.closingTime);
       formData.append("deletedImages", JSON.stringify(deletedImages));
+    
       
       form.images.forEach((image) => {
         formData.append("images", image);
@@ -172,12 +179,9 @@ const PoolManagement = () => {
     setIsEditing(true);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedPool.name}?`)) {
-      return;
-    }
-
+  const handleDeleteConfirmed = async () => {
     try {
+      console.log("handleDeleteConfirmed : ",selectedPool._id);
       setLoading(true);
       await axios.delete(`http://localhost:5000/api/pools/delete/${selectedPool._id}`);
       enqueueSnackbar("Pool deleted successfully", { variant: 'success' });
@@ -187,7 +191,13 @@ const PoolManagement = () => {
       handleError(error, "Failed to delete pool");
     } finally {
       setLoading(false);
+      setConfirmOpen(false); // Close dialog
     }
+  };
+
+  const handleDeleteClick = (pool) => {
+    setSelectedPool(pool);
+    setConfirmOpen(true); // Open dialog
   };
 
   const handleError = (error, defaultMessage) => {
@@ -246,7 +256,8 @@ const PoolManagement = () => {
           onTimeChange={handleTimeChange}
           onImageChange={handleImageChange}
           onRemoveImage={removeImage}
-          onDelete={handleDelete}
+          selectedPool={selectedPool} // <-- Add this
+          onDelete={() => handleDeleteClick(selectedPool)}
         />
       )}
 
@@ -254,7 +265,23 @@ const PoolManagement = () => {
         pools={pools}
         loading={loading}
         onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{selectedPool?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
+          <Button onClick={handleDeleteConfirmed} color="error" disabled={loading}>
+            {loading ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import Signup from "./pages/Signup";
 import AdminLayout from "./layout/adminLayout";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
+import ManageUsers from "./pages/admin/UserManagement";
 import ProtectedRoute from "./components/protectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 
@@ -40,6 +41,7 @@ const App = () => {
           <Route path="rooms" element={<ManageRooms />} />
           <Route path="pools" element={<ManagePools />} />
           <Route path="reservations" element={<ReservationCalendar />} />
+          <Route path="users" element={<ManageUsers />} />
         </Route>
       </Routes>
     </div>

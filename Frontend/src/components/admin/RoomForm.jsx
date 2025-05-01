@@ -1,6 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FiX, FiTrash2 } from 'react-icons/fi';
 import ImageUploader from './ImageUploader';
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Button as MuiButton
+} from '@mui/material';
 
 const RoomForm = ({
   form,
@@ -13,8 +21,20 @@ const RoomForm = ({
   onImageChange,
   onRemoveImage,
   onDelete,
-  error = {} // Default to empty object if no errors
+  error = {}
 }) => {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleDeleteClick = (e) => {
+    e.preventDefault();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setDeleteDialogOpen(false);
+    onDelete();
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -32,7 +52,6 @@ const RoomForm = ({
             </button>
           </div>
 
-          {/* General error message */}
           {error.general && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
               {error.general}
@@ -54,6 +73,7 @@ const RoomForm = ({
                   className={`w-full px-3 py-2 border ${
                     error.roomNumber ? 'border-red-500' : 'border-gray-300'
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  required
                 />
                 {error.roomNumber && (
                   <p className="mt-1 text-sm text-red-600">{error.roomNumber}</p>
@@ -72,6 +92,7 @@ const RoomForm = ({
                   className={`w-full px-3 py-2 border ${
                     error.type ? 'border-red-500' : 'border-gray-300'
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  required
                 >
                   <option value="">Select Type</option>
                   <option value="Single">Single</option>
@@ -96,6 +117,7 @@ const RoomForm = ({
                   className={`w-full px-3 py-2 border ${
                     error.acOption ? 'border-red-500' : 'border-gray-300'
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  required
                 >
                   <option value="">Select Option</option>
                   <option value="AC">AC Only</option>
@@ -127,6 +149,7 @@ const RoomForm = ({
                     className={`block w-full pl-12 pr-3 py-2 border ${
                       error.pricePerNight ? 'border-red-500' : 'border-gray-300'
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    required
                   />
                 </div>
                 {error.pricePerNight && (
@@ -154,6 +177,7 @@ const RoomForm = ({
                     className={`block w-full pl-12 pr-3 py-2 border ${
                       error.pricePerDay ? 'border-red-500' : 'border-gray-300'
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    required
                   />
                 </div>
                 {error.pricePerDay && (
@@ -175,6 +199,7 @@ const RoomForm = ({
                       checked={form.roomStatus === "Available"}
                       onChange={onChange}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      required
                     />
                     <span className="ml-2 text-gray-700">Available</span>
                   </label>
@@ -210,6 +235,7 @@ const RoomForm = ({
                 className={`w-full px-3 py-2 border ${
                   error.description ? 'border-red-500' : 'border-gray-300'
                 } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                required
               />
               {error.description && (
                 <p className="mt-1 text-sm text-red-600">{error.description}</p>
@@ -236,7 +262,7 @@ const RoomForm = ({
               {isEditing && (
                 <button
                   type="button"
-                  onClick={onDelete}
+                  onClick={handleDeleteClick}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center disabled:opacity-50"
                   disabled={loading}
                   aria-label="Delete room"
@@ -275,6 +301,34 @@ const RoomForm = ({
           </form>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          {"Confirm Deletion"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete Room {form.roomNumber}? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <MuiButton onClick={() => setDeleteDialogOpen(false)}>Cancel</MuiButton>
+          <MuiButton 
+            onClick={handleDeleteConfirm} 
+            color="error"
+            autoFocus
+            disabled={loading}
+          >
+            {loading ? 'Deleting...' : 'Confirm Delete'}
+          </MuiButton>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

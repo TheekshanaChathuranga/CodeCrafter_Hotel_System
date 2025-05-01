@@ -7,6 +7,10 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import { FiPlus } from "react-icons/fi";
 import ErrorDisplay from "../../components/ErrorDisplay";
 import { SnackbarProvider, useSnackbar } from 'notistack';
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, Typography
+} from '@mui/material';
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
@@ -28,6 +32,7 @@ const RoomManagement = () => {
   const [deletedImages, setDeletedImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
+   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchRooms();
@@ -227,24 +232,25 @@ const RoomManagement = () => {
     setError({});
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete Room ${selectedRoom.roomNumber}?`)) {
-      return;
-    }
-
+  const handleDeleteConfirmed = async () => {
     try {
+      console.log("handleDeleteConfirmed : ",selectedRoom._id);
       setLoading(true);
       await axios.delete(`http://localhost:5000/api/rooms/delete/${selectedRoom._id}`);
-      enqueueSnackbar("Room deleted successfully", { variant: "success" });
+      enqueueSnackbar("Room deleted successfully", { variant: 'success' });
       fetchRooms();
       resetForm();
     } catch (error) {
-      setError({ general: error.response?.data?.error || "Failed to delete room" });
-      console.error("Error deleting room:", error);
-      enqueueSnackbar(error.response?.data?.error || "Failed to delete room", { variant: "error" });
+      handleError(error, "Failed to delete room");
     } finally {
       setLoading(false);
+      setConfirmOpen(false); // Close dialog
     }
+  };
+
+  const handleDeleteClick = (room) => {
+    setSelectedRoom(room);
+    setConfirmOpen(true); // Open dialog
   };
 
   const resetForm = () => {
@@ -296,8 +302,8 @@ const RoomManagement = () => {
           onChange={handleChange}
           onImageChange={handleImageChange}
           onRemoveImage={removeImage}
-          onDelete={handleDelete}
-          error={error}
+          selectedRoom={selectedRoom} // <-- Add this
+          onDelete={() => handleDeleteClick(selectedRoom)}
         />
       )}
 
@@ -305,7 +311,23 @@ const RoomManagement = () => {
         rooms={rooms}
         loading={loading}
         onEdit={handleEdit}
+        onDelete={handleDeleteClick}
       />
+
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete <strong>{selectedRoom?.name}</strong>?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
+          <Button onClick={handleDeleteConfirmed} color="error" disabled={loading}>
+            {loading ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
