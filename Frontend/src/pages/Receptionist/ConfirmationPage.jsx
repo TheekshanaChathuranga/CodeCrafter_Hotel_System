@@ -80,7 +80,7 @@ const ConfirmationPage = () => {
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
                   Please present this booking ID at the hotel reception during check-in. 
-                  {paymentDetails.remainingAmount > 0 && ` The remaining amount of ₹${paymentDetails.remainingAmount} should be paid at the hotel.`}
+                  {paymentDetails.remainingAmount > 0 && ` The remaining amount of Rs.${paymentDetails.remainingAmount} should be paid at the hotel.`}
                 </p>
               </div>
             </div>
