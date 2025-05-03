@@ -33,28 +33,7 @@ const Room_Book = () => {
   });
 
 
-// //Fetch rooms from backend
-//   useEffect(() => {
-//     const fetchRooms = async () => {
-//       try {
-//         const response = await fetch("http://localhost:5000/api/rooms");
-//         if (!response.ok) {
-//           throw new Error("Failed to fetch rooms");
-//         }
-//         const data = await response.json();
-//         setRooms(data);
-//         setFilteredRooms(data);
-//       } catch (err) {
-//         setError(err.message);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
 
-//     fetchRooms();
-//   }, []);
-  // Modify the useEffect for fetching rooms
-// pages/Room_Book.jsx හි useEffect යාවත්කාලීන කිරීම
 useEffect(() => {
   const fetchRooms = async () => {
     try {
@@ -132,7 +111,7 @@ useEffect(() => {
     }));
   };
 
-// දින තෝරාගැනීමේ කොටසට එක් කරන්න
+//adding part of reservation dates
 const handleDateSelect = (date, type) => {
   if (type === 'checkOut' && bookingDates.checkIn && date <= bookingDates.checkIn) {
     alert('Check-out date must be after check-in date');
@@ -152,6 +131,89 @@ const handleDateSelect = (date, type) => {
   };
   
 
+  // const handleBookingSubmit = async (e) => {
+  //   e.preventDefault();
+    
+  //   try {
+  //     // Validate required fields
+  //     if (!bookingDates.checkIn || !bookingDates.checkOut) {
+  //       throw new Error('Please select both check-in and check-out dates');
+  //     }
+  //     if (bookingDates.checkOut <= bookingDates.checkIn) {
+  //       throw new Error('Check-out date must be after check-in date');
+  //     }
+  
+  //     // Prepare form data with proper type conversions
+  //     const formData = {
+  //       roomNumber: selectedRoom.roomNumber,
+  //       roomType: selectedRoom.type,
+  //       checkIn: bookingDates.checkIn.toISOString(),
+  //       checkOut: bookingDates.checkOut.toISOString(),
+  //       fullName: e.target.elements.fullName.value.trim(),
+  //       phoneNumber: e.target.elements.phoneNumber.value.trim(),
+  //       nicNumber: e.target.elements.nicNumber.value.trim() || undefined,
+  //       whatsappNumber: e.target.elements.whatsappNumber.value.trim() || undefined,
+  //       adults: parseInt(e.target.elements.adults.value, 10),
+  //       children: parseInt(e.target.elements.children.value, 10) || 0,
+  //       specialRequests: e.target.elements.specialRequests.value.trim() || undefined,
+  //     };
+  
+  //     // Validate adults count
+  //     if (formData.adults < 1 || isNaN(formData.adults)) {
+  //       throw new Error('Please select number of adults');
+  //     }
+  
+  //     // Send to backend
+  //     const response = await axios.post(
+  //       "http://localhost:5000/api/bookings",
+  //       formData,
+  //       {
+  //         headers: {
+  //           'Content-Type': 'application/json'
+  //         }
+  //       }
+  //     );
+  
+  //     // Handle success
+  //     if (response.data.success) {
+  //       alert(`✅ Booking Confirmed!\n
+  //         Booking ID: ${response.data.bookingId}\n
+  //         Room: ${response.data.details.roomNumber}\n
+  //         Dates: ${new Date(response.data.details.dates.checkIn).toLocaleDateString()} - ${new Date(response.data.details.dates.checkOut).toLocaleDateString()}`);
+  
+  //       // Reset state
+  //       setShowBookingForm(false);
+  //       setSelectedRoom(null);
+  //       setBookingDates({ checkIn: null, checkOut: null });
+  //       setError(null);
+  //     }
+  
+  //   } catch (error) {
+  //     console.error('Booking error:', error);
+      
+  //     // Handle server validation errors
+  //     const serverError = error.response?.data;
+  //     let errorMessage = 'Booking failed. Please check your information.';
+  
+  //     if (serverError) {
+  //       // Handle multiple error messages
+  //       if (Array.isArray(serverError.errors)) {
+  //         errorMessage = serverError.errors.join('\n');
+  //       } else if (serverError.message) {
+  //         errorMessage = serverError.message;
+  //       }
+  //     }
+      
+  //     // Special case for date conflicts
+  //     if (errorMessage.toLowerCase().includes('already booked')) {
+  //       errorMessage += '\nPlease select different Dates or Room.';
+  //     }
+  
+  //     // Update UI state and show alert
+  //     setError(errorMessage);
+  //     alert(`❌ ${errorMessage}`);
+  //   }
+  // };
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     
@@ -164,33 +226,43 @@ const handleDateSelect = (date, type) => {
         throw new Error('Check-out date must be after check-in date');
       }
   
-      // Prepare form data with proper type conversions
-      const formData = {
-        roomNumber: selectedRoom.roomNumber,
-        roomType: selectedRoom.type,
-        checkIn: bookingDates.checkIn.toISOString(),
-        checkOut: bookingDates.checkOut.toISOString(),
-        fullName: e.target.elements.fullName.value.trim(),
-        phoneNumber: e.target.elements.phoneNumber.value.trim(),
-        nicNumber: e.target.elements.nicNumber.value.trim() || undefined,
-        whatsappNumber: e.target.elements.whatsappNumber.value.trim() || undefined,
-        adults: parseInt(e.target.elements.adults.value, 10),
-        children: parseInt(e.target.elements.children.value, 10) || 0,
-        specialRequests: e.target.elements.specialRequests.value.trim() || undefined,
-      };
+      // Create FormData object
+      const formData = new FormData();
+      const fileInput = e.target.elements.document;
+  
+      // Append all form fields
+      formData.append('roomNumber', selectedRoom.roomNumber);
+      formData.append('roomType', selectedRoom.type);
+      formData.append('checkIn', bookingDates.checkIn.toISOString());
+      formData.append('checkOut', bookingDates.checkOut.toISOString());
+      formData.append('fullName', e.target.elements.fullName.value.trim());
+      formData.append('phoneNumber', e.target.elements.phoneNumber.value.trim());
+      formData.append('nicNumber', e.target.elements.nicNumber.value.trim());
+      formData.append('whatsappNumber', e.target.elements.whatsappNumber.value.trim());
+      formData.append('adults', parseInt(e.target.elements.adults.value, 10));
+      formData.append('children', parseInt(e.target.elements.children.value, 10) || 0);
+      formData.append('specialRequests', e.target.elements.specialRequests.value.trim());
   
       // Validate adults count
-      if (formData.adults < 1 || isNaN(formData.adults)) {
+      const adults = parseInt(e.target.elements.adults.value, 10);
+      if (adults < 1 || isNaN(adults)) {
         throw new Error('Please select number of adults');
       }
   
-      // Send to backend
+      // Append document file
+      if (fileInput.files[0]) {
+        formData.append('document', fileInput.files[0]);
+      } else {
+        throw new Error('Document (Image/PDF) is required');
+      }
+  
+      // Send to backend with multipart/form-data
       const response = await axios.post(
         "http://localhost:5000/api/bookings",
         formData,
         {
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'multipart/form-data'
           }
         }
       );
@@ -207,11 +279,18 @@ const handleDateSelect = (date, type) => {
         setSelectedRoom(null);
         setBookingDates({ checkIn: null, checkOut: null });
         setError(null);
+        e.target.reset(); // Reset form fields including file input
       }
   
     } catch (error) {
       console.error('Booking error:', error);
       
+      // Handle file validation errors
+      if (error.message.includes('File size exceeds')) {
+        alert('❌ File size exceeds 5MB limit');
+        return;
+      }
+  
       // Handle server validation errors
       const serverError = error.response?.data;
       let errorMessage = 'Booking failed. Please check your information.';
@@ -248,16 +327,16 @@ const handleDateSelect = (date, type) => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-6xl mx-auto px-4 py-16 text-center text-red-500">
-          <p>Error: {error}</p>
-        </div>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50">
+  //       <Navbar />
+  //       <div className="max-w-6xl mx-auto px-4 py-16 text-center text-red-500">
+  //         <p>Error: {error}</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -267,7 +346,8 @@ const handleDateSelect = (date, type) => {
       <div className="relative h-95 bg-[url('img/RoomPage.jpeg')] bg-cover bg-center">
         <button
           onClick={() => navigate(-1)}
-          className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          //className="absolute mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          className="absolute top-4 left-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700 z-10"
         >
           Go Back
         </button>
@@ -404,6 +484,27 @@ const handleDateSelect = (date, type) => {
                 placeholder="Any special requirements or notes..."
               ></textarea>
             </div>
+            {/* Add this section to the form */}
+            <div>
+              <label className="block text-gray-700 mb-2">
+                  Upload receipt of Advanced (Image/PDF) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="file"
+                name="document"
+                accept=".jpg,.jpeg,.png,.pdf"
+                required
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file && file.size > 5 * 1024 * 1024) {
+                    alert('File size exceeds 5MB limit');
+                    e.target.value = '';
+                  }
+                }}
+              />
+              <p className="text-sm text-gray-500 mt-1">Maximum file size: 5MB (Allowed formats: JPG, PNG, PDF)</p>
+            </div>
 
             <div className="pt-4">
               <button
@@ -424,37 +525,33 @@ const handleDateSelect = (date, type) => {
         </div>
       )}
 
-
-
-
-
-
-      {/* Add this above the existing filters */}
-<div className="max-w-6xl mx-auto px-4 py-8">
-  <div className="bg-white p-6 rounded-lg shadow-md">
-    <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <label className="block text-gray-700 mb-2">Check-in Date</label>
-        <Calendar
-          date={bookingDates.checkIn}
-          onChange={(date) => handleDateSelect(date, "checkIn")}
-          minDate={new Date()}
-          className="border rounded-lg p-2"
-        />
-      </div>
-      <div>
-        <label className="block text-gray-700 mb-2">Check-out Date</label>
-        <Calendar
-          date={bookingDates.checkOut}
-          onChange={(date) => handleDateSelect(date, "checkOut")}
-          minDate={bookingDates.checkIn || new Date()}
-          className="border rounded-lg p-2"
-        />
+    {/* Add this above the existing filters */}
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-gray-700 mb-2">Check-in Date</label>
+            <Calendar
+              date={bookingDates.checkIn}
+              onChange={(date) => handleDateSelect(date, "checkIn")}
+              minDate={new Date()}
+              className="border rounded-lg p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 mb-2">Check-out Date</label>
+            <Calendar
+              date={bookingDates.checkOut}
+              onChange={(date) => handleDateSelect(date, "checkOut")}
+              minDate={bookingDates.checkIn || new Date()}
+              className="border rounded-lg p-2"
+            />
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>{/* Date Range Picker */}
+    {/* Date Range Picker */}
 
 
       {/* Filters */}

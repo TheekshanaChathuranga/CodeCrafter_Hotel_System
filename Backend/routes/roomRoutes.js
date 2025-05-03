@@ -17,10 +17,6 @@ router.get('/', async (req, res) => {
 
 
 // Add other routes as needed...
-
-
-
-
 router.get('/available', async (req, res) => {
   try {
     const { checkIn, checkOut } = req.query;
@@ -58,15 +54,5 @@ router.get('/available', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
-
-
-
-
-
-
-
-
-
 export default router;
 

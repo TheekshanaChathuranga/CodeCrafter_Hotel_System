@@ -1,41 +1,3 @@
-// import React from 'react';
-
-// export default function Pool_page() {
-//   return (
-//     <div>
-//       <h1>This is the Pool Booking page</h1>
-//     </div>
-//   );
-// }
-
-// frontend/src/pages/pool_page.jsx
-////////////////////////////////////////////////////////////////////////
-// import React from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import Header from '../components/Header.jsx';
-
-// export default function Pool_Page() {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div>
-//       <Header />
-//       <main className="container mx-auto p-4">
-//         <button 
-//           onClick={() => navigate(-1)}
-//           className="mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-//         >
-//           Go Back
-//         </button>
-//         <h1 className="text-3xl font-semibold">Pool Booking</h1>
-//         {/* Add pool booking form here */}
-//       </main>
-//     </div>
-//   );
-// }
-////////////////////////////////////////////////////////////////
-// frontend/src/pages/pool_page.jsx
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
@@ -51,7 +13,7 @@ export default function Pool_Book() {
   });
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
-  const [price, setPrice] = useState(1.7); // Base price
+  const [price, setPrice] = useState(500.00); // Base price
 
   const poolImages = [
     'src/img/Pool1.jpeg',
@@ -106,7 +68,7 @@ export default function Pool_Book() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
               <h1 className="text-3xl font-semibold mb-8">Pool Booking
-                  <span className="text-gray-500 text-sm">(${price} per person)</span>
+                  <span className="text-gray-500 text-sm">(LKR.{price}.00 per person)</span>
               </h1>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -189,13 +151,30 @@ export default function Pool_Book() {
                     ></textarea>
                   </div>
 
-                  <div className="bg-blue-50 p-4 rounded-lg">
+                  {/* <div className="bg-blue-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold">Pricing Details</h3>
                     <p className="mt-2">
-                      Base Price: $50 <br />
-                      Additional Guests: ${(formData.guests - 1) * 15} ({formData.guests - 1} x $15) <br />
-                      <span className="font-bold text-xl">Total: ${price}</span>
+                      Base Price: LKR. <br />
+                      Additional Guests: LKR.{(formData.guests - 1) * 15} ({formData.guests - 1} x $15) <br />
+                      <span className="font-bold text-xl">Total: LKR.{price}</span>
                     </p>
+                  </div> */}
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold">Pricing Details</h3>
+                      <p className="mt-2">
+                          Price per person (one hour): LKR.500.00 <br />
+                          {formData.guests > 0 && formData.hours > 0 && (
+                              <>
+                                  Total for {formData.guests} guest(s) for {formData.hours} hour(s): LKR.{formData.guests * 500.00 * formData.hours}
+                              </>
+                          )}
+                          {formData.guests === 0 && (
+                              <span className="font-bold text-xl">Total: LKR. 0</span>
+                          )}
+                          {formData.guests > 0 && formData.hours === undefined && (
+                              <span className="font-bold text-xl">Total: LKR.{formData.guests * 500.00 * 2}</span>
+                          )}
+                      </p>
                   </div>
 
                   <button

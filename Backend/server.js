@@ -120,6 +120,9 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Add this line before routes
+app.use('/uploads', express.static('uploads')); 
+
 // Routes
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);

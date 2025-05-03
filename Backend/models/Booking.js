@@ -56,6 +56,10 @@ const bookingSchema = new mongoose.Schema({
   },
   specialRequests: { 
     type: String 
+  },
+  document: {
+    type: String,
+    required: [true, "Document (Image/PDF) is required"]
   }
 }, { 
   collection: 'onlinebooking',
