@@ -66,7 +66,7 @@ export default function Navbar() {
             <NavLink to="/bookings" text="Room Reservations" />
             <NavLink to="/calendar" text="Calendar" />
             <NavLink to="/pool-booking" text="Pool Booking" />
-            <NavLink to="/pool-reservations" text="Pool Schedule" />
+            <NavLink to="/bookings" text="Pool Schedule" />
           </div>
           <div className="ml-2 md:ml-4">
             <ProfileAvatar navigate={navigate} />

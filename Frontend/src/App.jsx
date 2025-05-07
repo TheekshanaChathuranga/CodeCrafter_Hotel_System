@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Receptionist/Navbar";
 
 import Home from "./pages/Receptionist/Home";
-import PoolBooking from "./pages/Receptionist/PoolBooking";
+import BookingsList from "./components/Receptionist/BookingsList";
+import BookingForm from "./components/Receptionist/BookingForm";
 
 
 
@@ -14,7 +15,8 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/pool-booking" element={<PoolBooking />} />
+        <Route path="/pool-booking" element={<BookingForm />} />
+        <Route path="/bookings" element={<BookingsList />} />
         {/* Add more routes as needed */}
 
         
