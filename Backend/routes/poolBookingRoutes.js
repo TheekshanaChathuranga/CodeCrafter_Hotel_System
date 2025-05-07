@@ -7,10 +7,20 @@ router.post('/', async (req, res) => {
   try {
     const { name, phone, whatsapp, email, peopleCount, checkIn, checkOut } = req.body;
     
-    // Calculate duration in hours
+    // Validate required fields
+    if (!name || !phone || !peopleCount || !checkIn || !checkOut) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Calculate duration
     const durationHours = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60);
     
-    // Calculate total amount (Rs.500 for first 2 hours, Rs.200 per additional hour)
+    // Validate duration
+    if (durationHours <= 0) {
+      return res.status(400).json({ message: 'Check-out must be after check-in' });
+    }
+
+    // Calculate total amount
     const baseRate = 500;
     const additionalRate = 200;
     const baseHours = 2;
@@ -20,9 +30,9 @@ router.post('/', async (req, res) => {
       totalAmount += Math.ceil(durationHours - baseHours) * additionalRate;
     }
     
-    // Multiply by number of people
     totalAmount *= peopleCount;
-    
+
+    // Create and save booking
     const booking = new PoolBooking({
       name,
       phone,
@@ -33,21 +43,44 @@ router.post('/', async (req, res) => {
       checkOut: new Date(checkOut),
       totalAmount
     });
+
+    const savedBooking = await booking.save();
     
-    await booking.save();
-    res.status(201).json(booking);
+    res.status(201).json({
+      message: 'Booking created successfully',
+      booking: savedBooking
+    });
+
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Booking creation error:', error);
+    res.status(500).json({ 
+      message: 'Failed to create booking',
+      error: error.message
+    });
   }
 });
 
-// Get all pool bookings
+// Get all pool bookings with optional limit
 router.get('/', async (req, res) => {
   try {
-    const bookings = await PoolBooking.find().sort({ createdAt: -1 });
-    res.json(bookings);
+    const limit = parseInt(req.query.limit) || 0;
+    const query = PoolBooking.find().sort({ createdAt: -1 });
+    
+    if (limit > 0) {
+      query.limit(limit);
+    }
+    
+    const bookings = await query.exec();
+    res.json({
+      count: bookings.length,
+      bookings: bookings
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch bookings',
+      error: error.message
+    });
   }
 });
 

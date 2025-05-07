@@ -86,7 +86,7 @@ const BookingForm = ({ onSuccess, success }) => {
     }
 
     try {
-      await axios.post('/api/bookings', {
+      await axios.post('http://localhost:5000/api/bookings', {
         ...formData,
         checkIn: formData.checkIn.toISOString(),
         checkOut: formData.checkOut.toISOString()

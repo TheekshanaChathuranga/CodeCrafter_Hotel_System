@@ -13,11 +13,13 @@ const RecentBookings = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/bookings?limit=5');
-      setBookings(Array.isArray(res.data) ? res.data : []);
+      setError('');
+      const res = await axios.get('http://localhost:5000/api/bookings?limit=5'); // Changed endpoint
+      setBookings(Array.isArray(res.data.bookings) ? res.data.bookings : []); // Access bookings array from response
     } catch (err) {
-      setError('Failed to fetch recent bookings');
+      setError(err.response?.data?.message || 'Failed to fetch recent bookings');
       console.error('Fetch bookings error:', err);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -26,32 +28,57 @@ const RecentBookings = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold text-blue-700 mb-4">Recent Bookings</h2>
-      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {error}
+          <button 
+            onClick={fetchBookings}
+            className="ml-2 text-blue-600 hover:text-blue-800"
+          >
+            Retry
+          </button>
+        </div>
+      )}
       
       {loading ? (
-        <p className="text-gray-500">Loading...</p>
+        <div className="flex justify-center items-center py-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
       ) : bookings.length === 0 ? (
-        <p className="text-gray-500">No bookings yet</p>
+        <p className="text-gray-500 py-4 text-center">
+          {error ? '' : 'No bookings found'}
+        </p>
       ) : (
         <div className="space-y-4 max-h-[600px] overflow-y-auto">
           {bookings.map(booking => (
-            <div key={booking._id} className="border-b border-gray-200 pb-4">
-              <p className="font-medium">{booking.name}</p>
+            <div key={booking._id} className="border-b border-gray-200 pb-4 last:border-b-0">
+              <p className="font-medium text-gray-800">{booking.name}</p>
               <p className="text-sm text-gray-600">
                 Phone: {booking.phone} | People: {booking.peopleCount}
               </p>
-              <p className="text-sm">
-                Check-in: {new Date(booking.checkIn).toLocaleString()}
-              </p>
-              <p className="text-sm">
-                Check-out: {new Date(booking.checkOut).toLocaleString()}
-              </p>
-              <p className="text-sm font-semibold">
-                Amount: Rs.{booking.totalAmount}
-              </p>
-              <p className="text-xs text-gray-500">
-                Booked at: {new Date(booking.createdAt).toLocaleString()}
-              </p>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <div>
+                  <p className="text-xs text-gray-500">Check-in</p>
+                  <p className="text-sm">
+                    {new Date(booking.checkIn).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Check-out</p>
+                  <p className="text-sm">
+                    {new Date(booking.checkOut).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm font-semibold text-blue-600">
+                  Amount: Rs.{booking.totalAmount}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {new Date(booking.createdAt).toLocaleDateString()}
+                </p>
+              </div>
             </div>
           ))}
         </div>
