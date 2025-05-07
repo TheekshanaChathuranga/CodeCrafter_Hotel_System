@@ -1,7 +1,8 @@
 import React from "react";
+
 import { Routes, Route, useLocation } from "react-router-dom";
+
 import Home from "./pages/Home";
-import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
@@ -16,10 +17,13 @@ import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
 
+
 const App = () => {
+
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isReceptionRoute = location.pathname.startsWith("/reception");
+
 
   return (
     <div>
@@ -27,7 +31,13 @@ const App = () => {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
+
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/rooms/:id" element={<RoomDetails />} />
+        <Route path="/booking" element={<BookingPage />} />
+        <Route path="/confirmation" element={<ConfirmationPage />} />
+        <Route path="/bookings" element={<ViewBookings />} />
+        <Route path="/booking-details/:bookingId" element={<BookingDetails />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -48,12 +58,14 @@ const App = () => {
           <Route path="users" element={<ManageUsers />} />
         </Route>
 
+
         {/* Reception routes */}
         <Route 
           path="/reception" 
           element={
             <ProtectedRoute allowedRoles={['reception']}>
               <DashboardLayout />
+
             </ProtectedRoute>
           }
         >
@@ -68,3 +80,4 @@ const App = () => {
 };
 
 export default App;
+

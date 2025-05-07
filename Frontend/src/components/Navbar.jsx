@@ -1,9 +1,16 @@
+<<<<<<< HEAD
+import React from "react";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
+=======
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
+>>>>>>> c14f77bbefb760989602ec8c9898b5b7c2ec0e2d
 
-
-const Navbar = () => {
+export default function Navbar() {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   // Color variables
@@ -56,6 +63,28 @@ const Navbar = () => {
             </Link>
             
             <Link 
+              to="/rooms" 
+              className="px-3 py-2 rounded-md text-sm font-medium"
+              style={{ 
+                color: colors.white,
+                ':hover': linkHover
+              }}
+            >
+              Rooms
+            </Link>
+
+            <Link 
+              to="/add-room" 
+              className="px-3 py-2 rounded-md text-sm font-medium"
+              style={{ 
+                color: colors.white,
+                ':hover': linkHover
+              }}
+            >
+              Add Room
+            </Link>
+
+            <Link 
               to="/about" 
               className="px-3 py-2 rounded-md text-sm font-medium"
               style={{ 
@@ -105,6 +134,12 @@ const Navbar = () => {
                 >
                   Logout
                 </button>
+                <img 
+                  src="/assets/react.svg" 
+                  alt="Profile" 
+                  className="w-10 h-10 rounded-full cursor-pointer" 
+                  onClick={() => navigate("/profile")}
+                />
               </>
             ) : (
               <>
@@ -143,6 +178,4 @@ const Navbar = () => {
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
