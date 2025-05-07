@@ -1,26 +1,30 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Hotel, Users, Menu, Waves, LifeBuoy,
-  CalendarCheck, UserCheck, Settings, LogOut, User
+  Hotel, Users, Menu, LifeBuoy,
+  CalendarCheck, UserCheck, Settings, LogOut, User,
+  Bell
 } from "lucide-react";
-import { useAuth } from "../../context/UserAuthContext";
+import { useAuth } from "../context/UserAuthContext";
 
 
 
-const AdminSidebar = () => {
+const DashboardSidebar = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(true);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
-  const menuItems = [
-    { title: "Rooms", url: "/admin/rooms", icon: <Hotel size={18} /> },
-    { title: "Pools", url: "/admin/pools", icon: <LifeBuoy size={18} /> },
-    { title: "Reservations", url: "/admin/reservations", icon: <CalendarCheck size={18} /> },
-    { title: "Users", url: "/admin/users", icon: <UserCheck size={18} /> },
-    { title: "Settings", url: "/admin/settings", icon: <Settings size={18} /> },
+  const allMenuItems = [
+    { title: "Rooms", url: { admin : "/admin/rooms", reception : "" }, icon: <Hotel size={18} />, roles : ["admin", "reception"] },
+    { title: "Pools", url: { admin : "/admin/pools", reception : "" }, icon: <LifeBuoy size={18} />, roles : ["admin", "reception"] },
+    { title: "Reservations", url: { admin : "/admin/reservations", reception : "" }, icon: <CalendarCheck size={18} />, roles : ["admin", "reception"] },
+    { title: "Notifications", url: { admin : "/admin/bookingNotifications" }, icon: <Bell size={18} />, roles : ["admin"] },
+    { title: "Users", url: {admin: "/admin/users"}, icon: <UserCheck size={18} />, roles : ["admin"]  },
+    { title: "Settings", url: {admin:"/admin/settings"}, icon: <Settings size={18} />, roles : ["admin"]  },
   ];
+
+  const menuItems = allMenuItems.filter(item => item.roles.includes(user.role));
 
   return (
     <div
@@ -54,7 +58,7 @@ const AdminSidebar = () => {
           {menuItems.map((item) => (
             <li key={item.title}>
               <Link
-                to={item.url}
+                to={item.url[user.role]}
                 className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${!isOpen ? "justify-center" : ""}`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
@@ -86,4 +90,4 @@ const AdminSidebar = () => {
   );
 };
 
-export default AdminSidebar;
+export default DashboardSidebar;

@@ -10,7 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -43,9 +43,18 @@ const Login = () => {
       const response = await login({ email, password });
       
       if (response.success) {
-        console.log("in login jsx"+response.success);
+
+        const loggedInUser = response.user;
         enqueueSnackbar("Login successful!", { variant: "success" });
-        navigate("/admin");
+
+        if(loggedInUser.role === "admin"){
+          navigate("/admin");
+        }else if(loggedInUser.role === "reception"){
+          navigate("/reception");
+        }else{
+          navigate("/home");
+        }
+        
       } else {
         throw new Error("Authentication failed - no token received");
       }

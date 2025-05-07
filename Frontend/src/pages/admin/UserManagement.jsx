@@ -24,7 +24,6 @@ const UserManagement = () => {
       setLoading(true);
       const res = await axios.get("http://localhost:5000/api/users");
       setUsers(Array.isArray(res?.data) ? res.data : []);
-      enqueueSnackbar('Users loaded successfully', { variant: 'success' });
     } catch (err) {
       console.error("Error fetching users:", err);
       enqueueSnackbar('Failed to fetch users', { variant: 'error' });
