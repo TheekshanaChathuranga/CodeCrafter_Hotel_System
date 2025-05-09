@@ -116,7 +116,7 @@ const BookingPage = () => {
 
   const handleBooking = () => {
     if (!validateFields()) {
-      alert("❌ Please correct the highlighted errors.");
+      // alert("❌ Please correct the highlighted errors.");
       return;
     }
     setShowConfirmation(true);
