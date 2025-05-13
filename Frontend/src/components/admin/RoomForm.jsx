@@ -1,14 +1,6 @@
-import React, { useState } from 'react';
-import { FiX, FiTrash2 } from 'react-icons/fi';
-import ImageUploader from './ImageUploader';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button as MuiButton
-} from '@mui/material';
+import React, { useState } from "react";
+import { FiX, FiTrash2 } from "react-icons/fi";
+import ImageUploader from "./ImageUploader";
 
 const RoomForm = ({
   form,
@@ -21,19 +13,8 @@ const RoomForm = ({
   onImageChange,
   onRemoveImage,
   onDelete,
-  error = {}
+  error = {},
 }) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  const handleDeleteClick = (e) => {
-    e.preventDefault();
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false);
-    onDelete();
-  };
 
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">
@@ -71,12 +52,14 @@ const RoomForm = ({
                   onChange={onChange}
                   placeholder="101"
                   className={`w-full px-3 py-2 border ${
-                    error.roomNumber ? 'border-red-500' : 'border-gray-300'
+                    error.roomNumber ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 />
                 {error.roomNumber && (
-                  <p className="mt-1 text-sm text-red-600">{error.roomNumber}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.roomNumber}
+                  </p>
                 )}
               </div>
 
@@ -90,7 +73,7 @@ const RoomForm = ({
                   value={form.type}
                   onChange={onChange}
                   className={`w-full px-3 py-2 border ${
-                    error.type ? 'border-red-500' : 'border-gray-300'
+                    error.type ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
@@ -115,7 +98,7 @@ const RoomForm = ({
                   value={form.acOption}
                   onChange={onChange}
                   className={`w-full px-3 py-2 border ${
-                    error.acOption ? 'border-red-500' : 'border-gray-300'
+                    error.acOption ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
@@ -147,13 +130,15 @@ const RoomForm = ({
                     onChange={onChange}
                     placeholder="100.00"
                     className={`block w-full pl-12 pr-3 py-2 border ${
-                      error.pricePerNight ? 'border-red-500' : 'border-gray-300'
+                      error.pricePerNight ? "border-red-500" : "border-gray-300"
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     required
                   />
                 </div>
                 {error.pricePerNight && (
-                  <p className="mt-1 text-sm text-red-600">{error.pricePerNight}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.pricePerNight}
+                  </p>
                 )}
               </div>
 
@@ -175,13 +160,15 @@ const RoomForm = ({
                     onChange={onChange}
                     placeholder="100.00"
                     className={`block w-full pl-12 pr-3 py-2 border ${
-                      error.pricePerDay ? 'border-red-500' : 'border-gray-300'
+                      error.pricePerDay ? "border-red-500" : "border-gray-300"
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     required
                   />
                 </div>
                 {error.pricePerDay && (
-                  <p className="mt-1 text-sm text-red-600">{error.pricePerDay}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.pricePerDay}
+                  </p>
                 )}
               </div>
 
@@ -216,7 +203,9 @@ const RoomForm = ({
                   </label>
                 </div>
                 {error.roomStatus && (
-                  <p className="mt-1 text-sm text-red-600">{error.roomStatus}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.roomStatus}
+                  </p>
                 )}
               </div>
             </div>
@@ -233,7 +222,7 @@ const RoomForm = ({
                 rows="3"
                 placeholder="Room features and details..."
                 className={`w-full px-3 py-2 border ${
-                  error.description ? 'border-red-500' : 'border-gray-300'
+                  error.description ? "border-red-500" : "border-gray-300"
                 } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
               />
@@ -247,7 +236,7 @@ const RoomForm = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Room Images (Max 3)
               </label>
-              <ImageUploader 
+              <ImageUploader
                 previewImages={previewImages}
                 onImageChange={onImageChange}
                 onRemoveImage={onRemoveImage}
@@ -262,10 +251,9 @@ const RoomForm = ({
               {isEditing && (
                 <button
                   type="button"
-                  onClick={handleDeleteClick}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center disabled:opacity-50"
+                  onClick={onDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center"
                   disabled={loading}
-                  aria-label="Delete room"
                 >
                   <FiTrash2 className="mr-2" /> Delete
                 </button>
@@ -287,48 +275,38 @@ const RoomForm = ({
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     {isEditing ? "Updating..." : "Saving..."}
                   </>
+                ) : isEditing ? (
+                  "Update Room"
                 ) : (
-                  isEditing ? "Update Room" : "Save Room"
+                  "Save Room"
                 )}
               </button>
             </div>
           </form>
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Confirm Deletion"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete Room {form.roomNumber}? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <MuiButton onClick={() => setDeleteDialogOpen(false)}>Cancel</MuiButton>
-          <MuiButton 
-            onClick={handleDeleteConfirm} 
-            color="error"
-            autoFocus
-            disabled={loading}
-          >
-            {loading ? 'Deleting...' : 'Confirm Delete'}
-          </MuiButton>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };
