@@ -72,7 +72,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/pools", poolRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/bookings/confirmation", BookingConfirmationRoutes); 
+app.use("/api/admin/bookings", BookingConfirmationRoutes);
+    
 
 
 

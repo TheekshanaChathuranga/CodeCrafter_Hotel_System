@@ -4,36 +4,44 @@ import mongoose from 'mongoose';
 
 const router = express.Router();
 
-// Admin middleware (directly in route file)
-const adminAuth = (req, res, next) => {
-  if (!req.user || !req.user.isAdmin) {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
-  next();
-};
-
-// Get pending bookings
-router.get('/pending', adminAuth, async (req, res) => {
+// Get all pending bookings
+router.get('/pending', async (req, res) => {
   try {
-    const bookings = await Booking.find({ status: 'pending' });
+    const bookings = await Booking.find({ status: 'pending' })
+      .select('-__v')
+      .lean();
+    
     res.json(bookings);
+  } catch (error) {
+    console.error('Error fetching pending bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch pending bookings' });
+  }
+});
+
+// Get single booking details
+router.get('/pending/:id', async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+    res.json(booking);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Approve booking
-router.patch('/:id/approve', adminAuth, async (req, res) => {
+router.patch('/:id/approve', async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid booking ID' });
-    }
-
+    // Temporarily hardcode processedBy for testing
+    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); // Replace with a valid user ID
+    
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
       { 
         status: 'confirmed',
-        processedBy: req.user.id,
+        processedBy: processedBy, // Use hardcoded ID for now
         processedAt: new Date()
       },
       { new: true }
@@ -43,32 +51,34 @@ router.patch('/:id/approve', adminAuth, async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    // Notify via Socket.io
-    req.app.get('io').emit('booking-updated', {
-      bookingId: booking._id,
-      newStatus: 'confirmed',
-      processedBy: req.user.name
-    });
+    // Emit socket event if io is available
+    if (req.app.get('io')) {
+      req.app.get('io').emit('booking-updated', {
+        bookingId: booking._id,
+        newStatus: 'confirmed'
+      });
+    }
 
     res.json(booking);
   } catch (error) {
+    console.error('Error approving booking:', error);
     res.status(400).json({ error: error.message });
   }
 });
 
 // Reject booking
-router.patch('/:id/reject', adminAuth, async (req, res) => {
+router.patch('/:id/reject', async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid booking ID' });
-    }
-
+    // Temporarily hardcode processedBy for testing
+    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); // Replace with a valid user ID
+    
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
       { 
         status: 'rejected',
-        processedBy: req.user.id,
-        processedAt: new Date()
+        processedBy: processedBy, // Use hardcoded ID for now
+        processedAt: new Date(),
+        rejectionReason: req.body.reason || ''
       },
       { new: true }
     );
@@ -77,14 +87,17 @@ router.patch('/:id/reject', adminAuth, async (req, res) => {
       return res.status(404).json({ error: 'Booking not found' });
     }
 
-    req.app.get('io').emit('booking-updated', {
-      bookingId: booking._id,
-      newStatus: 'rejected',
-      processedBy: req.user.name
-    });
+    // Emit socket event if io is available
+    if (req.app.get('io')) {
+      req.app.get('io').emit('booking-updated', {
+        bookingId: booking._id,
+        newStatus: 'rejected'
+      });
+    }
 
     res.json(booking);
   } catch (error) {
+    console.error('Error rejecting booking:', error);
     res.status(400).json({ error: error.message });
   }
 });

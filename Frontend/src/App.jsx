@@ -12,7 +12,8 @@ import ManageRooms from "./pages/admin/RoomManagement";
 import ManageUsers from "./pages/admin/UserManagement";
 import ProtectedRoute from "./components/protectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
-import BookingConfirmation from "./pages/admin/BookingConfirmation";
+import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
+import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
 
 
 // import RoomBooking from "./pages/reception/RoomBooking";
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="reservations" element={<ReservationCalendar />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="bookingNotifications" element={<BookingConfirmation />} />
+          <Route path="bookingNotifications/:id" element={<BookingConfirmationDetails />} />
         </Route>
 
         {/* Reception routes */}
