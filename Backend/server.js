@@ -12,6 +12,7 @@ import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/manageRoom.js";
 import poolRoutes from "./routes/managePool.js";
 import userRoutes from "./routes/manageUser.js";
+import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
 
 
 // Socket.io Configuration
@@ -71,7 +72,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/pools", poolRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/bookings", bookingRoutes);
+app.use("/api/bookings/confirmation", BookingConfirmationRoutes); 
+
+
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {
