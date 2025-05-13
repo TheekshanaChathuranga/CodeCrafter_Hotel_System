@@ -16,7 +16,7 @@ import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
 
 
 // Socket.io Configuration
-import configureSocket from "./socket/socketServer.js";
+import { configureSocket } from "./socket/socketServer.js";
 
 // Configure environment variables
 dotenv.config();
