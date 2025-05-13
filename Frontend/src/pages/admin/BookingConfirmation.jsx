@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 
@@ -76,3 +77,5 @@ const BookingConfirmation = () => {
     </div>
   );
 };
+
+export default BookingConfirmation;
