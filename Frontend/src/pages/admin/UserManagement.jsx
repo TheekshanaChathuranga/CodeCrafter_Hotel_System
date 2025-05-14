@@ -170,5 +170,4 @@ const UserManagement = () => {
   );
 };
 
-// Wrap your component with SnackbarProvider when using it
 export default UserManagement;

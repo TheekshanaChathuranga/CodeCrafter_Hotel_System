@@ -35,7 +35,7 @@ router.get('/pending/:id', async (req, res) => {
 router.patch('/:id/approve', async (req, res) => {
   try {
     // Temporarily hardcode processedBy for testing
-    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); // Replace with a valid user ID
+    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); 
     
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
@@ -70,7 +70,7 @@ router.patch('/:id/approve', async (req, res) => {
 router.patch('/:id/reject', async (req, res) => {
   try {
     // Temporarily hardcode processedBy for testing
-    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); // Replace with a valid user ID
+    const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); 
     
     const booking = await Booking.findByIdAndUpdate(
       req.params.id,
