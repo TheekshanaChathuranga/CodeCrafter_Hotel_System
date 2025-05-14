@@ -3,11 +3,9 @@ import { Link } from "react-router-dom";
 import {
   Hotel, Users, Menu, LifeBuoy,
   CalendarCheck, UserCheck, Settings, LogOut, User,
-  Bell
+  Bell, LayoutDashboard, BookOpen, CalendarDays, Clock
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
-
-
 
 const DashboardSidebar = () => {
   const { user, logout } = useAuth();
@@ -16,12 +14,16 @@ const DashboardSidebar = () => {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const allMenuItems = [
-    { title: "Rooms", url: { admin : "/admin/rooms", reception : "" }, icon: <Hotel size={18} />, roles : ["admin", "reception"] },
-    { title: "Pools", url: { admin : "/admin/pools", reception : "" }, icon: <LifeBuoy size={18} />, roles : ["admin", "reception"] },
-    { title: "Reservations", url: { admin : "/admin/reservations", reception : "" }, icon: <CalendarCheck size={18} />, roles : ["admin", "reception"] },
-    { title: "Notifications", url: { admin : "/admin/bookingNotifications" }, icon: <Bell size={18} />, roles : ["admin"] },
-    { title: "Users", url: {admin: "/admin/users"}, icon: <UserCheck size={18} />, roles : ["admin"]  },
-    { title: "Settings", url: {admin:"/admin/settings"}, icon: <Settings size={18} />, roles : ["admin"]  },
+    // Admin menu items
+    { title: "Dashboard", url: { admin: "/admin", reception: "/reception/home" }, icon: <LayoutDashboard size={18} />, roles: ["admin", "reception"] },
+    { title: "Rooms", url: { admin: "/admin/rooms", reception: "" }, icon: <Hotel size={18} />, roles: ["admin"] },
+    { title: "Room Booking", url: { admin: "/admin/rooms", reception: "/reception/roomBooking" }, icon: <Hotel size={18} />, roles: ["reception"] },
+    { title: "Reservations", url: { admin: "/admin/reservations", reception: "/reception/bookingsList" }, icon: <BookOpen size={18} />, roles: ["admin", "reception"] },
+    { title: "Pool Booking", url: { admin: "/admin/pools", reception: "/reception/pool-booking" }, icon: <LifeBuoy size={18} />, roles: ["admin", "reception"] },
+    { title: "Pool Schedules", url: { admin: "/admin/pool-schedules", reception: "/reception/pool-schedules" }, icon: <Clock size={18} />, roles: ["admin", "reception"] },
+    { title: "Notifications", url: { admin: "/admin/bookingNotifications" }, icon: <Bell size={18} />, roles: ["admin"] },
+    { title: "Users", url: { admin: "/admin/users" }, icon: <UserCheck size={18} />, roles: ["admin"] },
+    { title: "Settings", url: { admin: "/admin/settings" }, icon: <Settings size={18} />, roles: ["admin"] },
   ];
 
   const menuItems = allMenuItems.filter(item => item.roles.includes(user.role));
@@ -72,7 +74,7 @@ const DashboardSidebar = () => {
       {/* Profile and Sign Out Buttons */}
       <div className="space-y-2">
         <Link
-          to="/admin/profile"
+          to={user.role === "admin" ? "/admin/profile" : "/reception/profile"}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${!isOpen ? "justify-center" : ""}`}
         >
           <User size={18} />

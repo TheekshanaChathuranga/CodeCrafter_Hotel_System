@@ -55,8 +55,9 @@ app.use("/api/pools", poolRoutes);
 app.use('/api/users', userRoutes);
 
 // Reception routes
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/rooms', receptionRoomRoutes);
+app.use('/api/roomBookings', bookingRoutes);
+app.use('/api/receptionRooms', receptionRoomRoutes);
+app.use('/api/bookings' , bookingRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

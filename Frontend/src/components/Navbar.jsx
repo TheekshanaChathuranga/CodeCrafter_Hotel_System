@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 
-
 const Navbar = () => {
   const { user, logout } = useAuth();
 
@@ -44,27 +43,61 @@ const Navbar = () => {
 
           {/* Center - Navigation Links */}
           <div className="hidden md:flex items-center space-x-1">
-            <Link 
-              to="/" 
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ 
-                color: colors.white,
-                ':hover': linkHover
-              }}
-            >
-              Home
-            </Link>
-            
-            <Link 
-              to="/about" 
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ 
-                color: colors.white,
-                ':hover': linkHover
-              }}
-            >
-              About
-            </Link>
+            {/* Reception Links */}
+            {user?.role === 'reception' && (
+              <>
+                <Link
+                  to="/reception/home"
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/reception/roomBooking"
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Room Booking
+                </Link>
+                <Link
+                  to="/reception/bookingsList"
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Reservations
+                </Link>
+                <Link
+                  to="/pool-booking"
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Pool Booking
+                </Link>
+                <Link
+                  to="/pool-schedules"
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Pool Schedules
+                </Link>
+              </>
+            )}
 
             {/* Admin Dashboard Button */}
             {user?.role === 'admin' && (
@@ -78,6 +111,33 @@ const Navbar = () => {
               >
                 Dashboard
               </Link>
+            )}
+
+            {/* Show Home and About only when not logged in or for other roles */}
+            {(!user || user?.role !== 'reception') && (
+              <>
+                <Link 
+                  to="/" 
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{ 
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  Home
+                </Link>
+                
+                <Link 
+                  to="/about" 
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{ 
+                    color: colors.white,
+                    ':hover': linkHover
+                  }}
+                >
+                  About
+                </Link>
+              </>
             )}
           </div>
 
