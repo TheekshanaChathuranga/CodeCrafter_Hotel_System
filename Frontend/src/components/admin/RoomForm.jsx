@@ -81,7 +81,6 @@ const RoomForm = ({
                   <option value="Single">Single</option>
                   <option value="Double">Double</option>
                   <option value="Triple">Triple</option>
-                  <option value="Suite">Suite</option>
                 </select>
                 {error.type && (
                   <p className="mt-1 text-sm text-red-600">{error.type}</p>
