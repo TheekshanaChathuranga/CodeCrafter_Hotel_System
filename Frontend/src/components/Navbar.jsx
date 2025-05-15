@@ -33,7 +33,7 @@ const Navbar = () => {
           {/* Left side - Logo/Brand */}
           <div className="flex-shrink-0">
             <Link 
-              to="/" 
+              to="/reception/home" 
               className="text-xl font-bold"
               style={{ color: colors.white }}
             >
