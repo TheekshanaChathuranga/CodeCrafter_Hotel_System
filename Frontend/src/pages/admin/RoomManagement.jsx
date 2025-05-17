@@ -6,11 +6,15 @@ import RoomList from "../../components/admin/RoomList";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import { FiPlus } from "react-icons/fi";
 import ErrorDisplay from "../../components/ErrorDisplay";
-import { SnackbarProvider, useSnackbar } from 'notistack';
+import { SnackbarProvider, useSnackbar } from "notistack";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography
-} from '@mui/material';
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+} from "@mui/material";
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
@@ -22,7 +26,7 @@ const RoomManagement = () => {
     roomStatus: "Available",
     description: "",
     acOption: "",
-    images: []
+    images: [],
   });
   const [showForm, setShowForm] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -32,7 +36,24 @@ const RoomManagement = () => {
   const [deletedImages, setDeletedImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
-   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // State for search functionality
+  const [filters, setFilters] = useState({
+    type: "",
+    acOption: "",
+    roomStatus: "",
+  });
+
+  const getFilteredRooms = () => {
+    return rooms.filter((room) => {
+      return (
+        (filters.type === "" || room.type === filters.type) &&
+        (filters.acOption === "" || room.acOption === filters.acOption) &&
+        (filters.roomStatus === "" || room.roomStatus === filters.roomStatus)
+      );
+    });
+  };
 
   useEffect(() => {
     fetchRooms();
@@ -44,7 +65,9 @@ const RoomManagement = () => {
       const response = await axios.get("http://localhost:5000/api/rooms");
       setRooms(response.data);
     } catch (error) {
-      setError({ general: error.response?.data?.error || "Failed to fetch rooms" });
+      setError({
+        general: error.response?.data?.error || "Failed to fetch rooms",
+      });
     } finally {
       setLoading(false);
     }
@@ -55,7 +78,7 @@ const RoomManagement = () => {
     setForm({ ...form, [name]: value });
     // Clear specific error when field changes
     if (error[name]) {
-      setError(prev => {
+      setError((prev) => {
         const newError = { ...prev };
         delete newError[name];
         return newError;
@@ -66,9 +89,9 @@ const RoomManagement = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     const newErrors = {};
-    
-    const validFiles = files.filter(file => {
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    const validFiles = files.filter((file) => {
+      const validTypes = ["image/jpeg", "image/png", "image/webp"];
       if (!validTypes.includes(file.type)) {
         newErrors.images = `Invalid file type: ${file.name}. Only JPG, PNG, and WEBP are allowed.`;
         return false;
@@ -82,40 +105,43 @@ const RoomManagement = () => {
 
     if (validFiles.length + form.images.length > 3) {
       newErrors.images = "Maximum 3 images allowed";
-      setError(prev => ({ ...prev, ...newErrors }));
+      setError((prev) => ({ ...prev, ...newErrors }));
       return;
     }
 
     if (Object.keys(newErrors).length > 0) {
-      setError(prev => ({ ...prev, ...newErrors }));
+      setError((prev) => ({ ...prev, ...newErrors }));
       return;
     }
 
     setForm({ ...form, images: [...form.images, ...validFiles] });
-    
-    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
     setPreviewImages([...previewImages, ...newPreviews]);
   };
 
   const removeImage = (index) => {
     const newImages = [...form.images];
     const newPreviews = [...previewImages];
-    
+
     if (index < previewImages.length - newImages.length) {
-      const imagePath = previewImages[index].replace('http://localhost:5000', '');
+      const imagePath = previewImages[index].replace(
+        "http://localhost:5000",
+        ""
+      );
       setDeletedImages([...deletedImages, imagePath]);
     }
-    
+
     URL.revokeObjectURL(newPreviews[index]);
     newPreviews.splice(index, 1);
     newImages.splice(index, 1);
-    
+
     setPreviewImages(newPreviews);
-    setForm({...form, images: newImages});
-    
+    setForm({ ...form, images: newImages });
+
     // Clear image errors when removing images
     if (error.images) {
-      setError(prev => {
+      setError((prev) => {
         const newError = { ...prev };
         delete newError.images;
         return newError;
@@ -127,40 +153,40 @@ const RoomManagement = () => {
     e.preventDefault();
     setError({});
     setLoading(true);
-  
+
     // Basic validation
     const errors = {};
-    
+
     if (!form.roomNumber.trim()) {
       errors.roomNumber = "Room number is required";
     }
-  
+
     if (!form.type) {
       errors.type = "Room type is required";
     }
-  
+
     if (!form.acOption) {
       errors.acOption = "AC option is required";
     }
-  
+
     const numericPricePerNight = parseFloat(form.pricePerNight);
     if (isNaN(numericPricePerNight)) {
       errors.pricePerNight = "Price must be a valid number";
     } else if (numericPricePerNight < 0) {
       errors.pricePerNight = "Price cannot be negative";
     }
-  
+
     const numericPricePerDay = parseFloat(form.pricePerDay);
     if (isNaN(numericPricePerDay)) {
       errors.pricePerDay = "Price must be a valid number";
     } else if (numericPricePerDay < 0) {
       errors.pricePerDay = "Price cannot be negative";
     }
-  
+
     if (!form.description.trim()) {
       errors.description = "Description is required";
     }
-  
+
     if (Object.keys(errors).length > 0) {
       setError(errors);
       setLoading(false);
@@ -177,7 +203,7 @@ const RoomManagement = () => {
       formData.append("roomStatus", form.roomStatus);
       formData.append("description", form.description);
       formData.append("deletedImages", JSON.stringify(deletedImages));
-      
+
       form.images.forEach((image) => {
         formData.append("images", image);
       });
@@ -190,11 +216,9 @@ const RoomManagement = () => {
         );
         enqueueSnackbar("Room updated successfully", { variant: "success" });
       } else {
-        await axios.post(
-          "http://localhost:5000/api/rooms/add",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+        await axios.post("http://localhost:5000/api/rooms/add", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
         enqueueSnackbar("Room added successfully", { variant: "success" });
       }
 
@@ -205,10 +229,14 @@ const RoomManagement = () => {
       if (Object.keys(serverErrors).length > 0) {
         setError(serverErrors);
       } else {
-        setError({ general: error.response?.data?.error || "Failed to save room" });
+        setError({
+          general: error.response?.data?.error || "Failed to save room",
+        });
       }
       console.error("Error saving room:", error);
-      enqueueSnackbar(error.response?.data?.error || "Failed to save room", { variant: "error" });
+      enqueueSnackbar(error.response?.data?.error || "Failed to save room", {
+        variant: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -223,10 +251,10 @@ const RoomManagement = () => {
       pricePerDay: room.pricePerDay.toString(),
       roomStatus: room.roomStatus,
       description: room.description,
-      images: []
+      images: [],
     });
     setSelectedRoom(room);
-    setPreviewImages(room.images.map(img => `http://localhost:5000${img}`));
+    setPreviewImages(room.images.map((img) => `http://localhost:5000${img}`));
     setShowForm(true);
     setIsEditing(true);
     setError({});
@@ -234,10 +262,12 @@ const RoomManagement = () => {
 
   const handleDeleteConfirmed = async () => {
     try {
-      console.log("handleDeleteConfirmed : ",selectedRoom._id);
+      console.log("handleDeleteConfirmed : ", selectedRoom._id);
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/rooms/delete/${selectedRoom._id}`);
-      enqueueSnackbar("Room deleted successfully", { variant: 'success' });
+      await axios.delete(
+        `http://localhost:5000/api/rooms/delete/${selectedRoom._id}`
+      );
+      enqueueSnackbar("Room deleted successfully", { variant: "success" });
       fetchRooms();
       resetForm();
     } catch (error) {
@@ -262,7 +292,7 @@ const RoomManagement = () => {
       description: "",
       acOption: "",
       roomStatus: "Available",
-      images: []
+      images: [],
     });
     setPreviewImages([]);
     setDeletedImages([]);
@@ -288,11 +318,11 @@ const RoomManagement = () => {
       </div>
 
       <ErrorDisplay error={error.general} />
-      
+
       {loading && !showForm && <LoadingSpinner />}
 
       {showForm && (
-        <RoomForm 
+        <RoomForm
           form={form}
           isEditing={isEditing}
           loading={loading}
@@ -307,8 +337,73 @@ const RoomManagement = () => {
         />
       )}
 
-      <RoomList 
-        rooms={rooms}
+      {/* Search and filter section */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Room Type
+            </label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+            >
+              <option value="">All Types</option>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Suite">Suite</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              AC Option
+            </label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={filters.acOption}
+              onChange={(e) =>
+                setFilters({ ...filters, acOption: e.target.value })
+              }
+            >
+              <option value="">All Options</option>
+              <option value="AC">AC</option>
+              <option value="Non-AC">Non-AC</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              className="w-full p-2 border border-gray-300 rounded-md"
+              value={filters.roomStatus}
+              onChange={(e) =>
+                setFilters({ ...filters, roomStatus: e.target.value })
+              }
+            >
+              <option value="">All Statuses</option>
+              <option value="Available">Available</option>
+              <option value="Not Available">Not Available</option>
+            </select>
+          </div>
+        </div>
+        <div className="mt-4">
+          <button
+            onClick={() =>
+              setFilters({ type: "", acOption: "", roomStatus: "" })
+            }
+            className="text-sm text-gray-600 hover:text-gray-800"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+      <RoomList
+        rooms={getFilteredRooms()}
         loading={loading}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
@@ -318,13 +413,20 @@ const RoomManagement = () => {
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete <strong>{selectedRoom?.name}</strong>?
+            Are you sure you want to delete{" "}
+            <strong>{selectedRoom?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
-          <Button onClick={handleDeleteConfirmed} color="error" disabled={loading}>
-            {loading ? 'Deleting...' : 'Delete'}
+          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirmed}
+            color="error"
+            disabled={loading}
+          >
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
