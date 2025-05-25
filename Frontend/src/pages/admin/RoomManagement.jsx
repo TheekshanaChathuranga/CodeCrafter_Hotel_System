@@ -31,6 +31,8 @@ const RoomManagement = () => {
     description: "",
     acOption: "",
     images: [],
+    floor: "",
+    facilities: [],
   });
   const [showForm, setShowForm] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -50,12 +52,30 @@ const RoomManagement = () => {
   });
 
   const getFilteredRooms = () => {
+    const today = new Date().toISOString().slice(0, 10);
     return rooms.filter((room) => {
-      return (
-        (filters.type === "" || room.type === filters.type) &&
-        (filters.acOption === "" || room.acOption === filters.acOption) &&
-        (filters.roomStatus === "" || room.roomStatus === filters.roomStatus)
-      );
+      const matchesType = filters.type === "" || room.type === filters.type;
+      const matchesAC =
+        filters.acOption === "" || room.acOption === filters.acOption;
+      let matchesStatus = true;
+      if (filters.roomStatus === "Not Available") {
+        // Show only rooms not available today
+        if (room.roomStatus !== "Not Available") return false;
+        if (
+          room.unavailablePeriod &&
+          room.unavailablePeriod.start &&
+          room.unavailablePeriod.end
+        ) {
+          return (
+            today >= room.unavailablePeriod.start.slice(0, 10) &&
+            today <= room.unavailablePeriod.end.slice(0, 10)
+          );
+        }
+        return false;
+      } else if (filters.roomStatus) {
+        matchesStatus = room.roomStatus === filters.roomStatus;
+      }
+      return matchesType && matchesAC && matchesStatus;
     });
   };
 
@@ -78,15 +98,43 @@ const RoomManagement = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-    // Clear specific error when field changes
-    if (error[name]) {
-      setError((prev) => {
-        const newError = { ...prev };
-        delete newError[name];
-        return newError;
+    const { name, value, type, checked } = e.target;
+    if (
+      name === "unavailablePeriod.start" ||
+      name === "unavailablePeriod.end"
+    ) {
+      setForm((prev) => ({
+        ...prev,
+        unavailablePeriod: {
+          ...prev.unavailablePeriod,
+          [name.split(".")[1]]: value,
+        },
+      }));
+      if (error.unavailablePeriod) {
+        setError((prev) => {
+          const newError = { ...prev };
+          delete newError.unavailablePeriod;
+          return newError;
+        });
+      }
+    } else if (name === "facilities") {
+      setForm((prev) => {
+        const facilities = prev.facilities || [];
+        if (checked) {
+          return { ...prev, facilities: [...facilities, value] };
+        } else {
+          return { ...prev, facilities: facilities.filter((f) => f !== value) };
+        }
       });
+    } else {
+      setForm({ ...form, [name]: value });
+      if (error[name]) {
+        setError((prev) => {
+          const newError = { ...prev };
+          delete newError[name];
+          return newError;
+        });
+      }
     }
   };
 
@@ -107,8 +155,8 @@ const RoomManagement = () => {
       return true;
     });
 
-    if (validFiles.length + form.images.length > 3) {
-      newErrors.images = "Maximum 3 images allowed";
+    if (validFiles.length + form.images.length > 5) {
+      newErrors.images = "Maximum 5 images allowed";
       setError((prev) => ({ ...prev, ...newErrors }));
       return;
     }
@@ -230,6 +278,8 @@ const RoomManagement = () => {
       formData.append("roomStatus", form.roomStatus);
       formData.append("description", form.description);
       formData.append("deletedImages", JSON.stringify(deletedImages));
+      formData.append("floor", form.floor || "");
+      formData.append("facilities", JSON.stringify(form.facilities || []));
 
       if (form.roomStatus === "Not Available") {
         formData.append(
@@ -281,12 +331,18 @@ const RoomManagement = () => {
 
   const handleEdit = (room) => {
     setForm({
-      roomNumber: room.roomNumber,
-      type: room.type,
-      acOption: room.acOption,
-      pricePerNight: room.pricePerNight.toString(),
-      pricePerDay: room.pricePerDay.toString(),
-      roomStatus: room.roomStatus,
+      roomNumber: room.roomNumber || "",
+      type: room.type || "",
+      acOption: room.acOption || "",
+      pricePerNight:
+        room.pricePerNight !== undefined && room.pricePerNight !== null
+          ? room.pricePerNight.toString()
+          : "",
+      pricePerDay:
+        room.pricePerDay !== undefined && room.pricePerDay !== null
+          ? room.pricePerDay.toString()
+          : "",
+      roomStatus: room.roomStatus || "Available",
       unavailablePeriod: room.unavailablePeriod
         ? {
             start: room.unavailablePeriod.start
@@ -297,11 +353,15 @@ const RoomManagement = () => {
               : "",
           }
         : { start: "", end: "" },
-      description: room.description,
+      description: room.description || "",
       images: [],
+      floor: room.floor || "",
+      facilities: room.facilities || [],
     });
     setSelectedRoom(room);
-    setPreviewImages(room.images.map((img) => `http://localhost:5000${img}`));
+    setPreviewImages(
+      room.images ? room.images.map((img) => `http://localhost:5000${img}`) : []
+    );
     setShowForm(true);
     setIsEditing(true);
     setError({});
@@ -341,6 +401,8 @@ const RoomManagement = () => {
       roomStatus: "Available",
       unavailablePeriod: { start: "", end: "" },
       images: [],
+      floor: "",
+      facilities: [],
     });
     setPreviewImages([]);
     setDeletedImages([]);
@@ -387,7 +449,7 @@ const RoomManagement = () => {
 
       {/* Search and filter section */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Room Type
@@ -400,7 +462,7 @@ const RoomManagement = () => {
               <option value="">All Types</option>
               <option value="Single">Single</option>
               <option value="Double">Double</option>
-              <option value="Suite">Suite</option>
+              <option value="Triple">Triple</option>
             </select>
           </div>
 
@@ -418,6 +480,7 @@ const RoomManagement = () => {
               <option value="">All Options</option>
               <option value="AC">AC</option>
               <option value="Non-AC">Non-AC</option>
+              <option value="Flexible">Flexible</option>
             </select>
           </div>
 
@@ -437,16 +500,18 @@ const RoomManagement = () => {
               <option value="Not Available">Not Available</option>
             </select>
           </div>
-        </div>
-        <div className="mt-4">
-          <button
-            onClick={() =>
-              setFilters({ type: "", acOption: "", roomStatus: "" })
-            }
-            className="text-sm text-gray-600 hover:text-gray-800"
-          >
-            Clear Filters
-          </button>
+
+          <div className="w-full p-2 border border-gray-300 rounded-md flex items-center justify-between">
+            <button
+              onClick={() =>
+                setFilters({ type: "", acOption: "", roomStatus: "" })
+              }
+              className="text-sm text-gray-600 hover:text-gray-800"
+            >
+              Clear Filters
+            </button>
+          </div>
+
         </div>
       </div>
 

@@ -2,6 +2,26 @@ import React from 'react';
 import { FiClock } from 'react-icons/fi';
 
 const PoolCard = ({ pool, onEdit }) => {
+  // Calculate availability based on unavailablePeriod and today
+  let availabilityText = '';
+  let isAvailable = true;
+  if (pool.unavailablePeriod && pool.unavailablePeriod.start && pool.unavailablePeriod.end) {
+    const today = new Date();
+    const start = new Date(pool.unavailablePeriod.start);
+    const end = new Date(pool.unavailablePeriod.end);
+    // If today is before start or after end, available
+    if (today < start || today > end) {
+      availabilityText = 'Available';
+      isAvailable = true;
+    } else {
+      availabilityText = `Not Available (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
+      isAvailable = false;
+    }
+  } else {
+    availabilityText = pool.poolStatus;
+    isAvailable = pool.poolStatus === 'Available';
+  }
+
   return (
     <div
       className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
@@ -23,11 +43,9 @@ const PoolCard = ({ pool, onEdit }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold">{pool.name}</h3>
           <span className={`px-2 py-1 rounded-full text-xs ${
-            pool.poolStatus === 'Available' ? 'bg-green-100 text-green-800' :
-            pool.poolStatus === 'Maintenance' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
+            isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
-            {pool.poolStatus}
+            {availabilityText}
           </span>
         </div>
         <p className="text-gray-600 mb-1">

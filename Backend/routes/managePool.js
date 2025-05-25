@@ -37,8 +37,23 @@ router.post('/add',
       } = req.body;
 
       // Basic validation
-      if (!name || !description || !capacity || !poolStatus || !openingTime || !closingTime) {
+      if (!name || !description || !capacity || !poolStatus || !openingTime || !closingTime || !req.body.pricePerPersonHour) {
         throw new Error('Missing required fields');
+      }
+
+      let unavailablePeriod = undefined;
+      if (req.body.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(req.body.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
       }
 
       const pool = new Pool({
@@ -48,7 +63,9 @@ router.post('/add',
         poolStatus: poolStatus || 'Available',
         openingTime,
         closingTime,
-        images: req.files?.map(file => `/uploads/${file.filename}`) || []
+        pricePerPersonHour: parseFloat(req.body.pricePerPersonHour),
+        images: req.files?.map(file => `/uploads/${file.filename}`) || [],
+        ...(unavailablePeriod && { unavailablePeriod })
       });
 
       await pool.save();
@@ -133,6 +150,25 @@ router.put('/update/:id',
       if (updateData.capacity) {
         update.capacity = parseInt(updateData.capacity);
       }
+      if (updateData.pricePerPersonHour) {
+        update.pricePerPersonHour = parseFloat(updateData.pricePerPersonHour);
+      }
+
+      let unavailablePeriod = undefined;
+      if (updateData.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(updateData.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
+      }
+      if (unavailablePeriod) update.unavailablePeriod = unavailablePeriod;
 
       const updatedPool = await Pool.findByIdAndUpdate(
         id, 

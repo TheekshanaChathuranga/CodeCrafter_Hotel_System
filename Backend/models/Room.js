@@ -15,7 +15,7 @@ const roomSchema = new mongoose.Schema({
   acOption: {
     type: String,
     required: [true, "AC option is required"],
-    enum: ['AC', 'Non-AC', 'Both'],
+    enum: ['AC', 'Non-AC', 'Flexible'],
     default: 'AC'
   },
   hasAC: {
@@ -65,10 +65,18 @@ const roomSchema = new mongoose.Schema({
     type: [String],
     validate: {
       validator: function(v) {
-        return v.length <= 3;
+        return v.length <= 5;
       },
-      message: 'Maximum 3 images allowed'
+      message: 'Maximum 5 images allowed'
     }
+  },
+  floor: {
+    type: String,
+    default: ""
+  },
+  facilities: {
+    type: [String],
+    default: []
   }
 }, { 
   timestamps: true,

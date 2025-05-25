@@ -103,7 +103,7 @@ const RoomForm = ({
                   <option value="">Select Option</option>
                   <option value="AC">AC Only</option>
                   <option value="Non-AC">Non-AC Only</option>
-                  <option value="Both">Flexible (Can be AC or Non-AC)</option>
+                  <option value="Flexible">Flexible (Can be AC or Non-AC)</option>
                 </select>
                 {error.acOption && (
                   <p className="mt-1 text-sm text-red-600">{error.acOption}</p>
@@ -233,6 +233,7 @@ const RoomForm = ({
                           type="date"
                           name="unavailablePeriod.end"
                           value={form.unavailablePeriod?.end || ""}
+                          min={form.unavailablePeriod?.start || undefined}
                           onChange={(e) =>
                             onChange({
                               target: {
@@ -257,6 +258,83 @@ const RoomForm = ({
                     {error.roomStatus}
                   </p>
                 )}
+              </div>
+
+              {/* Floor Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Floor *
+                </label>
+                <select
+                  name="floor"
+                  value={form.floor || ""}
+                  onChange={onChange}
+                  className={`w-full px-3 py-2 border ${
+                    error.floor ? "border-red-500" : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  required
+                >
+                  <option value="">Select Floor</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+                {error.floor && (
+                  <p className="mt-1 text-sm text-red-600">{error.floor}</p>
+                )}
+              </div>
+
+              {/* Facilities Checkboxes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facilities
+                </label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="Mini Fridge"
+                      checked={form.facilities?.includes("Mini Fridge")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Mini Fridge</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="TV"
+                      checked={form.facilities?.includes("TV")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">TV</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="WiFi"
+                      checked={form.facilities?.includes("WiFi")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Wi-Fi</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="Balcony"
+                      checked={form.facilities?.includes("Balcony")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Balcony</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -284,13 +362,16 @@ const RoomForm = ({
             {/* Image Uploader */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Room Images (Max 3)
+                Room Images (Max 5)
               </label>
               <ImageUploader
                 previewImages={previewImages}
-                onImageChange={onImageChange}
+                onImageChange={previewImages.length >= 5 ? undefined : onImageChange}
                 onRemoveImage={onRemoveImage}
               />
+              {previewImages.length >= 5 && (
+                <p className="mt-1 text-sm text-yellow-600">Maximum 5 images allowed. Remove an image to add another.</p>
+              )}
               {error.images && (
                 <p className="mt-1 text-sm text-red-600">{error.images}</p>
               )}
@@ -311,7 +392,7 @@ const RoomForm = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                 disabled={loading}
                 aria-label="Cancel"
               >
@@ -319,7 +400,7 @@ const RoomForm = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center disabled:opacity-50"
+                className="px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75]"
                 disabled={loading}
                 aria-label={isEditing ? "Update room" : "Save room"}
               >

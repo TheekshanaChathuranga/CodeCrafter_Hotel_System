@@ -32,6 +32,21 @@ const poolSchema = new mongoose.Schema({
       createdAt: {
         type: Date,
         default: Date.now
+      },
+      pricePerPersonHour: {
+        type: Number,
+        required: true,
+        min: 0
+      },
+      unavailablePeriod: {
+        start: {
+          type: Date,
+          required: function() { return this.poolStatus === 'Not Available'; }
+        },
+        end: {
+          type: Date,
+          required: function() { return this.poolStatus === 'Not Available'; }
+        }
       }
     }, { timestamps: true });
     

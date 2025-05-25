@@ -48,11 +48,11 @@ const RoomCard = ({ room, onEdit }) => {
           </span>
         </div>
         <p className="text-gray-600 mb-1">
-          • {room.type} • {room.acOption === 'Both' ? 'AC/Non-AC' : room.acOption}
+          • {room.type} • {room.acOption === 'Flexible' ? 'AC/Non-AC' : room.acOption}
         </p>
         <p className="text-gray-600 mb-1">
-          • LKR {room.pricePerNight.toFixed(2)}/night 
-          • LKR {room.pricePerDay.toFixed(2)}/day
+          • LKR {room.pricePerNight ? Number(room.pricePerNight).toFixed(2) : '0.00'}/night 
+          • LKR {room.pricePerDay ? Number(room.pricePerDay).toFixed(2) : '0.00'}/day
         </p>
         {room.description && (
           <p className="text-gray-500 text-sm line-clamp-2">{room.description}</p>

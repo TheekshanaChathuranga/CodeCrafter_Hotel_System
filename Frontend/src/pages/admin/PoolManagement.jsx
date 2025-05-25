@@ -21,6 +21,8 @@ const PoolManagement = () => {
     poolStatus: "Available",
     openingTime: "08:00",
     closingTime: "20:00",
+    pricePerPersonHour: "",
+    unavailablePeriod: { start: "", end: "" },
     images: []
   });
   const [showForm, setShowForm] = useState(false);
@@ -52,7 +54,17 @@ const PoolManagement = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    if (name === "unavailablePeriod.start" || name === "unavailablePeriod.end") {
+      setForm((prev) => ({
+        ...prev,
+        unavailablePeriod: {
+          ...prev.unavailablePeriod,
+          [name.split(".")[1]]: value,
+        },
+      }));
+    } else {
+      setForm({ ...form, [name]: value });
+    }
     setError("");
   };
 
@@ -131,6 +143,16 @@ const PoolManagement = () => {
       formData.append("poolStatus", form.poolStatus);
       formData.append("openingTime", form.openingTime);
       formData.append("closingTime", form.closingTime);
+      formData.append("pricePerPersonHour", form.pricePerPersonHour);
+      if (form.poolStatus === "Not Available") {
+        formData.append(
+          "unavailablePeriod",
+          JSON.stringify({
+            start: form.unavailablePeriod.start,
+            end: form.unavailablePeriod.end,
+          })
+        );
+      }
       formData.append("deletedImages", JSON.stringify(deletedImages));
     
       
@@ -171,6 +193,17 @@ const PoolManagement = () => {
       poolStatus: pool.poolStatus,
       openingTime: pool.openingTime,
       closingTime: pool.closingTime,
+      pricePerPersonHour: pool.pricePerPersonHour?.toString() || "",
+      unavailablePeriod: pool.unavailablePeriod
+        ? {
+            start: pool.unavailablePeriod.start
+              ? pool.unavailablePeriod.start.slice(0, 10)
+              : "",
+            end: pool.unavailablePeriod.end
+              ? pool.unavailablePeriod.end.slice(0, 10)
+              : "",
+          }
+        : { start: "", end: "" },
       images: []
     });
     setSelectedPool(pool);
@@ -215,6 +248,8 @@ const PoolManagement = () => {
       poolStatus: "Available",
       openingTime: "08:00",
       closingTime: "20:00",
+      pricePerPersonHour: "",
+      unavailablePeriod: { start: "", end: "" },
       images: []
     });
     setPreviewImages([]);
