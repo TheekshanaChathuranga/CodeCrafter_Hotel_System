@@ -24,6 +24,10 @@ const RoomManagement = () => {
     pricePerNight: "",
     pricePerDay: "",
     roomStatus: "Available",
+    unavailablePeriod: {
+      start: "",
+      end: "",
+    },
     description: "",
     acOption: "",
     images: [],
@@ -183,6 +187,29 @@ const RoomManagement = () => {
       errors.pricePerDay = "Price cannot be negative";
     }
 
+    if (form.roomStatus === "Not Available") {
+      if (!form.unavailablePeriod?.start || !form.unavailablePeriod?.end) {
+        setError({
+          ...error,
+          unavailablePeriod:
+            "Date range is required when status is Not Available",
+        });
+        return;
+      }
+
+      // Validate end date is after start date
+      if (
+        new Date(form.unavailablePeriod.end) <
+        new Date(form.unavailablePeriod.start)
+      ) {
+        setError({
+          ...error,
+          unavailablePeriod: "End date must be after start date",
+        });
+        return;
+      }
+    }
+
     if (!form.description.trim()) {
       errors.description = "Description is required";
     }
@@ -203,6 +230,16 @@ const RoomManagement = () => {
       formData.append("roomStatus", form.roomStatus);
       formData.append("description", form.description);
       formData.append("deletedImages", JSON.stringify(deletedImages));
+
+      if (form.roomStatus === "Not Available") {
+        formData.append(
+          "unavailablePeriod",
+          JSON.stringify({
+            start: form.unavailablePeriod.start,
+            end: form.unavailablePeriod.end,
+          })
+        );
+      }
 
       form.images.forEach((image) => {
         formData.append("images", image);
@@ -250,6 +287,16 @@ const RoomManagement = () => {
       pricePerNight: room.pricePerNight.toString(),
       pricePerDay: room.pricePerDay.toString(),
       roomStatus: room.roomStatus,
+      unavailablePeriod: room.unavailablePeriod
+        ? {
+            start: room.unavailablePeriod.start
+              ? room.unavailablePeriod.start.slice(0, 10)
+              : "",
+            end: room.unavailablePeriod.end
+              ? room.unavailablePeriod.end.slice(0, 10)
+              : "",
+          }
+        : { start: "", end: "" },
       description: room.description,
       images: [],
     });
@@ -292,6 +339,7 @@ const RoomManagement = () => {
       description: "",
       acOption: "",
       roomStatus: "Available",
+      unavailablePeriod: { start: "", end: "" },
       images: [],
     });
     setPreviewImages([]);

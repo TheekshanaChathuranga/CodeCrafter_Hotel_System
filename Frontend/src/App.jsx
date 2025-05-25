@@ -22,11 +22,11 @@ import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails
 const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isReceptionRoute = location.pathname.startsWith("/reception");
+  const isreceptionistRoute = location.pathname.startsWith("/receptionist");
 
   return (
     <div>
-      {(!isAdminRoute && !isReceptionRoute) && <Navbar />}
+      {(!isAdminRoute && !isreceptionistRoute) && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -53,11 +53,11 @@ const App = () => {
           <Route path="bookingNotifications/:id" element={<BookingConfirmationDetails />} />
         </Route>
 
-        {/* Reception routes */}
+        {/* receptionist routes */}
         <Route 
-          path="/reception" 
+          path="/receptionist" 
           element={
-            <ProtectedRoute allowedRoles={['reception']}>
+            <ProtectedRoute allowedRoles={['receptionist']}>
               <DashboardLayout />
             </ProtectedRoute>
           }

@@ -15,7 +15,6 @@ const RoomForm = ({
   onDelete,
   error = {},
 }) => {
-
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -201,6 +200,58 @@ const RoomForm = ({
                     <span className="ml-2 text-gray-700">Not Available</span>
                   </label>
                 </div>
+
+                {/* Date Range Selector (shown only when Not Available is selected) */}
+                {form.roomStatus === "Not Available" && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Date Range
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="date"
+                          name="unavailablePeriod.start"
+                          value={form.unavailablePeriod?.start || ""}
+                          onChange={(e) =>
+                            onChange({
+                              target: {
+                                name: "unavailablePeriod",
+                                value: {
+                                  ...form.unavailablePeriod,
+                                  start: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="date"
+                          name="unavailablePeriod.end"
+                          value={form.unavailablePeriod?.end || ""}
+                          onChange={(e) =>
+                            onChange({
+                              target: {
+                                name: "unavailablePeriod",
+                                value: {
+                                  ...form.unavailablePeriod,
+                                  end: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {error.roomStatus && (
                   <p className="mt-1 text-sm text-red-600">
                     {error.roomStatus}

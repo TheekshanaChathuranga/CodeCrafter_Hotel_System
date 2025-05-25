@@ -37,7 +37,24 @@ const roomSchema = new mongoose.Schema({
     type: String,
     enum: ['Available', 'Not Available'],
     required: [true, "Room status is required"],
-    //default: 'Available'
+    default: 'Available'
+  },
+  // Added unavailable period fields
+  unavailablePeriod: {
+    start: {
+      type: Date,
+      required: function() { return this.roomStatus === 'Not Available'; }
+    },
+    end: {
+      type: Date,
+      required: function() { return this.roomStatus === 'Not Available'; },
+      validate: {
+        validator: function(endDate) {
+          return endDate >= this.unavailablePeriod.start;
+        },
+        message: 'End date must be after or equal to start date'
+      }
+    }
   },
   description: {
     type: String,

@@ -16,9 +16,9 @@ const DashboardSidebar = () => {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const allMenuItems = [
-    { title: "Rooms", url: { admin : "/admin/rooms", reception : "" }, icon: <Hotel size={18} />, roles : ["admin", "reception"] },
-    { title: "Pools", url: { admin : "/admin/pools", reception : "" }, icon: <LifeBuoy size={18} />, roles : ["admin", "reception"] },
-    { title: "Reservations", url: { admin : "/admin/reservations", reception : "" }, icon: <CalendarCheck size={18} />, roles : ["admin", "reception"] },
+    { title: "Rooms", url: { admin : "/admin/rooms", receptionist : "" }, icon: <Hotel size={18} />, roles : ["admin", "receptionist"] },
+    { title: "Pools", url: { admin : "/admin/pools", receptionist : "" }, icon: <LifeBuoy size={18} />, roles : ["admin", "receptionist"] },
+    { title: "Reservations", url: { admin : "/admin/reservations", receptionist : "" }, icon: <CalendarCheck size={18} />, roles : ["admin", "receptionist"] },
     { title: "Notifications", url: { admin : "/admin/bookingNotifications" }, icon: <Bell size={18} />, roles : ["admin"] },
     { title: "Users", url: {admin: "/admin/users"}, icon: <UserCheck size={18} />, roles : ["admin"]  },
     { title: "Settings", url: {admin:"/admin/settings"}, icon: <Settings size={18} />, roles : ["admin"]  },

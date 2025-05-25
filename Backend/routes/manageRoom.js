@@ -23,7 +23,7 @@ const deleteRoomImages = (images) => {
 
 // Add new room
 router.post("/add",
-  upload.array("images", 3), // Using shared middleware (max 3 images)
+  upload.array("images", 3),
   handleUploadErrors,
   async (req, res) => {
     try {
@@ -54,6 +54,21 @@ router.post("/add",
         throw new Error("Invalid price per day value");
       }
 
+      let unavailablePeriod = undefined;
+      if (req.body.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(req.body.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
+      }
+
       const newRoom = new Room({
         roomNumber,
         type,
@@ -63,11 +78,12 @@ router.post("/add",
         pricePerDay: numericPricePerDay,
         roomStatus,
         description,
-        images: req.files?.map(file => `/uploads/${file.filename}`) || []
+        images: req.files?.map(file => `/uploads/${file.filename}`) || [],
+        ...(unavailablePeriod && { unavailablePeriod })
       });
 
       await newRoom.save();
-      res.status(201).json({ 
+      res.status(201).json({
         message: "Room added successfully",
         room: newRoom
       });
@@ -173,19 +189,37 @@ router.put("/update/:id",
         throw new Error("Invalid room status");
       }
 
+      let unavailablePeriod = undefined;
+      if (req.body.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(req.body.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
+      }
+
+      const updateFields = {
+        roomNumber,
+        type,
+        acOption,
+        hasAC: acOption !== "Non-AC",
+        pricePerNight: numericPricePerNight,
+        pricePerDay: numericPricePerDay,
+        roomStatus,
+        description,
+        images: allImages
+      };
+      if (unavailablePeriod) updateFields.unavailablePeriod = unavailablePeriod;
+
       const updatedRoom = await Room.findByIdAndUpdate(
         id,
-        {
-          roomNumber,
-          type,
-          acOption,
-          hasAC: acOption !== "Non-AC",
-          pricePerNight: numericPricePerNight,
-          pricePerDay: numericPricePerDay,
-          roomStatus,
-          description,
-          images: allImages
-        },
+        updateFields,
         { new: true, runValidators: true }
       );
 

@@ -1,6 +1,26 @@
 import React from 'react';
 
 const RoomCard = ({ room, onEdit }) => {
+  // Calculate availability based on unavailablePeriod and today
+  let availabilityText = '';
+  let isAvailable = true;
+  if (room.unavailablePeriod && room.unavailablePeriod.start && room.unavailablePeriod.end) {
+    const today = new Date();
+    const start = new Date(room.unavailablePeriod.start);
+    const end = new Date(room.unavailablePeriod.end);
+    // If today is before start or after end, available
+    if (today < start || today > end) {
+      availabilityText = 'Available';
+      isAvailable = true;
+    } else {
+      availabilityText = `Not Available (${start.toLocaleDateString()} - ${end.toLocaleDateString()})`;
+      isAvailable = false;
+    }
+  } else {
+    availabilityText = room.roomStatus;
+    isAvailable = room.roomStatus === 'Available';
+  }
+
   return (
     <div
       className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer"
@@ -22,11 +42,9 @@ const RoomCard = ({ room, onEdit }) => {
         <div className="flex justify-between items-start mb-2">
           <h3 className="text-lg font-semibold">Room {room.roomNumber}</h3>
           <span className={`px-2 py-1 rounded-full text-xs ${
-            room.roomStatus === 'Available' ? 'bg-green-100 text-green-800' :
-            room.roomStatus === 'Not Available' ? 'bg-red-100 text-red-800' :
-            'bg-yellow-100 text-yellow-800'
+            isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
           }`}>
-            {room.roomStatus}
+            {availabilityText}
           </span>
         </div>
         <p className="text-gray-600 mb-1">
