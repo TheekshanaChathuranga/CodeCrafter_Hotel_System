@@ -12,6 +12,9 @@ import ManageRooms from "./pages/admin/RoomManagement";
 import ManageUsers from "./pages/admin/UserManagement";
 import ProtectedRoute from "./components/protectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
+import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
+import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
+
 
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
@@ -19,11 +22,11 @@ import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
-  const isReceptionRoute = location.pathname.startsWith("/reception");
+  const isreceptionistRoute = location.pathname.startsWith("/receptionist");
 
   return (
     <div>
-      {(!isAdminRoute && !isReceptionRoute) && <Navbar />}
+      {(!isAdminRoute && !isreceptionistRoute) && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -46,13 +49,15 @@ const App = () => {
           <Route path="pools" element={<ManagePools />} />
           <Route path="reservations" element={<ReservationCalendar />} />
           <Route path="users" element={<ManageUsers />} />
+          <Route path="bookingNotifications" element={<BookingConfirmation />} />
+          <Route path="bookingNotifications/:id" element={<BookingConfirmationDetails />} />
         </Route>
 
-        {/* Reception routes */}
+        {/* receptionist routes */}
         <Route 
-          path="/reception" 
+          path="/receptionist" 
           element={
-            <ProtectedRoute allowedRoles={['reception']}>
+            <ProtectedRoute allowedRoles={['receptionist']}>
               <DashboardLayout />
             </ProtectedRoute>
           }

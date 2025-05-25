@@ -1,5 +1,3 @@
-import React from 'react';
-import { FiClock } from 'react-icons/fi';
 
 const TimeInput = ({ label, value, onChange }) => {
   return (
@@ -15,7 +13,6 @@ const TimeInput = ({ label, value, onChange }) => {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
-        <FiClock className="absolute right-3 top-3 text-gray-400" />
       </div>
     </div>
   );

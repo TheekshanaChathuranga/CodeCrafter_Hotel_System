@@ -1,14 +1,6 @@
-import React, { useState } from 'react';
-import { FiX, FiTrash2 } from 'react-icons/fi';
-import ImageUploader from './ImageUploader';
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Button as MuiButton
-} from '@mui/material';
+import React, { useState } from "react";
+import { FiX, FiTrash2 } from "react-icons/fi";
+import ImageUploader from "./ImageUploader";
 
 const RoomForm = ({
   form,
@@ -21,20 +13,8 @@ const RoomForm = ({
   onImageChange,
   onRemoveImage,
   onDelete,
-  error = {}
+  error = {},
 }) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  const handleDeleteClick = (e) => {
-    e.preventDefault();
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    setDeleteDialogOpen(false);
-    onDelete();
-  };
-
   return (
     <div className="fixed inset-0 bg-gray-500/75 transition-opacity flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -71,12 +51,14 @@ const RoomForm = ({
                   onChange={onChange}
                   placeholder="101"
                   className={`w-full px-3 py-2 border ${
-                    error.roomNumber ? 'border-red-500' : 'border-gray-300'
+                    error.roomNumber ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 />
                 {error.roomNumber && (
-                  <p className="mt-1 text-sm text-red-600">{error.roomNumber}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.roomNumber}
+                  </p>
                 )}
               </div>
 
@@ -90,7 +72,7 @@ const RoomForm = ({
                   value={form.type}
                   onChange={onChange}
                   className={`w-full px-3 py-2 border ${
-                    error.type ? 'border-red-500' : 'border-gray-300'
+                    error.type ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
@@ -98,7 +80,6 @@ const RoomForm = ({
                   <option value="Single">Single</option>
                   <option value="Double">Double</option>
                   <option value="Triple">Triple</option>
-                  <option value="Suite">Suite</option>
                 </select>
                 {error.type && (
                   <p className="mt-1 text-sm text-red-600">{error.type}</p>
@@ -115,14 +96,14 @@ const RoomForm = ({
                   value={form.acOption}
                   onChange={onChange}
                   className={`w-full px-3 py-2 border ${
-                    error.acOption ? 'border-red-500' : 'border-gray-300'
+                    error.acOption ? "border-red-500" : "border-gray-300"
                   } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
                   <option value="">Select Option</option>
                   <option value="AC">AC Only</option>
                   <option value="Non-AC">Non-AC Only</option>
-                  <option value="Both">Flexible (Can be AC or Non-AC)</option>
+                  <option value="Flexible">Flexible (Can be AC or Non-AC)</option>
                 </select>
                 {error.acOption && (
                   <p className="mt-1 text-sm text-red-600">{error.acOption}</p>
@@ -147,13 +128,15 @@ const RoomForm = ({
                     onChange={onChange}
                     placeholder="100.00"
                     className={`block w-full pl-12 pr-3 py-2 border ${
-                      error.pricePerNight ? 'border-red-500' : 'border-gray-300'
+                      error.pricePerNight ? "border-red-500" : "border-gray-300"
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     required
                   />
                 </div>
                 {error.pricePerNight && (
-                  <p className="mt-1 text-sm text-red-600">{error.pricePerNight}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.pricePerNight}
+                  </p>
                 )}
               </div>
 
@@ -175,13 +158,15 @@ const RoomForm = ({
                     onChange={onChange}
                     placeholder="100.00"
                     className={`block w-full pl-12 pr-3 py-2 border ${
-                      error.pricePerDay ? 'border-red-500' : 'border-gray-300'
+                      error.pricePerDay ? "border-red-500" : "border-gray-300"
                     } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     required
                   />
                 </div>
                 {error.pricePerDay && (
-                  <p className="mt-1 text-sm text-red-600">{error.pricePerDay}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.pricePerDay}
+                  </p>
                 )}
               </div>
 
@@ -215,9 +200,141 @@ const RoomForm = ({
                     <span className="ml-2 text-gray-700">Not Available</span>
                   </label>
                 </div>
-                {error.roomStatus && (
-                  <p className="mt-1 text-sm text-red-600">{error.roomStatus}</p>
+
+                {/* Date Range Selector (shown only when Not Available is selected) */}
+                {form.roomStatus === "Not Available" && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Date Range
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="date"
+                          name="unavailablePeriod.start"
+                          value={form.unavailablePeriod?.start || ""}
+                          onChange={(e) =>
+                            onChange({
+                              target: {
+                                name: "unavailablePeriod",
+                                value: {
+                                  ...form.unavailablePeriod,
+                                  start: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="date"
+                          name="unavailablePeriod.end"
+                          value={form.unavailablePeriod?.end || ""}
+                          min={form.unavailablePeriod?.start || undefined}
+                          onChange={(e) =>
+                            onChange({
+                              target: {
+                                name: "unavailablePeriod",
+                                value: {
+                                  ...form.unavailablePeriod,
+                                  end: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
                 )}
+
+                {error.roomStatus && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {error.roomStatus}
+                  </p>
+                )}
+              </div>
+
+              {/* Floor Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Floor *
+                </label>
+                <select
+                  name="floor"
+                  value={form.floor || ""}
+                  onChange={onChange}
+                  className={`w-full px-3 py-2 border ${
+                    error.floor ? "border-red-500" : "border-gray-300"
+                  } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  required
+                >
+                  <option value="">Select Floor</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+                {error.floor && (
+                  <p className="mt-1 text-sm text-red-600">{error.floor}</p>
+                )}
+              </div>
+
+              {/* Facilities Checkboxes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Facilities
+                </label>
+                <div className="flex flex-wrap gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="Mini Fridge"
+                      checked={form.facilities?.includes("Mini Fridge")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Mini Fridge</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="TV"
+                      checked={form.facilities?.includes("TV")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">TV</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="WiFi"
+                      checked={form.facilities?.includes("WiFi")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Wi-Fi</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="facilities"
+                      value="Balcony"
+                      checked={form.facilities?.includes("Balcony")}
+                      onChange={onChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    />
+                    <span className="ml-2">Balcony</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -233,7 +350,7 @@ const RoomForm = ({
                 rows="3"
                 placeholder="Room features and details..."
                 className={`w-full px-3 py-2 border ${
-                  error.description ? 'border-red-500' : 'border-gray-300'
+                  error.description ? "border-red-500" : "border-gray-300"
                 } rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
               />
@@ -245,13 +362,16 @@ const RoomForm = ({
             {/* Image Uploader */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Room Images (Max 3)
+                Room Images (Max 5)
               </label>
-              <ImageUploader 
+              <ImageUploader
                 previewImages={previewImages}
-                onImageChange={onImageChange}
+                onImageChange={previewImages.length >= 5 ? undefined : onImageChange}
                 onRemoveImage={onRemoveImage}
               />
+              {previewImages.length >= 5 && (
+                <p className="mt-1 text-sm text-yellow-600">Maximum 5 images allowed. Remove an image to add another.</p>
+              )}
               {error.images && (
                 <p className="mt-1 text-sm text-red-600">{error.images}</p>
               )}
@@ -262,10 +382,9 @@ const RoomForm = ({
               {isEditing && (
                 <button
                   type="button"
-                  onClick={handleDeleteClick}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center disabled:opacity-50"
+                  onClick={onDelete}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center"
                   disabled={loading}
-                  aria-label="Delete room"
                 >
                   <FiTrash2 className="mr-2" /> Delete
                 </button>
@@ -273,7 +392,7 @@ const RoomForm = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                 disabled={loading}
                 aria-label="Cancel"
               >
@@ -281,54 +400,44 @@ const RoomForm = ({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-center disabled:opacity-50"
+                className="px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75]"
                 disabled={loading}
                 aria-label={isEditing ? "Update room" : "Save room"}
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     {isEditing ? "Updating..." : "Saving..."}
                   </>
+                ) : isEditing ? (
+                  "Update Room"
                 ) : (
-                  isEditing ? "Update Room" : "Save Room"
+                  "Save Room"
                 )}
               </button>
             </div>
           </form>
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">
-          {"Confirm Deletion"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete Room {form.roomNumber}? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <MuiButton onClick={() => setDeleteDialogOpen(false)}>Cancel</MuiButton>
-          <MuiButton 
-            onClick={handleDeleteConfirm} 
-            color="error"
-            autoFocus
-            disabled={loading}
-          >
-            {loading ? 'Deleting...' : 'Confirm Delete'}
-          </MuiButton>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };

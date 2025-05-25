@@ -15,7 +15,7 @@ const roomSchema = new mongoose.Schema({
   acOption: {
     type: String,
     required: [true, "AC option is required"],
-    enum: ['AC', 'Non-AC', 'Both'],
+    enum: ['AC', 'Non-AC', 'Flexible'],
     default: 'AC'
   },
   hasAC: {
@@ -37,7 +37,24 @@ const roomSchema = new mongoose.Schema({
     type: String,
     enum: ['Available', 'Not Available'],
     required: [true, "Room status is required"],
-    //default: 'Available'
+    default: 'Available'
+  },
+  // Added unavailable period fields
+  unavailablePeriod: {
+    start: {
+      type: Date,
+      required: function() { return this.roomStatus === 'Not Available'; }
+    },
+    end: {
+      type: Date,
+      required: function() { return this.roomStatus === 'Not Available'; },
+      validate: {
+        validator: function(endDate) {
+          return endDate >= this.unavailablePeriod.start;
+        },
+        message: 'End date must be after or equal to start date'
+      }
+    }
   },
   description: {
     type: String,
@@ -48,10 +65,18 @@ const roomSchema = new mongoose.Schema({
     type: [String],
     validate: {
       validator: function(v) {
-        return v.length <= 3;
+        return v.length <= 5;
       },
-      message: 'Maximum 3 images allowed'
+      message: 'Maximum 5 images allowed'
     }
+  },
+  floor: {
+    type: String,
+    default: ""
+  },
+  facilities: {
+    type: [String],
+    default: []
   }
 }, { 
   timestamps: true,
