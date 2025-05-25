@@ -41,7 +41,7 @@ router.post("/signup", async (req, res) => {
 
 // Login
 router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, remember } = req.body;
 
   try {
     const user = await User.findOne({ email });
@@ -50,9 +50,10 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    //Backend validates and returns token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ token, userId: user._id });
+    // Set token expiry based on remember checkbox
+    const expiresIn = remember ? "7d" : "1h";
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn });
+    res.json({ token, userId: user._id, expiresIn });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Error logging in", error });

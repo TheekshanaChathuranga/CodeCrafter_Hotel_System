@@ -3,13 +3,25 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 
-export const login = async (credentials) => {
+export const login = async ({ email, password, remember }) => {
   try {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials);
-    return response.data;
+    const response = await axios.post(`${API_URL}/auth/login`, { email, password, remember });
+    const data = response.data;
+    
+    if (data.token) {
+      // Optionally store expiresIn if you want to use it for auto-logout
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId);
+      if (data.expiresIn) {
+        localStorage.setItem('tokenExpiresIn', data.expiresIn);
+      }
+      // You may want to fetch user details here or return data
+      return { success: true, token: data.token, user: data.user, userId: data.userId };
+    } else {
+      return { success: false, message: data.message || 'Login failed' };
+    }
   } catch (error) {
-    // Properly re-throw the full Axios error object
-    throw error;
+    return { success: false, message: error.message };
   }
 };
 

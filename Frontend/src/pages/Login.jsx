@@ -10,6 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [remember, setRemember] = useState(false);
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
@@ -40,7 +41,7 @@ const Login = () => {
     setErrors({}); // Clear previous errors
     
     try {
-      const response = await login({ email, password });
+      const response = await login({ email, password, remember });
       
       if (response.success) {
 
@@ -182,6 +183,8 @@ const Login = () => {
                   type="checkbox"
                   className="h-4 w-4 focus:ring-blue-500 border-gray-300 rounded"
                   style={{ color: "#16A085" }}
+                  checked={remember}
+                  onChange={e => setRemember(e.target.checked)}
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm" style={{ color: "#333333" }}>
                   Remember me
