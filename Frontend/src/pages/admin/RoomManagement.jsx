@@ -448,8 +448,8 @@ const RoomManagement = () => {
       )}
 
       {/* Search and filter section */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="mb-5 bg-white p-3 rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Room Type
@@ -501,7 +501,7 @@ const RoomManagement = () => {
             </select>
           </div>
 
-          <div className="w-full p-2 border border-gray-300 rounded-md flex items-center justify-between">
+          <div className="gap-4 flex items-center">
             <button
               onClick={() =>
                 setFilters({ type: "", acOption: "", roomStatus: "" })
