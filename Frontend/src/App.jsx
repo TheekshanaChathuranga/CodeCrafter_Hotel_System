@@ -15,6 +15,11 @@ import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
 
+import Room_Book from "./pages/customer/Room_Book";
+import Pool_Book from "./pages/customer/Pool_Book";
+
+
+
 
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
@@ -34,6 +39,10 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        
+        <Route path="/room-booking" element={<Room_Book />} />
+        <Route path="/pool-booking" element={<Pool_Book />} />
+
 
         {/* Admin routes */}
         <Route 
