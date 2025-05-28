@@ -68,7 +68,6 @@ useEffect(() => {
 
 
 
-
   // Apply filters
   useEffect(() => {
     let result = rooms;
@@ -116,6 +115,7 @@ const handleDateSelect = (date, type) => {
     [type]: date,
   }));
 };
+
 
   const handleBookNow = (room) => {
     setSelectedRoom(room);
@@ -461,7 +461,8 @@ const handleDateSelect = (date, type) => {
         </div>
       </div>
     </div>
-    {/* Date Range Picker */}
+
+
 
 
       {/* Filters */}
