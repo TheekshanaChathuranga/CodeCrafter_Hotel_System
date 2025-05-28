@@ -131,7 +131,7 @@ import bookingRoutes from "./routes/booking.js";
 //import poolRoutes from "./routes/poolRoutes.js";
 import poolRoutes from "./routes/managePool.js";
 //import poolBookingRoutes from "./routes/poolBooking.js";
-//import poolBookingRoutes from "./routes/poolBooking.js";
+import poolBookingRoutes from "./routes/poolBooking.js";//pool booking
 import manageRoomRoutes from "./routes/manageRoom.js";
 import managePoolRoutes from "./routes/managePool.js";
 import manageUserRoutes from "./routes/manageUser.js";
@@ -222,6 +222,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/pools", poolRoutes);
+app.use("/api/pool-bookings", poolBookingRoutes); // Pool booking routes
 //app.use("/api/pool-bookings", poolBookingRoutes);
 app.use("/api/admin/rooms", manageRoomRoutes);
 app.use("/api/admin/pools", managePoolRoutes);
