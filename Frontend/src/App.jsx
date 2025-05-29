@@ -14,12 +14,10 @@ import ProtectedRoute from "./components/protectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
+import Profile from "./pages/Profile";
 
 import Room_Book from "./pages/customer/Room_Book";
 import Pool_Book from "./pages/customer/Pool_Book";
-
-
-
 
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
@@ -31,7 +29,7 @@ const App = () => {
 
   return (
     <div>
-      {(!isAdminRoute && !isreceptionistRoute) && <Navbar />}
+      {!isAdminRoute && !isreceptionistRoute && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -39,16 +37,16 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        
+
         <Route path="/room-booking" element={<Room_Book />} />
         <Route path="/pool-booking" element={<Pool_Book />} />
-
+        <Route path="/profile" element={<Profile />} />
 
         {/* Admin routes */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -58,15 +56,21 @@ const App = () => {
           <Route path="pools" element={<ManagePools />} />
           <Route path="reservations" element={<ReservationCalendar />} />
           <Route path="users" element={<ManageUsers />} />
-          <Route path="bookingNotifications" element={<BookingConfirmation />} />
-          <Route path="bookingNotifications/:id" element={<BookingConfirmationDetails />} />
+          <Route
+            path="bookingNotifications"
+            element={<BookingConfirmation />}
+          />
+          <Route
+            path="bookingNotifications/:id"
+            element={<BookingConfirmationDetails />}
+          />
         </Route>
 
         {/* receptionist routes */}
-        <Route 
-          path="/receptionist" 
+        <Route
+          path="/receptionist"
           element={
-            <ProtectedRoute allowedRoles={['receptionist']}>
+            <ProtectedRoute allowedRoles={["receptionist"]}>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -75,7 +79,6 @@ const App = () => {
           <Route path="rooms" element={<ManageRooms />} />
           <Route path="pools" element={<ManagePools />} />
         </Route>
-
       </Routes>
     </div>
   );

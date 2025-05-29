@@ -5,6 +5,7 @@ import { Calendar } from "react-date-range";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
+import { jwtDecode } from "jwt-decode";
 
 const Room_Book = () => {
   const navigate = useNavigate(); // Initialize navigate
@@ -25,48 +26,43 @@ const Room_Book = () => {
     maxPrice: "",
   });
 
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        let url = "http://localhost:5000/api/rooms";
 
+        if (bookingDates.checkIn && bookingDates.checkOut) {
+          const params = new URLSearchParams({
+            checkIn: bookingDates.checkIn.toISOString(),
+            checkOut: bookingDates.checkOut.toISOString(),
+          });
+          url = `http://localhost:5000/api/rooms/available?${params}`;
+        }
 
-useEffect(() => {
-  const fetchRooms = async () => {
-    try {
-      let url = 'http://localhost:5000/api/rooms';
-      
-      if (bookingDates.checkIn && bookingDates.checkOut) {
-        const params = new URLSearchParams({
-          checkIn: bookingDates.checkIn.toISOString(),
-          checkOut: bookingDates.checkOut.toISOString()
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to fetch rooms");
+        }
+
+        const data = await response.json();
+        setRooms(data);
+        setFilteredRooms(data);
+      } catch (err) {
+        setError(err.message);
+        console.error("Fetch rooms error:", {
+          message: err.message,
+          stack: err.stack,
+          url: url,
         });
-        url = `http://localhost:5000/api/rooms/available?${params}`;
+      } finally {
+        setLoading(false);
       }
+    };
 
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch rooms');
-      }
-
-      const data = await response.json();
-      setRooms(data);
-      setFilteredRooms(data);
-      
-    } catch (err) {
-      setError(err.message);
-      console.error('Fetch rooms error:', {
-        message: err.message,
-        stack: err.stack,
-        url: url
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchRooms();
-}, [bookingDates.checkIn, bookingDates.checkOut]);
-
-
+    fetchRooms();
+  }, [bookingDates.checkIn, bookingDates.checkOut]);
 
   // Apply filters
   useEffect(() => {
@@ -103,87 +99,128 @@ useEffect(() => {
     }));
   };
 
-//adding part of reservation dates
-const handleDateSelect = (date, type) => {
-  if (type === 'checkOut' && bookingDates.checkIn && date <= bookingDates.checkIn) {
-    alert('Check-out date must be after check-in date');
-    return;
-  }
-  
-  setBookingDates((prev) => ({
-    ...prev,
-    [type]: date,
-  }));
-};
+  //adding part of reservation dates
+  const handleDateSelect = (date, type) => {
+    if (
+      type === "checkOut" &&
+      bookingDates.checkIn &&
+      date <= bookingDates.checkIn
+    ) {
+      alert("Check-out date must be after check-in date");
+      return;
+    }
 
+    setBookingDates((prev) => ({
+      ...prev,
+      [type]: date,
+    }));
+  };
 
   const handleBookNow = (room) => {
     setSelectedRoom(room);
     setShowBookingForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  
+
   // Handle booking form submission
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Validate required fields
       if (!bookingDates.checkIn || !bookingDates.checkOut) {
-        throw new Error('Please select both check-in and check-out dates');
+        throw new Error("Please select both check-in and check-out dates");
       }
       if (bookingDates.checkOut <= bookingDates.checkIn) {
-        throw new Error('Check-out date must be after check-in date');
+        throw new Error("Check-out date must be after check-in date");
       }
-  
+
+      // Get user token from localStorage and decode userId
+      let token =
+        localStorage.getItem("userToken") ||
+        localStorage.getItem("token") ||
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("jwt");
+      if (!token) {
+        throw new Error("User not logged in. Please log in to book a room.");
+      }
+      let userId;
+      try {
+        const decoded = jwtDecode(token);
+        userId = decoded.userId || decoded.id || decoded._id || decoded.sub;
+      } catch (err) {
+        throw new Error("Invalid user token. Please log in again.");
+      }
+      if (!userId) {
+        throw new Error("User ID not found in token.");
+      }
+
       // Create FormData object
       const formData = new FormData();
       const fileInput = e.target.elements.document;
-  
+
       // Append all form fields
-      formData.append('roomNumber', selectedRoom.roomNumber);
-      formData.append('roomType', selectedRoom.type);
-      formData.append('checkIn', bookingDates.checkIn.toISOString());
-      formData.append('checkOut', bookingDates.checkOut.toISOString());
-      formData.append('fullName', e.target.elements.fullName.value.trim());
-      formData.append('phoneNumber', e.target.elements.phoneNumber.value.trim());
-      formData.append('nicNumber', e.target.elements.nicNumber.value.trim());
-      formData.append('whatsappNumber', e.target.elements.whatsappNumber.value.trim());
-      formData.append('adults', parseInt(e.target.elements.adults.value, 10));
-      formData.append('children', parseInt(e.target.elements.children.value, 10) || 0);
-      formData.append('specialRequests', e.target.elements.specialRequests.value.trim());
-  
+      formData.append("roomNumber", selectedRoom.roomNumber);
+      formData.append("roomType", selectedRoom.type);
+      formData.append("checkIn", bookingDates.checkIn.toISOString());
+      formData.append("checkOut", bookingDates.checkOut.toISOString());
+      formData.append("fullName", e.target.elements.fullName.value.trim());
+      formData.append(
+        "phoneNumber",
+        e.target.elements.phoneNumber.value.trim()
+      );
+      formData.append("nicNumber", e.target.elements.nicNumber.value.trim());
+      formData.append(
+        "whatsappNumber",
+        e.target.elements.whatsappNumber.value.trim()
+      );
+      formData.append("adults", parseInt(e.target.elements.adults.value, 10));
+      formData.append(
+        "children",
+        parseInt(e.target.elements.children.value, 10) || 0
+      );
+      formData.append(
+        "specialRequests",
+        e.target.elements.specialRequests.value.trim()
+      );
+      // Append user field
+      formData.append("user", userId);
+
       // Validate adults count
       const adults = parseInt(e.target.elements.adults.value, 10);
       if (adults < 1 || isNaN(adults)) {
-        throw new Error('Please select number of adults');
+        throw new Error("Please select number of adults");
       }
-  
+
       // Append document file
       if (fileInput.files[0]) {
-        formData.append('document', fileInput.files[0]);
+        formData.append("document", fileInput.files[0]);
       } else {
-        throw new Error('Document (Image/PDF) is required');
+        throw new Error("Document (Image/PDF) is required");
       }
-  
+
       // Send to backend with multipart/form-data
       const response = await axios.post(
         "http://localhost:5000/api/bookings",
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
-  
+
       // Handle success
       if (response.data.success) {
         alert(`✅ Booking Confirmed!\n
           Booking ID: ${response.data.bookingId}\n
           Room: ${response.data.details.roomNumber}\n
-          Dates: ${new Date(response.data.details.dates.checkIn).toLocaleDateString()} - ${new Date(response.data.details.dates.checkOut).toLocaleDateString()}`);
-  
+          Dates: ${new Date(
+            response.data.details.dates.checkIn
+          ).toLocaleDateString()} - ${new Date(
+          response.data.details.dates.checkOut
+        ).toLocaleDateString()}`);
+
         // Reset state
         setShowBookingForm(false);
         setSelectedRoom(null);
@@ -191,40 +228,38 @@ const handleDateSelect = (date, type) => {
         setError(null);
         e.target.reset(); // Reset form fields including file input
       }
-  
     } catch (error) {
-      console.error('Booking error:', error);
-      
+      console.error("Booking error:", error);
+
       // Handle file validation errors
-      if (error.message.includes('File size exceeds')) {
-        alert('❌ File size exceeds 5MB limit');
+      if (error.message.includes("File size exceeds")) {
+        alert("❌ File size exceeds 5MB limit");
         return;
       }
-  
+
       // Handle server validation errors
       const serverError = error.response?.data;
-      let errorMessage = 'Booking failed. Please check your information.';
-  
+      let errorMessage = "Booking failed. Please check your information.";
+
       if (serverError) {
         // Handle multiple error messages
         if (Array.isArray(serverError.errors)) {
-          errorMessage = serverError.errors.join('\n');
+          errorMessage = serverError.errors.join("\n");
         } else if (serverError.message) {
           errorMessage = serverError.message;
         }
       }
-      
+
       // Special case for date conflicts
-      if (errorMessage.toLowerCase().includes('already booked')) {
-        errorMessage += '\nPlease select different dates.';
+      if (errorMessage.toLowerCase().includes("already booked")) {
+        errorMessage += "\nPlease select different dates.";
       }
-  
+
       // Update UI state and show alert
       setError(errorMessage);
       alert(`❌ ${errorMessage}`);
     }
   };
-  
 
   if (loading) {
     return (
@@ -397,7 +432,8 @@ const handleDateSelect = (date, type) => {
             {/* Add this section to the form */}
             <div>
               <label className="block text-gray-700 mb-2">
-                  Upload receipt of Advanced (Image/PDF) <span className="text-red-500">*</span>
+                Upload receipt of Advanced (Image/PDF){" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
@@ -408,12 +444,14 @@ const handleDateSelect = (date, type) => {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file && file.size > 5 * 1024 * 1024) {
-                    alert('File size exceeds 5MB limit');
-                    e.target.value = '';
+                    alert("File size exceeds 5MB limit");
+                    e.target.value = "";
                   }
                 }}
               />
-              <p className="text-sm text-gray-500 mt-1">Maximum file size: 5MB (Allowed formats: JPG, PNG, PDF)</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Maximum file size: 5MB (Allowed formats: JPG, PNG, PDF)
+              </p>
             </div>
 
             <div className="pt-4">
@@ -435,35 +473,32 @@ const handleDateSelect = (date, type) => {
         </div>
       )}
 
-    {/* Add this above the existing filters */}
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-gray-700 mb-2">Check-in Date</label>
-            <Calendar
-              date={bookingDates.checkIn}
-              onChange={(date) => handleDateSelect(date, "checkIn")}
-              minDate={new Date()}
-              className="border rounded-lg p-2"
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-2">Check-out Date</label>
-            <Calendar
-              date={bookingDates.checkOut}
-              onChange={(date) => handleDateSelect(date, "checkOut")}
-              minDate={bookingDates.checkIn || new Date()}
-              className="border rounded-lg p-2"
-            />
+      {/* Add this above the existing filters */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-gray-700 mb-2">Check-in Date</label>
+              <Calendar
+                date={bookingDates.checkIn}
+                onChange={(date) => handleDateSelect(date, "checkIn")}
+                minDate={new Date()}
+                className="border rounded-lg p-2"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Check-out Date</label>
+              <Calendar
+                date={bookingDates.checkOut}
+                onChange={(date) => handleDateSelect(date, "checkOut")}
+                minDate={bookingDates.checkIn || new Date()}
+                className="border rounded-lg p-2"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-
-
 
       {/* Filters */}
       <div className="max-w-6xl mx-auto px-4 py-8">

@@ -70,13 +70,13 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     whatsappNumber
   } = req.body;
 
-  // // Validate required fields
-  // if (!checkInTime || !checkOutTime || !phoneNumber) {
-  //   return res.status(400).json({
-  //     message: "Check-in time, check-out time, and phone number are required"
-  //   });
-  // }
-  // Add this at the start of your POST route handler
+  // Validate required fields
+  if (!checkInTime || !checkOutTime || !phoneNumber) {
+    return res.status(400).json({
+      message: "Check-in time, check-out time, and phone number are required"
+    });
+  }
+  //Add this at the start of your POST route handler
 if (!checkInTime || !checkOutTime || !phoneNumber) {
   return res.status(400).json({
     message: "Check-in time, check-out time, and phone number are required"
