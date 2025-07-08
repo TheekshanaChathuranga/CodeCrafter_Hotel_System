@@ -2,106 +2,52 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/UserAuthContext';
 
-
 const Navbar = () => {
   const { user, logout } = useAuth();
 
-  // Color variables
   const colors = {
     primary: '#2C3E50',
-    secondary: '#16A085',
     accent: '#E74C3C',
-    background: '#ECF0F1',
-    text: '#333333',
     success: '#27AE60',
     info: '#3498DB',
     white: '#FFFFFF'
   };
 
-  // Hover styles
-  const linkHover = {
-    backgroundColor: '#34495E', // Darker primary
-    transition: 'background-color 0.3s ease'
-  };
-
   return (
-    <nav 
-      className="shadow-lg"
-      style={{ backgroundColor: colors.primary }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Left side - Logo/Brand */}
-          <div className="flex-shrink-0">
-            <Link 
-              to="/" 
-              className="text-xl font-bold"
-              style={{ color: colors.white }}
-            >
+    <nav className="bg-gray-800 text-white shadow-lg">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <img src="/src/img/logo.jpg" alt="Logo" className="h-8 w-8 rounded-full" />
+            <Link to="/" className="text-xl font-bold text-white hover:text-blue-300 transition-colors">
               The Lake Hotel
             </Link>
           </div>
 
-          {/* Center - Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1">
-            <Link 
-              to="/" 
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ 
-                color: colors.white,
-                ':hover': linkHover
-              }}
-            >
-              Home
-            </Link>
-            
-            <Link 
-              to="/about" 
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ 
-                color: colors.white,
-                ':hover': linkHover
-              }}
-            >
-              About
-            </Link>
+          {/* Desktop Menu */}
+          <div className="hidden md:flex space-x-6 items-center">
+            <Link to="/" className="hover:text-blue-400 transition-colors">Home</Link>
+            <Link to="/room-booking" className="hover:text-blue-400 transition-colors">Room Booking</Link>
+            <Link to="/pool-booking" className="hover:text-blue-400 transition-colors">Pool Booking</Link>
+            <Link to="/event-booking" className="hover:text-blue-400 transition-colors">Event Booking</Link>
+            <Link to="/about" className="hover:text-blue-400 transition-colors">About Us</Link>
+            <Link to="/contact" className="hover:text-blue-400 transition-colors">Contact</Link>
 
-            {/* Admin Dashboard Button */}
+            {/* Admin Dashboard */}
             {user?.role === 'admin' && (
-              <Link
-                to="/admin"
-                className="px-3 py-2 rounded-md text-sm font-medium"
-                style={{
-                  color: colors.white,
-                  ':hover': linkHover
-                }}
-              >
-                Dashboard
-              </Link>
+              <Link to="/admin" className="hover:text-yellow-400 transition-colors">Dashboard</Link>
             )}
           </div>
 
-          {/* Right side - Auth Buttons */}
+          {/* Auth Buttons */}
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <span 
-                  className="text-sm font-medium"
-                  style={{ color: colors.white }}
-                >
-                  Welcome, {user.username}
-                </span>
+                <span className="text-sm text-white hidden md:inline">Welcome, {user.username}</span>
                 <button
                   onClick={logout}
-                  className="px-4 py-2 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: colors.accent,
-                    color: colors.white,
-                    ':hover': {
-                      backgroundColor: '#C0392B',
-                      transition: 'background-color 0.3s ease'
-                    }
-                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-md text-sm"
                 >
                   Logout
                 </button>
@@ -110,34 +56,27 @@ const Navbar = () => {
               <>
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: colors.info,
-                    color: colors.white,
-                    ':hover': {
-                      backgroundColor: '#2980B9',
-                      transition: 'background-color 0.3s ease'
-                    }
-                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1 rounded-md text-sm"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="px-4 py-2 rounded-md text-sm font-medium"
-                  style={{
-                    backgroundColor: colors.success,
-                    color: colors.white,
-                    ':hover': {
-                      backgroundColor: '#219955',
-                      transition: 'background-color 0.3s ease'
-                    }
-                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-1 rounded-md text-sm"
                 >
                   Sign Up
                 </Link>
               </>
             )}
+          </div>
+
+          {/* Optional Mobile Menu Button */}
+          <div className="md:hidden">
+            <button className="p-2 rounded-md hover:bg-gray-700">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

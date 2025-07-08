@@ -4,7 +4,7 @@ const Contact = () => {
   return (
     <div>
       <h1 className="text-2xl font-bold">Contact Us</h1>
-      <p>Email: support@hotel.com</p>
+      
     </div>
   );
 };
