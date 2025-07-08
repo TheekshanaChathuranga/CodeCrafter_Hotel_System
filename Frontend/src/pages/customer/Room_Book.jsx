@@ -289,13 +289,13 @@ const Room_Book = () => {
 
       {/* Hero Section */}
       <div className="relative h-95 bg-[url('img/RoomPage.jpeg')] bg-cover bg-center">
-        <button
+        {/* <button
           onClick={() => navigate(-1)}
           //className="absolute mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700"
           className="absolute top-4 left-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-gray-700 z-10"
         >
           Go Back
-        </button>
+        </button> */}
         <div className="absolute inset-0 bg-black/50 flex items-center">
           <div className="max-w-6xl mx-auto px-4 text-center text-white">
             <h1 className="text-4xl font-bold mb-4">Room Booking</h1>

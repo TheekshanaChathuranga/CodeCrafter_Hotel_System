@@ -79,12 +79,22 @@ const Navbar = () => {
             <NavLink to="/event-booking" hoverStyle={linkHover}>
               Event Booking
             </NavLink>
-            <NavLink to="/about" hoverStyle={linkHover}>
+            {/* Replace About NavLink with anchor link to #about */}
+            <a
+              href="/#about"
+              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+              style={{ color: colors.white }}
+            >
               About
-            </NavLink>
-            <NavLink to="/contact" hoverStyle={linkHover}>
+            </a>
+            {/* Replace Contact NavLink with anchor link to #contact */}
+            <a
+              href="/#contact"
+              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+              style={{ color: colors.white }}
+            >
               Contact
-            </NavLink>
+            </a>
             {user?.role === "admin" && (
               <NavLink to="/admin" hoverStyle={linkHover}>
                 Dashboard
