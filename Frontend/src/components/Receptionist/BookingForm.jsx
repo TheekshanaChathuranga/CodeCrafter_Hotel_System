@@ -15,7 +15,13 @@ const BookingForm = ({ onSuccess, success }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [totalAmount, setTotalAmount] = useState(500);
+  const [pricing, setPricing] = useState({
+    baseAmount: 500,
+    additionalHours: 0,
+    additionalAmount: 0,
+    totalAmount: 500
+  });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     calculateTotal();
@@ -27,28 +33,48 @@ const BookingForm = ({ onSuccess, success }) => {
     const additionalRate = 200;
     const baseHours = 2;
     
-    let calculatedAmount = baseRate;
+    let baseAmount = baseRate;
+    let additionalHours = 0;
+    let additionalAmount = 0;
+    
     if (durationHours > baseHours) {
-      calculatedAmount += Math.ceil(durationHours - baseHours) * additionalRate;
+      additionalHours = Math.ceil(durationHours - baseHours);
+      additionalAmount = additionalHours * additionalRate;
     }
     
-    calculatedAmount *= formData.peopleCount;
-    setTotalAmount(calculatedAmount);
+    const totalAmount = (baseAmount + additionalAmount) * formData.peopleCount;
+    
+    setPricing({
+      baseAmount,
+      additionalHours,
+      additionalAmount,
+      totalAmount
+    });
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'peopleCount' ? Number(value) : value
     }));
   };
 
   const handleDateChange = (name, date) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: date
-    }));
+    if (name === 'checkIn') {
+      // When check-in changes, automatically set check-out to 2 hours later
+      const newCheckOut = new Date(date.getTime() + 2 * 60 * 60 * 1000);
+      setFormData(prev => ({
+        ...prev,
+        checkIn: date,
+        checkOut: newCheckOut
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: date
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -79,19 +105,22 @@ const BookingForm = ({ onSuccess, success }) => {
       return;
     }
 
-    if (formData.checkOut <= formData.checkIn) {
-      setError('Check-out time must be after check-in time');
+    const durationHours = (formData.checkOut - formData.checkIn) / (1000 * 60 * 60);
+    if (durationHours < 2) {
+      setError('Check-out time must be at least 2 hours after check-in');
       setLoading(false);
       return;
     }
 
     try {
-      await axios.post('http://localhost:5000/api/bookings', {
+      const response = await axios.post('http://localhost:5000/api/bookings', {
         ...formData,
         checkIn: formData.checkIn.toISOString(),
         checkOut: formData.checkOut.toISOString()
       });
+      
       onSuccess('Booking successful!');
+      setShowSuccessModal(true);
       setFormData({
         name: '',
         phone: '',
@@ -211,6 +240,7 @@ const BookingForm = ({ onSuccess, success }) => {
         <div className="mb-4">
           <label className="block text-gray-700 mb-2">
             Check-out Time <span className="text-red-500">*</span>
+            <span className="text-sm text-gray-500 ml-2">(Auto-set to 2 hours after check-in)</span>
           </label>
           <DatePicker
             selected={formData.checkOut}
@@ -220,17 +250,36 @@ const BookingForm = ({ onSuccess, success }) => {
             timeIntervals={30}
             dateFormat="MMMM d, yyyy h:mm aa"
             minDate={formData.checkIn}
-            minTime={formData.checkIn}
+            minTime={new Date(formData.checkIn.getTime() + 2 * 60 * 60 * 1000)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
 
         <div className="mb-4 p-4 bg-blue-100 rounded-md">
-          <p className="font-medium">Total Amount: Rs.{totalAmount}</p>
-          <p className="text-sm text-gray-600">
-            {formData.peopleCount} person(s) × Rs.{totalAmount / formData.peopleCount}
-          </p>
+          <h3 className="font-semibold text-blue-800 mb-2">Pricing Breakdown:</h3>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span>Base Rate (2 hours):</span>
+              <span>Rs.{pricing.baseAmount}</span>
+            </div>
+            {pricing.additionalHours > 0 && (
+              <div className="flex justify-between">
+                <span>Additional Hours ({pricing.additionalHours} × Rs.200):</span>
+                <span>Rs.{pricing.additionalAmount}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-medium">
+              <span>Per Person Total:</span>
+              <span>Rs.{pricing.baseAmount + pricing.additionalAmount}</span>
+            </div>
+            <div className="border-t pt-1 mt-2">
+              <div className="flex justify-between font-bold text-lg">
+                <span>Total Amount ({formData.peopleCount} person{formData.peopleCount > 1 ? 's' : ''}):</span>
+                <span>Rs.{pricing.totalAmount}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button
@@ -241,6 +290,23 @@ const BookingForm = ({ onSuccess, success }) => {
           {loading ? 'Processing...' : 'Confirm Booking'}
         </button>
       </form>
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-4 text-green-700">Booking Successful!</h3>
+            <p className="mb-6 text-gray-700">The booking has been successfully created.</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

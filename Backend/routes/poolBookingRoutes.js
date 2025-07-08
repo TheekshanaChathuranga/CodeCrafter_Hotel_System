@@ -8,26 +8,39 @@ router.post('/', async (req, res) => {
     const { name, phone, whatsapp, email, peopleCount, checkIn, checkOut } = req.body;
     
     // Validate required fields
-    if (!name || !phone || !peopleCount || !checkIn || !checkOut) {
+    if (!name || !phone || !peopleCount || !checkIn) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Calculate duration
-    const durationHours = (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60);
+    // Parse check-in time
+    const checkInDate = new Date(checkIn);
     
-    // Validate duration
-    if (durationHours <= 0) {
-      return res.status(400).json({ message: 'Check-out must be after check-in' });
+    // If check-out is not provided, automatically set it to 2 hours after check-in
+    let checkOutDate;
+    if (checkOut) {
+      checkOutDate = new Date(checkOut);
+    } else {
+      checkOutDate = new Date(checkInDate.getTime() + 2 * 60 * 60 * 1000); // 2 hours later
+    }
+
+    // Calculate duration
+    const durationHours = (checkOutDate - checkInDate) / (1000 * 60 * 60);
+    
+    // Validate duration (minimum 2 hours)
+    if (durationHours < 2) {
+      return res.status(400).json({ message: 'Minimum booking duration is 2 hours' });
     }
 
     // Calculate total amount
-    const baseRate = 500;
-    const additionalRate = 200;
+    const baseRate = 500; // Rs.500 for first 2 hours
+    const additionalRate = 200; // Rs.200 per additional hour
     const baseHours = 2;
     
     let totalAmount = baseRate;
-    if (durationHours > baseHours) {
-      totalAmount += Math.ceil(durationHours - baseHours) * additionalRate;
+    const additionalHours = Math.ceil(durationHours - baseHours);
+    
+    if (additionalHours > 0) {
+      totalAmount += additionalHours * additionalRate;
     }
     
     totalAmount *= peopleCount;
@@ -39,8 +52,8 @@ router.post('/', async (req, res) => {
       whatsapp,
       email,
       peopleCount,
-      checkIn: new Date(checkIn),
-      checkOut: new Date(checkOut),
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
       totalAmount
     });
 
@@ -48,7 +61,14 @@ router.post('/', async (req, res) => {
     
     res.status(201).json({
       message: 'Booking created successfully',
-      booking: savedBooking
+      booking: savedBooking,
+      pricing: {
+        baseRate,
+        additionalHours: savedBooking.additionalHours,
+        additionalRate,
+        totalAmount: savedBooking.totalAmount,
+        perPersonAmount: savedBooking.totalAmount / peopleCount
+      }
     });
 
   } catch (error) {
