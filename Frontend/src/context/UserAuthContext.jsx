@@ -63,8 +63,19 @@ export const AuthProvider = ({ children }) => {
     navigate('/login');
   };
 
+  // Add updateUser function
+  const updateUserProfile = async (data) => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No auth token');
+    // Use the updateUser API from user.js
+    const { updateUser } = await import('../api/user');
+    const updatedUser = await updateUser(data, token);
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUser: updateUserProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );

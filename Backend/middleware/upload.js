@@ -8,14 +8,23 @@ const __dirname = path.dirname(__filename);
 
 // Configure upload directory
 const uploadDir = path.join(__dirname, '../uploads');
+const profileImagesDir = path.join(uploadDir, 'profileImages');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(profileImagesDir)) {
+  fs.mkdirSync(profileImagesDir, { recursive: true });
 }
 
 // Multer configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    // If uploading profile image, save to /uploads/profileImages
+    if (req.originalUrl.includes('upload-profile-image')) {
+      cb(null, profileImagesDir);
+    } else {
+      cb(null, uploadDir);
+    }
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -52,5 +61,6 @@ const handleUploadErrors = (err, req, res, next) => {
 export { 
   upload, 
   handleUploadErrors,
-  uploadDir // Export if needed for file cleanup
+  uploadDir,
+  profileImagesDir
 };
