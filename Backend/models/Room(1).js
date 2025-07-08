@@ -1,0 +1,67 @@
+import mongoose from 'mongoose';
+
+const roomSchema = new mongoose.Schema({
+  roomNumber: { 
+    type: String, 
+    required: [true, "Room number is required"], 
+    unique: true,
+    trim: true
+  },
+  type: { 
+    type: String, 
+    required: [true, "Room type is required"], 
+    enum: ['Single', 'Double', 'Triple'] 
+  },
+  acOption: { 
+    type: String, 
+    required: [true, "AC option is required"], 
+    enum: ['AC', 'Non-AC', 'Both'],
+    default: 'AC'
+  },
+  hasAC: { 
+    type: Boolean, 
+    required: true,
+    default: true 
+  },
+  pricePerNight: { 
+    type: Number, 
+    required: [true, "Price per night is required"],
+    min: [0, "Price cannot be negative"]
+  },
+  pricePerDay: { 
+    type: Number, 
+    required: [true, "Price per day is required"],
+    min: [0, "Price cannot be negative"]
+  },
+  roomStatus: { 
+    type: String, 
+    enum: ['Available', 'Not Available'],
+    required: [true, "Room status is required"],
+    default: 'Available'
+  },
+  description: { 
+    type: String,
+    trim: true
+  },
+  images: { 
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(v) {
+        return v.length <= 5; // Maximum 5 images
+      },
+      message: 'Maximum 5 images allowed'
+    }
+  }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Add index for better performance
+//roomSchema.index({ roomNumber: 1 }, { unique: true });
+
+// Create and export the model
+const Room = mongoose.model("Room", roomSchema);
+export default Room;
