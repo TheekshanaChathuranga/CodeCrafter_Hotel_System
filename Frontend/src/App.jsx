@@ -14,10 +14,13 @@ import ProtectedRoute from "./components/protectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 
 
+
 import ReceptionRoomBooking from "./pages/Receptionist/ReceptionRoomBookingPage";
 import BookingsListPage from "./pages/Receptionist/BookingsListPage";
 import BookingDetailsPage from "./pages/Receptionist/BookingDetailsPage";
 import ReceptionHome from "./pages/Receptionist/ReceptionHome";
+import PoolBooking from "./components/Receptionist/PoolBooking";
+import BookingsList from "./components/Receptionist/BookingsList";
 
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
@@ -68,13 +71,13 @@ const App = () => {
           <Route path="roomBooking" element={<ReceptionRoomBooking />} />
           <Route path="bookingsList" element={<BookingsListPage />} />
           <Route path="bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="pool-booking" element={<PoolBooking />} />
+          <Route path="pool-bookings" element={<BookingsList />} />
+          <Route path="pool-schedules" element={<BookingsList />} />
           {/* <Route path="poolsBooking" element={<PoolsBooking />} /> */}
           <Route path="pools" element={<ManagePools />} />
         </Route>
 
-      </Routes>
-      <Routes>
-        <Route path="/bookings/:id" element={<BookingDetailsPage />} />
       </Routes>
     </div>
   );

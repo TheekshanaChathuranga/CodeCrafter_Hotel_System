@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import {
   Hotel, Users, Menu, LifeBuoy,
   CalendarCheck, UserCheck, Settings, LogOut, User,
-  Bell, LayoutDashboard, BookOpen, CalendarDays, Clock
+  Bell, LayoutDashboard, BookOpen, CalendarDays, Clock, X
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ onClose }) => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(true);
 
@@ -28,17 +28,36 @@ const DashboardSidebar = () => {
 
   const menuItems = allMenuItems.filter(item => item.roles.includes(user.role));
 
+  const handleLinkClick = () => {
+    if (onClose) {
+      onClose(); // Close mobile sidebar when link is clicked
+    }
+  };
+
   return (
     <div
-      className={`bg-[#2C3E50] text-white h-full p-4 transition-all duration-300 flex flex-col justify-between ${isOpen ? "w-64" : "w-16"}`}
+      className={`bg-[#2C3E50] text-white h-full transition-all duration-300 flex flex-col justify-between ${
+        isOpen ? "w-64" : "w-16"
+      }`}
     >
-      <div>
-        <button
-          onClick={toggleSidebar}
-          className="mb-6 p-2 hover:bg-[#34495E] rounded"
-        >
-          <Menu />
-        </button>
+      <div className="p-4">
+        {/* Header with close button for mobile */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={toggleSidebar}
+            className="hidden lg:block p-2 hover:bg-[#34495E] rounded"
+          >
+            <Menu />
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="lg:hidden p-2 hover:bg-[#34495E] rounded ml-auto"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
 
         {/* User Info */}
         <div className={`flex items-center gap-3 mb-8 ${!isOpen ? "justify-center" : ""}`}>
@@ -61,7 +80,8 @@ const DashboardSidebar = () => {
             <li key={item.title}>
               <Link
                 to={item.url[user.role]}
-                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${!isOpen ? "justify-center" : ""}`}
+                onClick={handleLinkClick}
+                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${!isOpen ? "justify-center" : ""}`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
                 {isOpen && <span>{item.title}</span>}
@@ -72,17 +92,21 @@ const DashboardSidebar = () => {
       </div>
 
       {/* Profile and Sign Out Buttons */}
-      <div className="space-y-2">
+      <div className="p-4 space-y-2">
         <Link
           to={user.role === "admin" ? "/admin/profile" : "/reception/profile"}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${!isOpen ? "justify-center" : ""}`}
+          onClick={handleLinkClick}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${!isOpen ? "justify-center" : ""}`}
         >
           <User size={18} />
           {isOpen && <span>Profile</span>}
         </Link>
         <button
-          onClick={logout}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full ${!isOpen ? "justify-center" : ""}`}
+          onClick={() => {
+            logout();
+            if (onClose) onClose();
+          }}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full transition-colors ${!isOpen ? "justify-center" : ""}`}
         >
           <LogOut size={18} />
           {isOpen && <span>Sign Out</span>}

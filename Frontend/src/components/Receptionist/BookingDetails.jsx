@@ -68,55 +68,136 @@ export default function BookingDetails() {
   if (!booking) return <div>Loading...</div>;
 
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold text-center mb-4">Booking Details</h2>
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-blue-600 px-4 sm:px-6 py-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-white text-center">
+              📋 Booking Details
+            </h2>
+          </div>
 
-      <div className="bg-gray-100 p-4 rounded-lg">
-        <p><strong>Guest Name:</strong> {booking.adminDetails.name}</p>
-        <p><strong>Mobile:</strong> {booking.adminDetails.mobile}</p>
-        <p><strong>WhatsApp:</strong> {booking.adminDetails.whatsapp || "N/A"}</p>
-        {!isEditing ? (
-          <>
-            <p><strong>Check-in:</strong> {new Date(booking.adminDetails.checkIn).toLocaleString()}</p>
-            <p><strong>Check-out:</strong> {new Date(booking.adminDetails.checkOut).toLocaleString()}</p>
-          </>
-        ) : (
-          <>
-            <label>Check-in: </label>
-            <input
-              type="datetime-local"
-              name="checkIn"
-              value={editData.checkIn}
-              onChange={handleChange}
-              className="block w-full p-2 mt-2 border rounded-lg"
-            />
-            <label>Check-out: </label>
-            <input
-              type="datetime-local"
-              name="checkOut"
-              value={editData.checkOut}
-              onChange={handleChange}
-              className="block w-full p-2 mt-2 border rounded-lg"
-            />
-          </>
-        )}
-        <p><strong>Room No:</strong> {booking.selectedRoom.roomNumber}</p>
-        <p><strong>AC Type:</strong> {booking.selectedRoom.acType}</p>
+          {/* Content */}
+          <div className="p-4 sm:p-6">
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-lg space-y-3 sm:space-y-4">
+              {/* Guest Information */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                  👤 Guest Information
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Guest Name:</span>
+                    <p className="text-gray-900 font-medium">{booking.adminDetails.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Mobile:</span>
+                    <p className="text-gray-900 font-medium">{booking.adminDetails.mobile}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-sm font-medium text-gray-600">WhatsApp:</span>
+                    <p className="text-gray-900 font-medium">{booking.adminDetails.whatsapp || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Schedule */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                  📅 Booking Schedule
+                </h3>
+                {!isEditing ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Check-in:</span>
+                      <p className="text-gray-900 font-medium">
+                        {new Date(booking.adminDetails.checkIn).toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm font-medium text-gray-600">Check-out:</span>
+                      <p className="text-gray-900 font-medium">
+                        {new Date(booking.adminDetails.checkOut).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Check-in:
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="checkIn"
+                        value={editData.checkIn}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Check-out:
+                      </label>
+                      <input
+                        type="datetime-local"
+                        name="checkOut"
+                        value={editData.checkOut}
+                        onChange={handleChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Room Information */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                  🏠 Room Information
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Room No:</span>
+                    <p className="text-gray-900 font-medium">{booking.selectedRoom.roomNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">AC Type:</span>
+                    <p className="text-gray-900 font-medium">{booking.selectedRoom.acType}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
+              {!isEditing ? (
+                <button 
+                  onClick={handleEditClick} 
+                  className="flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  ✏️ Edit Booking
+                </button>
+              ) : (
+                <button 
+                  onClick={handleSave} 
+                  className="flex-1 sm:flex-none px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  💾 Save Changes
+                </button>
+              )}
+              
+              <button 
+                onClick={deleteBooking} 
+                className="flex-1 sm:flex-none px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                🗑️ Cancel Booking
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {!isEditing ? (
-        <button onClick={handleEditClick} className="mt-5 px-6 py-2 bg-blue-500 text-white rounded-lg">
-          Edit Booking
-        </button>
-      ) : (
-        <button onClick={handleSave} className="mt-5 px-6 py-2 bg-green-500 text-white rounded-lg">
-          Save Changes
-        </button>
-      )}
-      
-      <button onClick={deleteBooking} className="mt-5 ml-2 px-6 py-2 bg-red-500 text-white rounded-lg">
-        Cancel Booking
-      </button>
     </div>
   );
 }

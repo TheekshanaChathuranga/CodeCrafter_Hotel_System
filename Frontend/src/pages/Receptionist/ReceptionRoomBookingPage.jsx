@@ -248,11 +248,11 @@ const ReceptionRoomBookingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 py-8 px-4">
+    <div className="min-h-screen bg-blue-50 py-4 sm:py-8 px-4">
       {/* Success Popup Modal */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                 <svg
@@ -296,9 +296,9 @@ const ReceptionRoomBookingPage = () => {
         </div>
       )}
 
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="bg-blue-600 p-6 text-white">
-          <h2 className="text-2xl font-bold text-center">Hotel Room Booking</h2>
+      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="bg-blue-600 p-4 sm:p-6 text-white">
+          <h2 className="text-xl sm:text-2xl font-bold text-center">Hotel Room Booking</h2>
         </div>
 
         {showConfirmation ? (
@@ -334,13 +334,13 @@ const ReceptionRoomBookingPage = () => {
 
             <div className="flex flex-col sm:flex-row justify-between gap-4">
               <button 
-                className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                className="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
                 onClick={() => setShowConfirmation(false)}
               >
                 Back to Edit
               </button>
               <button 
-                className={`px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center ${loading ? 'opacity-75' : ''}`}
+                className={`w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center ${loading ? 'opacity-75' : ''}`}
                 onClick={confirmBooking}
                 disabled={loading}
               >
@@ -573,13 +573,13 @@ const ReceptionRoomBookingPage = () => {
 
             <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6">
               <button 
-                className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                className="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
                 onClick={resetForm}
               >
                 Reset Form
               </button>
               <button 
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 onClick={handleBooking}
               >
                 Next: Confirm Booking
