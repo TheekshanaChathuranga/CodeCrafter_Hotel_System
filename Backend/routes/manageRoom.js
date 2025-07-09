@@ -23,7 +23,7 @@ const deleteRoomImages = (images) => {
 
 // Add new room
 router.post("/add",
-  upload.array("images", 3), // Using shared middleware (max 3 images)
+  upload.array("images", 5), // Increased from 3 to 5
   handleUploadErrors,
   async (req, res) => {
     try {
@@ -38,8 +38,8 @@ router.post("/add",
         throw new Error("Invalid status value");
       }
 
-      if (!["AC", "Non-AC", "Both"].includes(acOption)) {
-        throw new Error("Invalid AC option. Must be 'AC', 'Non-AC', or 'Both'.");
+      if (!["AC", "Non-AC", "Flexible"].includes(acOption)) {
+        throw new Error("Invalid AC option. Must be 'AC', 'Non-AC', or 'Flexible'.");
       }
 
       const hasAC = acOption !== "Non-AC";
@@ -54,6 +54,21 @@ router.post("/add",
         throw new Error("Invalid price per day value");
       }
 
+      let unavailablePeriod = undefined;
+      if (req.body.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(req.body.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
+      }
+
       const newRoom = new Room({
         roomNumber,
         type,
@@ -63,11 +78,14 @@ router.post("/add",
         pricePerDay: numericPricePerDay,
         roomStatus,
         description,
-        images: req.files?.map(file => `/uploads/${file.filename}`) || []
+        images: req.files?.map(file => `/uploads/${file.filename}`) || [],
+        ...(unavailablePeriod && { unavailablePeriod }),
+        floor: req.body.floor || "",
+        facilities: req.body.facilities ? JSON.parse(req.body.facilities) : [],
       });
 
       await newRoom.save();
-      res.status(201).json({ 
+      res.status(201).json({
         message: "Room added successfully",
         room: newRoom
       });
@@ -119,10 +137,11 @@ router.get("/:id", async (req, res) => {
 
 // Update room
 router.put("/update/:id",
-  upload.array("images", 3),
+  upload.array("images", 5), // Increased from 3 to 5
   handleUploadErrors,
   async (req, res) => {
     try {
+      console.log("req.body:", req.body);
       const { id } = req.params;
       const { 
         roomNumber, 
@@ -132,7 +151,9 @@ router.put("/update/:id",
         pricePerDay, 
         roomStatus, 
         description,
-        deletedImages
+        deletedImages,
+        floor,
+        facilities
       } = req.body;
 
       const existingRoom = await Room.findById(id);
@@ -149,43 +170,62 @@ router.put("/update/:id",
         img => !imagesToDelete.includes(img)
       );
 
-      // Add new images (max 3 total)
+      // Add new images (max 5 total)
       const newImagePaths = req.files?.map(file => `/uploads/${file.filename}`) || [];
-      const allImages = [...remainingImages, ...newImagePaths].slice(0, 3);
+      const allImages = [...remainingImages, ...newImagePaths].slice(0, 5); // Increased from 3 to 5
 
       // Validate and parse input
       const numericPricePerNight = parseFloat(pricePerNight);
       const numericPricePerDay = parseFloat(pricePerDay);
-      
-      if (isNaN(numericPricePerNight)) {
+      if (!roomNumber || !type || !acOption || !pricePerNight || !pricePerDay || !description || !floor) {
+        throw new Error("All fields are required");
+      }
+      if (!['Available', 'Not Available'].includes(roomStatus)) {
+        throw new Error("Invalid room status");
+      }
+      if (!["AC", "Non-AC", "Flexible"].includes(acOption)) {
+        throw new Error("Invalid AC option");
+      }
+      if (isNaN(numericPricePerNight) || numericPricePerNight < 0) {
         throw new Error("Invalid price per night value");
       }
-
-      if (isNaN(numericPricePerDay)) {
+      if (isNaN(numericPricePerDay) || numericPricePerDay < 0) {
         throw new Error("Invalid price per day value");
       }
 
-      if (!["AC", "Non-AC", "Both"].includes(acOption)) {
-        throw new Error("Invalid AC option");
+      let unavailablePeriod = undefined;
+      if (req.body.unavailablePeriod) {
+        try {
+          const parsed = JSON.parse(req.body.unavailablePeriod);
+          if (parsed.start && parsed.end) {
+            unavailablePeriod = {
+              start: new Date(parsed.start),
+              end: new Date(parsed.end)
+            };
+          }
+        } catch (e) {
+          throw new Error("Invalid unavailablePeriod format");
+        }
       }
 
-      if (!["Available", "Not Available"].includes(roomStatus)) {
-        throw new Error("Invalid room status");
-      }
+      const updateFields = {
+        roomNumber,
+        type,
+        acOption,
+        hasAC: acOption !== "Non-AC",
+        pricePerNight: numericPricePerNight,
+        pricePerDay: numericPricePerDay,
+        roomStatus,
+        description,
+        images: allImages,
+        floor: floor || "",
+        facilities: facilities ? JSON.parse(facilities) : [],
+      };
+      if (unavailablePeriod) updateFields.unavailablePeriod = unavailablePeriod;
 
       const updatedRoom = await Room.findByIdAndUpdate(
         id,
-        {
-          roomNumber,
-          type,
-          acOption,
-          hasAC: acOption !== "Non-AC",
-          pricePerNight: numericPricePerNight,
-          pricePerDay: numericPricePerDay,
-          roomStatus,
-          description,
-          images: allImages
-        },
+        updateFields,
         { new: true, runValidators: true }
       );
 

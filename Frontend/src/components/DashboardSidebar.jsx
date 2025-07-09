@@ -14,23 +14,81 @@ const DashboardSidebar = ({ onClose }) => {
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const allMenuItems = [
-    // Admin menu items
-    { title: "Dashboard", url: { admin: "/admin", reception: "/reception/home" }, icon: <LayoutDashboard size={18} />, roles: ["admin", "reception"] },
-    { title: "Rooms", url: { admin: "/admin/rooms", reception: "" }, icon: <Hotel size={18} />, roles: ["admin"] },
-    { title: "Room Booking", url: { admin: "/admin/rooms", reception: "/reception/roomBooking" }, icon: <Hotel size={18} />, roles: ["reception"] },
-    { title: "Reservations", url: { admin: "/admin/reservations", reception: "/reception/bookingsList" }, icon: <BookOpen size={18} />, roles: ["admin", "reception"] },
-    { title: "Pool Booking", url: { admin: "/admin/pools", reception: "/reception/pool-booking" }, icon: <LifeBuoy size={18} />, roles: ["admin", "reception"] },
-    { title: "Pool Schedules", url: { admin: "/admin/pool-schedules", reception: "/reception/pool-schedules" }, icon: <Clock size={18} />, roles: ["admin", "reception"] },
-    { title: "Notifications", url: { admin: "/admin/bookingNotifications" }, icon: <Bell size={18} />, roles: ["admin"] },
-    { title: "Users", url: { admin: "/admin/users" }, icon: <UserCheck size={18} />, roles: ["admin"] },
-    { title: "Settings", url: { admin: "/admin/settings" }, icon: <Settings size={18} />, roles: ["admin"] },
+    // Dashboard for both roles
+    {
+      title: "Dashboard",
+      url: { admin: "/admin", reception: "/reception/home" },
+      icon: <LayoutDashboard size={18} />,
+      roles: ["admin", "reception"],
+    },
+    // Admin-specific items
+    {
+      title: "Rooms",
+      url: { admin: "/admin/rooms", reception: "" },
+      icon: <Hotel size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Users",
+      url: { admin: "/admin/users" },
+      icon: <UserCheck size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Settings",
+      url: { admin: "/admin/settings" },
+      icon: <Settings size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Notifications",
+      url: { admin: "/admin/bookingNotifications" },
+      icon: <Bell size={18} />,
+      roles: ["admin"],
+    },
+    // Reception and shared routes
+    {
+      title: "Room Booking",
+      url: { admin: "/admin/rooms", reception: "/reception/roomBooking" },
+      icon: <Hotel size={18} />,
+      roles: ["reception"],
+    },
+    {
+      title: "Reservations",
+      url: {
+        admin: "/admin/reservations",
+        reception: "/reception/bookingsList",
+      },
+      icon: <BookOpen size={18} />,
+      roles: ["admin", "reception"],
+    },
+    {
+      title: "Pool Booking",
+      url: {
+        admin: "/admin/pools",
+        reception: "/reception/pool-booking",
+      },
+      icon: <LifeBuoy size={18} />,
+      roles: ["admin", "reception"],
+    },
+    {
+      title: "Pool Schedules",
+      url: {
+        admin: "/admin/pool-schedules",
+        reception: "/reception/pool-schedules",
+      },
+      icon: <Clock size={18} />,
+      roles: ["admin", "reception"],
+    },
   ];
 
-  const menuItems = allMenuItems.filter(item => item.roles.includes(user.role));
+  const menuItems = allMenuItems.filter((item) =>
+    item.roles.includes(user.role)
+  );
 
   const handleLinkClick = () => {
     if (onClose) {
-      onClose(); // Close mobile sidebar when link is clicked
+      onClose(); // Close mobile sidebar
     }
   };
 
@@ -41,7 +99,7 @@ const DashboardSidebar = ({ onClose }) => {
       }`}
     >
       <div className="p-4">
-        {/* Header with close button for mobile */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={toggleSidebar}
@@ -60,10 +118,14 @@ const DashboardSidebar = ({ onClose }) => {
         </div>
 
         {/* User Info */}
-        <div className={`flex items-center gap-3 mb-8 ${!isOpen ? "justify-center" : ""}`}>
+        <div
+          className={`flex items-center gap-3 mb-8 ${
+            !isOpen ? "justify-center" : ""
+          }`}
+        >
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s"
-            alt=""
+            alt="User avatar"
             className="w-10 h-10 rounded-full object-cover"
           />
           {isOpen && (
@@ -74,14 +136,16 @@ const DashboardSidebar = ({ onClose }) => {
           )}
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Links */}
         <ul className="space-y-2">
           {menuItems.map((item) => (
             <li key={item.title}>
               <Link
                 to={item.url[user.role]}
                 onClick={handleLinkClick}
-                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${!isOpen ? "justify-center" : ""}`}
+                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
+                  !isOpen ? "justify-center" : ""
+                }`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
                 {isOpen && <span>{item.title}</span>}
@@ -91,12 +155,14 @@ const DashboardSidebar = ({ onClose }) => {
         </ul>
       </div>
 
-      {/* Profile and Sign Out Buttons */}
+      {/* Profile & Sign Out */}
       <div className="p-4 space-y-2">
         <Link
           to={user.role === "admin" ? "/admin/profile" : "/reception/profile"}
           onClick={handleLinkClick}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${!isOpen ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
+            !isOpen ? "justify-center" : ""
+          }`}
         >
           <User size={18} />
           {isOpen && <span>Profile</span>}
@@ -106,7 +172,9 @@ const DashboardSidebar = ({ onClose }) => {
             logout();
             if (onClose) onClose();
           }}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full transition-colors ${!isOpen ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full transition-colors ${
+            !isOpen ? "justify-center" : ""
+          }`}
         >
           <LogOut size={18} />
           {isOpen && <span>Sign Out</span>}
