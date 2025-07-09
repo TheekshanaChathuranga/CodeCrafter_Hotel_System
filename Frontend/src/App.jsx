@@ -32,10 +32,11 @@ const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isreceptionistRoute = location.pathname.startsWith("/receptionist");
+  const isReceptionRoute = location.pathname.startsWith("/reception");
 
   return (
     <div>
-      {(!isAdminRoute && !isreceptionistRoute) && <Navbar />}
+      {(!isAdminRoute && !isreceptionistRoute && !isReceptionRoute) && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -80,6 +81,26 @@ const App = () => {
           <Route path="pool-bookings" element={<BookingsList />} />
           <Route path="pool-schedules" element={<BookingsList />} />
           {/* <Route path="poolsBooking" element={<PoolsBooking />} /> */}
+          <Route path="pools" element={<ManagePools />} />
+        </Route>
+
+        {/* reception routes - for backward compatibility */}
+        <Route 
+          path="/reception" 
+          element={
+            <ProtectedRoute allowedRoles={['reception']}>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ReceptionHome />} />
+          <Route path="home" element={<ReceptionHome />} />
+          <Route path="roomBooking" element={<ReceptionRoomBooking />} />
+          <Route path="bookingsList" element={<BookingsListPage />} />
+          <Route path="bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="pool-booking" element={<PoolBooking />} />
+          <Route path="pool-bookings" element={<BookingsList />} />
+          <Route path="pool-schedules" element={<BookingsList />} />
           <Route path="pools" element={<ManagePools />} />
         </Route>
 
