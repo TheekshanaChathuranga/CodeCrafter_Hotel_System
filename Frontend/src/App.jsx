@@ -44,6 +44,7 @@ const App = () => {
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/unauthorized" element={<div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl text-red-500">Unauthorized Access</h1></div>} />
 
         {/* Admin routes */}
         <Route 
@@ -67,7 +68,7 @@ const App = () => {
         <Route 
           path="/receptionist" 
           element={
-            <ProtectedRoute allowedRoles={['receptionist']}>
+            <ProtectedRoute allowedRoles={['receptionist', 'reception']}>
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -88,7 +89,7 @@ const App = () => {
         <Route 
           path="/reception" 
           element={
-            <ProtectedRoute allowedRoles={['reception']}>
+            <ProtectedRoute allowedRoles={['reception', 'receptionist']}>
               <DashboardLayout />
             </ProtectedRoute>
           }

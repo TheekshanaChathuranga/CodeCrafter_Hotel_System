@@ -51,6 +51,8 @@ const Login = () => {
           navigate("/admin");
         }else if(loggedInUser.role === "receptionist"){
           navigate("/receptionist");
+        }else if(loggedInUser.role === "reception"){
+          navigate("/reception/home");
         }else{
           navigate("/home");
         }
