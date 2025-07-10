@@ -13,6 +13,7 @@ import roomRoutes from "./routes/manageRoom.js";
 import poolRoutes from "./routes/managePool.js";
 import userRoutes from "./routes/manageUser.js";
 import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
+import eventRoutes from "./routes/manageEvent.js";
 
 
 // Socket.io Configuration
@@ -73,6 +74,7 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/pools", poolRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin/bookings", BookingConfirmationRoutes);
+app.use("/api", eventRoutes);
     
 
 
