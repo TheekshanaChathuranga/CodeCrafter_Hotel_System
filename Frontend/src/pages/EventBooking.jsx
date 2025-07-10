@@ -30,7 +30,8 @@ const EventBooking = () => {
     { no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
   ]);
   const [extraFields, setExtraFields] = useState([
-    { no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
+    { description: "Pool Side reservation", rate: 5000, selected: false },
+    { description: "Boat ride", rate: 5000, selected: false },
   ]);
   const [editingEvent, setEditingEvent] = useState(null);
   const [popup, setPopup] = useState({ message: "", type: "", showConfirm: false });
@@ -64,7 +65,7 @@ const EventBooking = () => {
         notes: event.notes || "",
       });
       setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-      setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+      setExtraFields(event.extraFields || [{ description: "Pool Side reservation", rate: 5000, selected: false }, { description: "Boat ride", rate: 5000, selected: false }]);
     }
   }, [location.state]);
 
@@ -143,25 +144,9 @@ const EventBooking = () => {
     setTableData(updatedData);
   };
 
-  const handleExtraChange = (index, field, value) => {
+  const handleExtraToggle = (index) => {
     const updatedExtras = [...extraFields];
-    updatedExtras[index][field] = field === "description" || field === "unit" ? value : parseFloat(value) || 0;
-    if (field === "quantity" || field === "rate") {
-      updatedExtras[index].amount = updatedExtras[index].quantity * updatedExtras[index].rate;
-    }
-    setExtraFields(updatedExtras);
-  };
-
-  const addExtraRow = () => {
-    setExtraFields([...extraFields, { no: `E${extraFields.length + 1}`, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-  };
-
-  const removeExtraRow = (index) => {
-    if (extraFields.length === 1) {
-      setPopup({ message: "Cannot remove the last row!", type: "warning", showConfirm: false });
-      return;
-    }
-    const updatedExtras = extraFields.filter((_, i) => i !== index).map((row, i) => ({ ...row, no: `E${i + 1}` }));
+    updatedExtras[index].selected = !updatedExtras[index].selected;
     setExtraFields(updatedExtras);
   };
 
@@ -179,7 +164,7 @@ const EventBooking = () => {
       onConfirm: async () => {
         try {
           const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
-          const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
+          const extraAmount = extraFields.reduce((sum, row) => sum + (row.selected ? row.rate : 0), 0);
           const serviceCharge = totalAmount * 0.1;
           const grandTotal = totalAmount + serviceCharge + extraAmount;
 
@@ -210,10 +195,8 @@ const EventBooking = () => {
             })),
             extraFields: extraFields.map(row => ({
               description: row.description,
-              unit: row.unit,
-              quantity: Number(row.quantity),
               rate: Number(row.rate),
-              amount: Number(row.amount)
+              selected: row.selected,
             })),
             totalAmount,
             serviceCharge,
@@ -268,7 +251,7 @@ const EventBooking = () => {
             notes: "",
           });
           setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-          setExtraFields([{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+          setExtraFields([{ description: "Pool Side reservation", rate: 5000, selected: false }, { description: "Boat ride", rate: 5000, selected: false }]);
         } catch (error) {
           console.error("Error submitting booking:", error);
           setPopup({
@@ -282,7 +265,7 @@ const EventBooking = () => {
   };
 
   const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
-  const extraAmount = extraFields.reduce((sum, row) => sum + (row.amount || 0), 0);
+  const extraAmount = extraFields.reduce((sum, row) => sum + (row.selected ? row.rate : 0), 0);
   const serviceCharge = totalAmount * 0.1;
   const grandTotal = totalAmount + serviceCharge + extraAmount;
 
@@ -306,7 +289,6 @@ const EventBooking = () => {
                     <ShadTableRow>
                       <TableHead>No</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Unit</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Rate</TableHead>
                       <TableHead>Amount</TableHead>
@@ -342,36 +324,30 @@ const EventBooking = () => {
                 <Table>
                   <TableHeader>
                     <ShadTableRow>
-                      <TableHead>No</TableHead>
+                      <TableHead>Select</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead>Quantity</TableHead>
                       <TableHead>Rate</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Action</TableHead>
                     </ShadTableRow>
                   </TableHeader>
                   <TableBody>
                     {extraFields.map((row, index) => (
-                      <ExtraRow
-                        key={index}
-                        row={row}
-                        index={index}
-                        unitOptions={unitOptions}
-                        handleExtraChange={handleExtraChange}
-                        removeExtraRow={removeExtraRow}
-                      />
+                      <ShadTableRow key={index}>
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={row.selected}
+                            onChange={() => handleExtraToggle(index)}
+                          />
+                        </TableCell>
+                        <TableCell>{row.description}</TableCell>
+                        <TableCell>{row.rate.toLocaleString()}</TableCell>
+                        <TableCell>{row.selected ? row.rate.toLocaleString() : 0}</TableCell>
+                      </ShadTableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
-              <Button
-                type="button"
-                onClick={addExtraRow}
-                className="mt-4"
-              >
-                Add Extra Row
-              </Button>
             </div>
 
             <SummarySection

@@ -1,12 +1,15 @@
 import React from 'react';
+import { Button } from "../ui/button";
+import { TableRow as ShadTableRow } from "../ui/table";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../ui/select";
+import { Input } from "../ui/input";
 
 const TableRow = ({ row, index, foodOptions, handleTableChange, removeRow }) => {
   // foodOptions is now an array of objects: { name, unitType, unitPrice }
   const selectedFood = foodOptions.find(item => item.name === row.description);
 
   return (
-    <tr className="border-b">
+    <ShadTableRow>
       <td className="px-4 py-2">{row.no}</td>
       <td className="px-4 py-2">
         <Select
@@ -26,41 +29,38 @@ const TableRow = ({ row, index, foodOptions, handleTableChange, removeRow }) => 
         </Select>
       </td>
       <td className="px-4 py-2">
-        <input
-          type="text"
-          value={selectedFood ? selectedFood.unitType : row.unit}
-          disabled
-          className="w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-        />
+        <div className="relative w-24">
+          <Input
+            type="number"
+            value={row.quantity}
+            onChange={e => handleTableChange(index, 'quantity', e.target.value)}
+            min={0}
+            className="pr-10"
+          />
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+            {selectedFood ? (row.quantity === 1 ? selectedFood.unitType : (selectedFood.unitType.endsWith('s') ? selectedFood.unitType : selectedFood.unitType + 's')) : ''}
+          </span>
+        </div>
       </td>
       <td className="px-4 py-2">
-        <input
-          type="number"
-          value={row.quantity}
-          onChange={(e) => handleTableChange(index, 'quantity', e.target.value)}
-          min="0"
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
-        />
-      </td>
-      <td className="px-4 py-2">
-        <input
+        <Input
           type="number"
           value={selectedFood ? selectedFood.unitPrice : row.rate}
           disabled
-          className="w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
         />
       </td>
       <td className="px-4 py-2">{row.amount.toFixed(2)}</td>
       <td className="px-4 py-2">
-        <button
+        <Button
           type="button"
+          variant="destructive"
+          size="sm"
           onClick={() => removeRow(index)}
-          className="text-red-600 hover:text-red-800"
         >
           Remove
-        </button>
+        </Button>
       </td>
-    </tr>
+    </ShadTableRow>
   );
 };
 
