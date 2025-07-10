@@ -8,25 +8,23 @@ const router = express.Router();
 // Update profile route
 router.put("/update-profile", verifyToken, async (req, res) => {
   try {
-    const { username, fullName, bio, location, phone, profilePicture } =
-      req.body;
+    const { fullName, bio, location, phone, profilePicture } = req.body;
 
-    if (!username) {
+    if (!fullName || fullName.trim().length < 3) {
       return res.status(400).json({
         success: false,
-        message: "Username is required",
+        message: "Full name is required and must be at least 3 characters.",
       });
     }
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
       {
-        username,
         fullName,
         bio,
         location,
         phone,
-        profilePicture, // <-- ensure profilePicture is updated
+        profilePicture,
       },
       { new: true, runValidators: true }
     ).select("-password");
@@ -46,36 +44,40 @@ router.put("/update-profile", verifyToken, async (req, res) => {
   }
 });
 
-// Upload profile image
+// Profile image upload route
 router.post(
   "/upload-profile-image",
   verifyToken,
   upload.single("profileImage"),
   handleUploadErrors,
   async (req, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
     try {
-      // Delete previous profile image if exists and is not default
-      const user = await User.findById(req.user.userId);
-      if (user && user.profilePicture && user.profilePicture.startsWith('/uploads/profileImages/')) {
-        const fs = await import('fs');
-        const path = await import('path');
-        // Support both Windows and POSIX paths
-        let oldImagePath = user.profilePicture;
-        if (oldImagePath.startsWith('/')) oldImagePath = oldImagePath.substring(1);
-        const absPath = path.resolve(process.cwd(), 'Backend', oldImagePath);
-        if (fs.existsSync(absPath)) {
-          fs.unlinkSync(absPath);
-        }
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No file uploaded" });
       }
-    } catch (err) {
-      // Log but don't block upload
-      console.error('Error deleting old profile image:', err);
+      // Save file path to user profile
+      const imagePath = `/uploads/${req.file.filename}`;
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user.userId,
+        { profilePicture: imagePath },
+        { new: true, runValidators: true }
+      ).select("-password");
+      res.json({
+        success: true,
+        message: "Profile image uploaded successfully",
+        profilePicture: imagePath,
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error uploading profile image",
+        error: error.message,
+      });
     }
-    // Always return the path as /uploads/profileImages/filename
-    res.json({ imageUrl: `/uploads/profileImages/${req.file.filename}` });
   }
 );
 

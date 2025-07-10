@@ -1,25 +1,25 @@
 // import mongoose from 'mongoose';
 
 // const bookingSchema = new mongoose.Schema({
-//   roomNumber: { 
-//     type: String, 
-//     required: [true, "Room number is required"] 
+//   roomNumber: {
+//     type: String,
+//     required: [true, "Room number is required"]
 //   },
-//   roomType: { 
-//     type: String, 
-//     required: [true, "Room type is required"] 
+//   roomType: {
+//     type: String,
+//     required: [true, "Room type is required"]
 //   },
-//   checkIn: { 
-//     type: Date, 
-//     required: [true, "Check-in date is required"] 
+//   checkIn: {
+//     type: Date,
+//     required: [true, "Check-in date is required"]
 //   },
-//   checkOut: { 
-//     type: Date, 
-//     required: [true, "Check-out date is required"] 
+//   checkOut: {
+//     type: Date,
+//     required: [true, "Check-out date is required"]
 //   },
-//   fullName: { 
-//     type: String, 
-//     required: [true, "Full name is required"] 
+//   fullName: {
+//     type: String,
+//     required: [true, "Full name is required"]
 //   },
 //   phoneNumber: {
 //     type: String,
@@ -31,8 +31,8 @@
 //       message: props => `${props.value} is not a valid phone number! Must be 10 digits.`
 //     }
 //   },
-//   nicNumber: { 
-//     type: String 
+//   nicNumber: {
+//     type: String
 //   },
 //   whatsappNumber: {
 //     type: String,
@@ -44,18 +44,18 @@
 //       message: props => `${props.value} is not a valid WhatsApp number!`
 //     }
 //   },
-//   adults: { 
-//     type: Number, 
+//   adults: {
+//     type: Number,
 //     required: [true, "Number of adults is required"],
-//     min: [1, "At least 1 adult required"] 
+//     min: [1, "At least 1 adult required"]
 //   },
-//   children: { 
-//     type: Number, 
+//   children: {
+//     type: Number,
 //     default: 0,
-//     min: [0, "Cannot have negative children"] 
+//     min: [0, "Cannot have negative children"]
 //   },
-//   specialRequests: { 
-//     type: String 
+//   specialRequests: {
+//     type: String
 //   },
 //   document: {
 //     type: String,
@@ -71,7 +71,7 @@
 //     ref: 'User'
 //   },
 //   processedAt: Date
-// }, { 
+// }, {
 //   collection: 'onlinebooking',
 //   timestamps: true // Adds createdAt and updatedAt automatically
 // });
@@ -137,29 +137,27 @@ const bookingSchema = new mongoose.Schema(
     children: {
       type: Number,
       default: 0,
-      min: [0, "Cannot have negative children"],
     },
     specialRequests: {
       type: String,
     },
-    document: {
+    documentPath: {
       type: String,
-      required: [true, "Document (Image/PDF) is required"],
+      required: [true, "Document path is required"],
     },
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "rejected", "cancelled"],
-      default: "pending",
-    },
-    processedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    processedAt: Date,
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User is required for booking"],
+      required: [true, "User ID is required"],
+    },
+    status: {
+      type: String,
+      enum: ["pending", "confirmed", "cancelled"],
+      default: "pending",
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
@@ -168,7 +166,29 @@ const bookingSchema = new mongoose.Schema(
   }
 );
 
-// Add index for better query performance
+// Add index for searching overlapping bookings
 bookingSchema.index({ roomNumber: 1, checkIn: 1, checkOut: 1 });
 
-export default mongoose.model("Booking", bookingSchema);
+// Add methods
+bookingSchema.methods.toJSON = function () {
+  const obj = this.toObject();
+  delete obj.__v;
+  return obj;
+};
+
+// Add statics for finding overlapping bookings
+bookingSchema.statics.findOverlappingBookings = async function (
+  roomNumber,
+  checkIn,
+  checkOut
+) {
+  return this.find({
+    roomNumber,
+    status: { $ne: "cancelled" },
+    $or: [{ checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } }],
+  });
+};
+
+const Booking = mongoose.model("Booking", bookingSchema);
+
+export default Booking;

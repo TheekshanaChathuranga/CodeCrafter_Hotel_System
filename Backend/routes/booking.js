@@ -2,20 +2,25 @@ import express from "express";
 import Booking from "../models/Booking.js";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
+import mongoose from "mongoose";
 
 const router = express.Router();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // File upload configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
+    cb(null, "document-" + uniqueSuffix + path.extname(file.originalname));
   },
 });
 
@@ -40,65 +45,89 @@ const upload = multer({
 });
 
 router.post("/", upload.single("document"), async (req, res) => {
+  let savedBooking = null;
   try {
-    // Destructure and validate input
-    const { checkIn, checkOut, phoneNumber, roomNumber, user, ...rest } =
-      req.body;
+    console.log("Received booking request:", {
+      ...req.body,
+      file: req.file ? { ...req.file, buffer: undefined } : null,
+    });
 
-    // Convert to Date objects
-    const newCheckIn = new Date(checkIn);
-    const newCheckOut = new Date(checkOut);
+    // Validate required fields
+    const requiredFields = [
+      "roomNumber",
+      "roomType",
+      "checkIn",
+      "checkOut",
+      "fullName",
+      "phoneNumber",
+      "adults",
+      "user",
+    ];
+    const missingFields = requiredFields.filter((field) => !req.body[field]);
 
-    // Date validation
-    if (newCheckOut <= newCheckIn) {
-      return res.status(400).json({
-        message: "Check-out date must be after check-in date",
-      });
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
     }
 
-    // Phone number validation
-    if (!/^\d{10}$/.test(phoneNumber)) {
-      return res.status(400).json({
-        message: "Invalid phone number format (10 digits required)",
-      });
+    if (!req.file) {
+      throw new Error("Document upload is required");
+    }
+
+    // Convert and validate dates
+    const checkIn = new Date(req.body.checkIn);
+    const checkOut = new Date(req.body.checkOut);
+
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+      throw new Error("Invalid dates provided");
+    }
+
+    if (checkIn >= checkOut) {
+      throw new Error("Check-out date must be after check-in date");
+    }
+
+    // Validate user ID
+    if (!mongoose.Types.ObjectId.isValid(req.body.user)) {
+      throw new Error("Invalid user ID");
     }
 
     // Check for overlapping bookings
-    const existingBooking = await Booking.findOne({
-      roomNumber: roomNumber,
-      $or: [
-        {
-          checkIn: { $lt: newCheckOut },
-          checkOut: { $gt: newCheckIn },
-        },
-      ],
-    });
+    const overlappingBookings = await Booking.findOverlappingBookings(
+      req.body.roomNumber,
+      checkIn,
+      checkOut
+    );
 
-    if (existingBooking) {
-      return res.status(409).json({
-        message: `Room ${roomNumber} is already booked from ${existingBooking.checkIn.toDateString()} to ${existingBooking.checkOut.toDateString()}`,
-      });
+    if (overlappingBookings.length > 0) {
+      throw new Error("Room is already booked for these dates");
     }
 
-    // Create new booking with document and user
+    // Create new booking
     const newBooking = new Booking({
-      roomNumber,
-      checkIn: newCheckIn,
-      checkOut: newCheckOut,
-      phoneNumber,
-      document: req.file.path, // Add document path from uploaded file
-      processedBy: req.user ? req.user._id : null, // Assuming req.user is set by authentication middleware
-      user, // Set user from decoded JWT or request body
-      ...rest,
+      roomNumber: req.body.roomNumber,
+      roomType: req.body.roomType,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      fullName: req.body.fullName,
+      phoneNumber: req.body.phoneNumber,
+      nicNumber: req.body.nicNumber || null,
+      whatsappNumber: req.body.whatsappNumber || null,
+      adults: parseInt(req.body.adults),
+      children: parseInt(req.body.children) || 0,
+      specialRequests: req.body.specialRequests || "",
+      documentPath: "/uploads/" + req.file.filename,
+      user: req.body.user,
+      status: "pending",
+      createdAt: new Date(),
     });
 
-    // Save to database
-    const savedBooking = await newBooking.save();
+    // Save booking
+    savedBooking = await newBooking.save();
+    console.log("Booking saved successfully:", savedBooking._id);
 
-    // Success response
+    // Send success response
     res.status(201).json({
       success: true,
-      message: "Booking confirmed!",
+      message: "Booking created successfully",
       bookingId: savedBooking._id,
       details: {
         roomNumber: savedBooking.roomNumber,
@@ -106,47 +135,29 @@ router.post("/", upload.single("document"), async (req, res) => {
           checkIn: savedBooking.checkIn,
           checkOut: savedBooking.checkOut,
         },
-        guest: savedBooking.fullName,
-        document: savedBooking.document,
       },
     });
   } catch (error) {
     console.error("Booking error:", error);
 
-    // Handle file upload errors
-    if (error instanceof multer.MulterError) {
-      return res.status(400).json({
-        message: `File upload error: ${error.message}`,
-      });
+    // Clean up uploaded file if booking failed
+    if (req.file && !savedBooking) {
+      try {
+        fs.unlinkSync(path.join(uploadsDir, req.file.filename));
+      } catch (unlinkError) {
+        console.error("Error deleting uploaded file:", unlinkError);
+      }
     }
 
-    // Handle validation errors
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({
-        message: "Validation failed",
-        errors: errors,
-      });
-    }
-
-    // Handle duplicate key errors
-    if (error.code === 11000) {
-      return res.status(409).json({
-        message: "Duplicate booking detected",
-      });
-    }
-
-    // Handle custom errors from file filter
-    if (error.message.includes("Invalid file type")) {
-      return res.status(400).json({
-        message: error.message,
-      });
-    }
-
-    // Generic error response
-    res.status(500).json({
-      message: "Booking processing failed",
-      error: error.message,
+    // Send appropriate error response
+    const statusCode =
+      error.name === "ValidationError" ? 400 : error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || "Failed to create booking",
+      errors: error.errors
+        ? Object.values(error.errors).map((err) => err.message)
+        : undefined,
     });
   }
 });

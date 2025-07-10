@@ -9,6 +9,8 @@ import { jwtDecode } from "jwt-decode";
 
 const Room_Book = () => {
   const navigate = useNavigate(); // Initialize navigate
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [bookingConfirmation, setBookingConfirmation] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,38 +31,74 @@ const Room_Book = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        let url = "http://localhost:5000/api/rooms";
+        setLoading(true);
+        setError(null);
+
+        let fetchUrl = "http://localhost:5000/api/rooms";
 
         if (bookingDates.checkIn && bookingDates.checkOut) {
+          // Ensure we're working with Date objects
+          const checkIn = new Date(bookingDates.checkIn);
+          const checkOut = new Date(bookingDates.checkOut);
+
+          // Add one day to checkOut date to include the full last day
+          const adjustedCheckOut = new Date(checkOut);
+          adjustedCheckOut.setDate(adjustedCheckOut.getDate() + 1);
+
+          // Validate dates
+          if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime())) {
+            throw new Error("Invalid dates selected");
+          }
+
+          // Create URL with properly formatted dates
           const params = new URLSearchParams({
-            checkIn: bookingDates.checkIn.toISOString(),
-            checkOut: bookingDates.checkOut.toISOString(),
+            checkIn: checkIn.toISOString(),
+            checkOut: adjustedCheckOut.toISOString(),
           });
-          url = `http://localhost:5000/api/rooms/available?${params}`;
+          fetchUrl = `http://localhost:5000/api/rooms/available?${params}`;
+
+          console.log("Fetching rooms with URL:", fetchUrl);
         }
 
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to fetch rooms");
-        }
+        const response = await fetch(fetchUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
 
         const data = await response.json();
-        setRooms(data);
-        setFilteredRooms(data);
+        console.log("Received response:", data);
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || data.error || "Failed to fetch rooms"
+          );
+        }
+
+        // Handle the response data
+        const roomsArray = data.rooms || data;
+        if (!Array.isArray(roomsArray)) {
+          throw new Error("Invalid data format received from server");
+        }
+
+        console.log(`Fetched ${roomsArray.length} rooms successfully`);
+
+        setRooms(roomsArray);
+        setFilteredRooms(roomsArray);
+        setError(null);
       } catch (err) {
-        setError(err.message);
-        console.error("Fetch rooms error:", {
-          message: err.message,
-          stack: err.stack,
-          url: url,
-        });
+        console.error("Fetch rooms error:", err);
+        setError(err.message || "Failed to load rooms. Please try again.");
+        setRooms([]);
+        setFilteredRooms([]);
       } finally {
         setLoading(false);
       }
     };
 
+    // Only fetch if dates are selected or no dates are selected
     fetchRooms();
   }, [bookingDates.checkIn, bookingDates.checkOut]);
 
@@ -101,18 +139,48 @@ const Room_Book = () => {
 
   //adding part of reservation dates
   const handleDateSelect = (date, type) => {
-    if (
-      type === "checkOut" &&
-      bookingDates.checkIn &&
-      date <= bookingDates.checkIn
-    ) {
-      alert("Check-out date must be after check-in date");
+    // Ensure we're working with date objects
+    const selectedDate = new Date(date);
+    const currentDate = new Date();
+
+    // Reset time part to midnight for accurate day comparison
+    selectedDate.setHours(0, 0, 0, 0);
+    currentDate.setHours(0, 0, 0, 0);
+
+    // Validate selected date is not in the past
+    if (selectedDate < currentDate) {
+      alert("Cannot select dates in the past");
       return;
+    }
+
+    if (type === "checkOut" && bookingDates.checkIn) {
+      const checkInDate = new Date(bookingDates.checkIn);
+      checkInDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate <= checkInDate) {
+        alert("Check-out date must be after check-in date");
+        return;
+      }
+    }
+
+    if (type === "checkIn" && bookingDates.checkOut) {
+      const checkOutDate = new Date(bookingDates.checkOut);
+      checkOutDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate >= checkOutDate) {
+        // Reset checkout date if check-in date is after or equal to it
+        setBookingDates((prev) => ({
+          ...prev,
+          checkOut: null,
+          [type]: selectedDate,
+        }));
+        return;
+      }
     }
 
     setBookingDates((prev) => ({
       ...prev,
-      [type]: date,
+      [type]: selectedDate,
     }));
   };
 
@@ -144,6 +212,7 @@ const Room_Book = () => {
       if (!token) {
         throw new Error("User not logged in. Please log in to book a room.");
       }
+
       let userId;
       try {
         const decoded = jwtDecode(token);
@@ -151,6 +220,7 @@ const Room_Book = () => {
       } catch (err) {
         throw new Error("Invalid user token. Please log in again.");
       }
+
       if (!userId) {
         throw new Error("User ID not found in token.");
       }
@@ -158,6 +228,17 @@ const Room_Book = () => {
       // Create FormData object
       const formData = new FormData();
       const fileInput = e.target.elements.document;
+
+      // Validate file
+      if (!fileInput.files[0]) {
+        throw new Error("Document (Image/PDF) is required");
+      }
+
+      // Validate adults count
+      const adults = parseInt(e.target.elements.adults.value, 10);
+      if (adults < 1 || isNaN(adults)) {
+        throw new Error("Please select number of adults");
+      }
 
       // Append all form fields
       formData.append("roomNumber", selectedRoom.roomNumber);
@@ -174,7 +255,7 @@ const Room_Book = () => {
         "whatsappNumber",
         e.target.elements.whatsappNumber.value.trim()
       );
-      formData.append("adults", parseInt(e.target.elements.adults.value, 10));
+      formData.append("adults", adults);
       formData.append(
         "children",
         parseInt(e.target.elements.children.value, 10) || 0
@@ -183,20 +264,14 @@ const Room_Book = () => {
         "specialRequests",
         e.target.elements.specialRequests.value.trim()
       );
-      // Append user field
       formData.append("user", userId);
+      formData.append("document", fileInput.files[0]);
 
-      // Validate adults count
-      const adults = parseInt(e.target.elements.adults.value, 10);
-      if (adults < 1 || isNaN(adults)) {
-        throw new Error("Please select number of adults");
-      }
-
-      // Append document file
-      if (fileInput.files[0]) {
-        formData.append("document", fileInput.files[0]);
-      } else {
-        throw new Error("Document (Image/PDF) is required");
+      // Log form data for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log(
+          `Form Data: ${key} = ${value instanceof File ? value.name : value}`
+        );
       }
 
       // Send to backend with multipart/form-data
@@ -210,24 +285,32 @@ const Room_Book = () => {
         }
       );
 
-      // Handle success
-      if (response.data.success) {
-        alert(`✅ Booking Confirmed!\n
-          Booking ID: ${response.data.bookingId}\n
-          Room: ${response.data.details.roomNumber}\n
-          Dates: ${new Date(
-            response.data.details.dates.checkIn
-          ).toLocaleDateString()} - ${new Date(
-          response.data.details.dates.checkOut
-        ).toLocaleDateString()}`);
+      console.log("Server response:", response.data);
 
-        // Reset state
-        setShowBookingForm(false);
-        setSelectedRoom(null);
-        setBookingDates({ checkIn: null, checkOut: null });
-        setError(null);
-        e.target.reset(); // Reset form fields including file input
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Booking failed");
       }
+
+      // Set booking confirmation details and show popup
+      setBookingConfirmation({
+        bookingId: response.data.bookingId,
+        roomNumber: response.data.details.roomNumber,
+        checkIn: new Date(
+          response.data.details.dates.checkIn
+        ).toLocaleDateString(),
+        checkOut: new Date(
+          response.data.details.dates.checkOut
+        ).toLocaleDateString(),
+      });
+
+      // Show success popup
+      setShowSuccessPopup(true);
+
+      // Reset form state
+      setShowBookingForm(false);
+      setSelectedRoom(null);
+      setError(null);
+      e.target.reset(); // Reset form fields including file input
     } catch (error) {
       console.error("Booking error:", error);
 
@@ -239,10 +322,10 @@ const Room_Book = () => {
 
       // Handle server validation errors
       const serverError = error.response?.data;
-      let errorMessage = "Booking failed. Please check your information.";
+      let errorMessage =
+        error.message || "Booking failed. Please check your information.";
 
       if (serverError) {
-        // Handle multiple error messages
         if (Array.isArray(serverError.errors)) {
           errorMessage = serverError.errors.join("\n");
         } else if (serverError.message) {
@@ -261,6 +344,94 @@ const Room_Book = () => {
     }
   };
 
+  // Booking Success Popup Component
+  const BookingSuccessPopup = () => {
+    if (!showSuccessPopup || !bookingConfirmation) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 transform transition-all">
+          <div className="p-6">
+            {/* Success Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="rounded-full bg-green-100 p-3">
+                <svg
+                  className="w-12 h-12 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Booking Confirmed!
+            </h2>
+
+            {/* Booking Details */}
+            <div className="space-y-4 mb-6">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Booking ID</p>
+                    <p className="font-semibold text-gray-800">
+                      {bookingConfirmation.bookingId}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Room Number</p>
+                    <p className="font-semibold text-gray-800">
+                      {bookingConfirmation.roomNumber}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600">Stay Duration</p>
+                    <p className="font-semibold text-gray-800">
+                      {bookingConfirmation.checkIn} -{" "}
+                      {bookingConfirmation.checkOut}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setShowSuccessPopup(false);
+                  setBookingConfirmation(null);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+              >
+                Done
+              </button>
+              <button
+                onClick={() => {
+                  setShowSuccessPopup(false);
+                  setBookingConfirmation(null);
+                  navigate("/mybookings"); // If you have a bookings page
+                }}
+                className="w-full bg-blue-100 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-200 transition-colors"
+              >
+                View My Bookings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -272,16 +443,46 @@ const Room_Book = () => {
     );
   }
 
-  // if (error) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50">
-  //       <Navbar />
-  //       <div className="max-w-6xl mx-auto px-4 py-16 text-center text-red-500">
-  //         <p>Error: {error}</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 mb-2">
+              Error Loading Rooms
+            </h2>
+            <p className="text-red-600 mb-4">{error}</p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setError(null);
+                  setBookingDates({ checkIn: null, checkOut: null });
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setBookingDates({ checkIn: null, checkOut: null });
+                  setFilters({
+                    type: "all",
+                    acOption: "all",
+                    minPrice: "",
+                    maxPrice: "",
+                  });
+                }}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Reset All Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -675,6 +876,9 @@ const Room_Book = () => {
           </div>
         )}
       </div>
+
+      {/* Booking Success Popup */}
+      <BookingSuccessPopup />
 
       {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">

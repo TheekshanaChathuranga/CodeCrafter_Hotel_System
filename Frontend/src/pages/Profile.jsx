@@ -7,7 +7,6 @@ const Profile = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
     fullName: "",
     bio: "",
     location: "",
@@ -16,46 +15,19 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [previewImage, setPreviewImage] = useState("");
   const fileInputRef = useRef(null);
-  const [showConfirm, setShowConfirm] = useState(false); // NEW: confirmation dialog state
-  const [pendingSubmit, setPendingSubmit] = useState(false); // NEW: to prevent double submit
 
   useEffect(() => {
     if (user) {
       setFormData({
-        username: user.username || "",
-        fullName: user.fullName || "",
+        fullName: user.fullName || user.username || "",
         bio: user.bio || "",
         location: user.location || "",
         phone: user.phone || "",
       });
-      // Use the same helper as Navbar to get the correct image URL
-      let profilePic = user.profilePicture;
-      if (!profilePic || profilePic === "/img/default-profile.png") {
-        setPreviewImage("/img/default-profile.png");
-      } else if (profilePic.startsWith("/uploads/profileImages/")) {
-        setPreviewImage(
-          (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(
-            /\/api$/,
-            ""
-          ) + profilePic
-        );
-      } else if (
-        profilePic.startsWith("http://") ||
-        profilePic.startsWith("https://") ||
-        profilePic.startsWith("data:")
-      ) {
-        setPreviewImage(profilePic);
-      } else {
-        // If it's just a filename, treat as upload to profileImages
-        setPreviewImage(
-          (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(
-            /\/api$/,
-            ""
-          ) +
-            "/uploads/profileImages/" +
-            profilePic
-        );
-      }
+      // Always use getProfileImage for previewImage
+      setPreviewImage(
+        getProfileImage(user.profilePicture || "/img/default-profile.png")
+      );
     }
   }, [user]);
 
@@ -70,6 +42,7 @@ const Profile = () => {
       setProfileImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
+        // Use getProfileImage for preview
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
@@ -80,17 +53,11 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
-  // NEW: Confirm dialog logic
-  const handleSaveClick = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowConfirm(true);
-  };
-
-  const handleConfirm = async () => {
-    setShowConfirm(false);
-    setPendingSubmit(true);
     try {
       let imageUrl = user.profilePicture || "";
+
       if (profileImage) {
         const imageForm = new FormData();
         imageForm.append("profileImage", profileImage);
@@ -104,43 +71,38 @@ const Profile = () => {
             },
           }
         );
-        imageUrl = uploadRes.data.imageUrl;
+        imageUrl = uploadRes.data.profilePicture;
       }
-      // Always expect /uploads/profileImages/filename for profile images
-      if (imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "") {
-        if (
-          imageUrl.startsWith("data:") ||
-          imageUrl.startsWith("http://") ||
-          imageUrl.startsWith("https://")
-        ) {
-          // do nothing
-        } else if (imageUrl.startsWith("/uploads/profileImages/")) {
-          // do nothing
-        } else {
-          imageUrl = `/uploads/profileImages/${imageUrl}`;
-        }
-      } else {
-        imageUrl = "/img/default-profile.png";
-      }
+
       const updatedUser = {
         ...formData,
         profilePicture: imageUrl,
       };
-      await updateUser(updatedUser);
-      // Immediately update previewImage after save
-      setPreviewImage(imageUrl);
+
+      const userAfterUpdate = await updateUser(updatedUser);
+      setPreviewImage(
+        getProfileImage(userAfterUpdate.profilePicture || "/img/default-profile.png")
+      );
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       console.error("Update failed:", error);
       toast.error("Failed to update profile. Try again.");
-    } finally {
-      setPendingSubmit(false);
     }
   };
 
-  const handleCancel = () => {
-    setShowConfirm(false);
+  // Helper to get correct image URL (copied from Navbar)
+  const getProfileImage = (imgPath) => {
+    if (!imgPath || imgPath === "/img/default-profile.png")
+      return "/img/default-profile.png";
+    if (imgPath.startsWith("/uploads/")) {
+      return (
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+        }`.replace(/\/api$/, "") + imgPath
+      );
+    }
+    return imgPath;
   };
 
   if (!user) {
@@ -153,52 +115,20 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      {/* Confirmation Dialog */}
-      {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-            <h2 className="text-lg font-semibold mb-4">
-              Are you sure you want to change your details?
-            </h2>
-            <div className="flex justify-center gap-4 mt-6">
-              <button
-                onClick={handleConfirm}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                disabled={pendingSubmit}
-              >
-                Yes, Save Changes
-              </button>
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition"
-                disabled={pendingSubmit}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Sidebar - Profile Overview */}
         <div className="bg-white rounded-2xl shadow p-6 sticky top-10 h-fit">
           <div className="flex flex-col items-center text-center">
             <div className="relative group w-40 h-40">
-              {previewImage ? (
-                <img
-                  src={previewImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover rounded-full border-4 border-white shadow"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/img/default-profile.png";
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-full border-4 border-white shadow">
-                  <span className="text-gray-500 text-lg">No Image</span>
-                </div>
-              )}
+              <img
+                src={getProfileImage(previewImage)}
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full border-4 border-white shadow"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/img/default-profile.png";
+                }}
+              />
               {isEditing && (
                 <>
                   <button
@@ -219,17 +149,13 @@ const Profile = () => {
             </div>
 
             <div className="mt-4 space-y-1">
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="text-xl font-semibold text-center bg-gray-100 px-2 py-1 rounded"
-                />
-              ) : (
-                <h1 className="text-xl font-semibold">{user.username}</h1>
-              )}
+              <h1 className="text-xl font-semibold">
+                {user.fullName ||
+                  user.username ||
+                  formData.fullName ||
+                  "No Name"}
+              </h1>
+              <p className="text-xs text-gray-500">Full Name</p>
               <p className="text-gray-600 text-sm">{user.email}</p>
               <p className="text-sm text-blue-600 capitalize">{user.role}</p>
             </div>
@@ -251,7 +177,7 @@ const Profile = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl shadow p-6">
             {isEditing ? (
-              <form onSubmit={handleSaveClick} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Bio
@@ -314,7 +240,6 @@ const Profile = () => {
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md"
-                    disabled={pendingSubmit}
                   >
                     Save Changes
                   </button>
@@ -335,7 +260,10 @@ const Profile = () => {
                       Full Name
                     </h3>
                     <p className="mt-1 text-lg">
-                      {user.fullName || "Not provided"}
+                      {user.fullName ||
+                        user.username ||
+                        formData.fullName ||
+                        "Not provided"}
                     </p>
                   </div>
                   <div>

@@ -1,7 +1,8 @@
-import React from 'react';
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as authApi from '../api/auth';
+import React from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import * as authApi from "../api/auth";
+import * as userApi from "../api/user";
 
 //This context will be used across the app to share authentication status
 const AuthContext = createContext();
@@ -15,14 +16,14 @@ export const AuthProvider = ({ children }) => {
   // On app load
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (token) {
         try {
           // Verify with backend
           const userData = await authApi.verifyToken(token);
           setUser(userData);
         } catch (error) {
-          localStorage.removeItem('token');
+          localStorage.removeItem("token");
         }
       }
       setLoading(false);
@@ -33,15 +34,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const { token } = await authApi.login(credentials);
-      localStorage.setItem('token', token);
-      
+      localStorage.setItem("token", token);
+
       const userData = await authApi.verifyToken(token);
       setUser(userData);
 
       return { success: true, user: userData };
     } catch (error) {
-      localStorage.removeItem('token');
-      throw error; 
+      localStorage.removeItem("token");
+      throw error;
     }
   };
 
@@ -52,30 +53,30 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.message || "Signup failed"
+        message: error.message || "Signup failed",
       };
     }
   };
-  
+
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     setUser(null);
-    navigate('/login');
+    navigate("/login");
   };
 
-  // Add updateUser function
-  const updateUserProfile = async (data) => {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No auth token');
-    // Use the updateUser API from user.js
-    const { updateUser } = await import('../api/user');
-    const updatedUser = await updateUser(data, token);
+  // Add updateUser for profile updates (persist to backend)
+  const updateUser = async (updatedFields) => {
+    const token = localStorage.getItem("token");
+    // Call backend API to update user and get updated user object
+    const updatedUser = await userApi.updateUser(updatedFields, token);
     setUser(updatedUser);
     return updatedUser;
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUser: updateUserProfile }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, updateUser }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 //
@@ -44,7 +43,7 @@ const Pool_Book = () => {
 
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/poolBookings/${poolId}/${selectedDate}`
+        `http://localhost:5000/api/pool-booking/${poolId}/${selectedDate}`
       );
       const totalGuests = res.data.totalGuests || 0;
       const poolCapacity =
@@ -109,7 +108,7 @@ const Pool_Book = () => {
 
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/pool-bookings/${pool._id}/${data.date}`
+        `http://localhost:5000/api/pool-booking/${pool._id}/${data.date}`
       );
       const existingCount = res.data.totalGuests || 0;
 
@@ -138,7 +137,7 @@ const Pool_Book = () => {
         bookingForm.append("whatsappNumber", data.whatsappNumber);
       }
 
-      await axios.post("http://localhost:5000/api/pool-bookings", bookingForm);
+      await axios.post("http://localhost:5000/api/pool-booking", bookingForm);
 
       setBookingStatus((prev) => ({
         ...prev,

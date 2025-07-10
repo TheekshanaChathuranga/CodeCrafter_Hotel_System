@@ -2,6 +2,73 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
 
+// User Dropdown Menu Component
+const UserDropdown = ({ user, logout, colors }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center space-x-2 focus:outline-none"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        <img
+          src={getProfileImage(user.profilePicture)}
+          alt="Profile"
+          className="h-10 w-10 rounded-full object-cover border-2 border-white shadow hover:ring-2 hover:ring-[#16A085] transition"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/img/default-profile.png";
+          }}
+        />
+        <svg
+          className="w-4 h-4 text-white"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 z-50">
+          <Link
+            to="/profile"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            My Profile
+          </Link>
+          <Link
+            to="/mybookings"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            View My Reservations
+          </Link>
+          <button
+            onClick={() => {
+              logout();
+              setIsOpen(false);
+            }}
+            className="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Helper to get correct image URL
 const getProfileImage = (imgPath) => {
   if (!imgPath || imgPath === "/img/default-profile.png")
@@ -105,32 +172,7 @@ const Navbar = () => {
           {/* Right side - Auth/Profile Section */}
           <div className="flex items-center space-x-4">
             {user ? (
-              <>
-                <button
-                  onClick={logout}
-                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  style={{
-                    backgroundColor: colors.accent,
-                    color: colors.white,
-                  }}
-                  title="Logout"
-                >
-                  Logout
-                </button>
-                <div className="relative group">
-                  <Link to="/profile" className="flex items-center">
-                    <img
-                      src={getProfileImage(user.profilePicture)}
-                      alt="Profile"
-                      className="h-10 w-10 rounded-full object-cover border-2 border-white shadow hover:ring-2 hover:ring-[#16A085] transition"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/img/default-profile.png";
-                      }}
-                    />
-                  </Link>
-                </div>
-              </>
+              <UserDropdown user={user} logout={logout} colors={colors} />
             ) : (
               <>
                 <AuthLink to="/login" color={colors.info}>
@@ -196,6 +238,16 @@ const Navbar = () => {
               <MobileLink to="/admin" onClick={toggleMenu}>
                 Dashboard
               </MobileLink>
+            )}
+            {user && (
+              <>
+                <MobileLink to="/profile" onClick={toggleMenu}>
+                  My Profile
+                </MobileLink>
+                <MobileLink to="/mybookings" onClick={toggleMenu}>
+                  View My Reservations
+                </MobileLink>
+              </>
             )}
             <div className="border-t pt-2 mt-2">
               {user ? (
