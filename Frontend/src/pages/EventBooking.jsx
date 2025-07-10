@@ -6,6 +6,7 @@ import TableRow from "../components/events/TableRow";
 import ExtraRow from "../components/events/ExtraRow";
 import SummarySection from "../components/events/SummarySection";
 import eventService from "../services/eventService";
+import foodService from "../services/foodService";
 
 const EventBooking = () => {
   const navigate = useNavigate();
@@ -31,12 +32,9 @@ const EventBooking = () => {
   const [editingEvent, setEditingEvent] = useState(null);
   const [popup, setPopup] = useState({ message: "", type: "", showConfirm: false });
   const [errors, setErrors] = useState({});
-
-  const foodOptions = [
-    "Welcome Drink", "Kiribath", "Chicken fried rice", "Egg noodle", "White rice",
-    "Chicken Curry", "Dhall Curry", "Devilled Fish", "Fried Lake fish", "Egg slices",
-    "Desert Ice cream", "Cut Fruit"
-  ];
+  const [foodItems, setFoodItems] = useState([]);
+  const [foodLoading, setFoodLoading] = useState(true);
+  const [foodError, setFoodError] = useState("");
 
   const unitOptions = ["Unit", "KG", "Plate", "Glass", "Set"];
 
@@ -66,6 +64,20 @@ const EventBooking = () => {
       setExtraFields(event.extraFields || [{ no: "E1", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    // Fetch food items from backend
+    setFoodLoading(true);
+    foodService.getAllFoodItems()
+      .then(items => {
+        setFoodItems(items);
+        setFoodLoading(false);
+      })
+      .catch(err => {
+        setFoodError("Failed to load food items");
+        setFoodLoading(false);
+      });
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -100,9 +112,18 @@ const EventBooking = () => {
 
   const handleTableChange = (index, field, value) => {
     const updatedData = [...tableData];
-    updatedData[index][field] = field === "description" || field === "unit" ? value : parseFloat(value) || 0;
-    if (field === "quantity" || field === "rate") {
+    if (field === "description") {
+      // Find the selected food item from foodItems
+      const selectedFood = foodItems.find(item => item.name === value);
+      updatedData[index].description = value;
+      updatedData[index].unit = selectedFood ? selectedFood.unitType : "";
+      updatedData[index].rate = selectedFood ? selectedFood.unitPrice : 0;
+      updatedData[index].amount = updatedData[index].quantity * (selectedFood ? selectedFood.unitPrice : 0);
+    } else if (field === "quantity") {
+      updatedData[index].quantity = parseFloat(value) || 0;
       updatedData[index].amount = updatedData[index].quantity * updatedData[index].rate;
+    } else {
+      updatedData[index][field] = parseFloat(value) || 0;
     }
     setTableData(updatedData);
   };
@@ -293,8 +314,7 @@ const EventBooking = () => {
                       key={index}
                       row={row}
                       index={index}
-                      foodOptions={foodOptions}
-                      unitOptions={unitOptions}
+                      foodOptions={foodItems}
                       handleTableChange={handleTableChange}
                       removeRow={removeRow}
                     />

@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import eventRoutes from './routes/events.js';
+import foodItemsRoutes from './routes/fooditems.js';
 import validateEvent from './middleware/validateEvent.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -37,6 +38,7 @@ mongoose.connect(MONGODB_URI)
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/fooditems', foodItemsRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
