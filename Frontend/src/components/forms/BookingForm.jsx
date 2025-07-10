@@ -1,4 +1,5 @@
 import React from 'react';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../ui/select";
 
 const BookingForm = ({ formData, errors, handleChange }) => {
   return (
@@ -52,18 +53,20 @@ const BookingForm = ({ formData, errors, handleChange }) => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Event Type:</label>
-        <select
-          name="eventType"
-          value={formData.eventType}
-          onChange={handleChange}
-          className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.eventType ? "border-red-500" : ""}`}
+        <Select
+          value={formData.eventType || ""}
+          onValueChange={value => handleChange({ target: { name: "eventType", value } })}
         >
-          <option value="">Select Event Type</option>
-          <option value="Wedding">Wedding</option>
-          <option value="Birthday">Birthday</option>
-          <option value="Corporate">Corporate</option>
-          <option value="Other">Other</option>
-        </select>
+          <SelectTrigger className={`mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 ${errors.eventType ? "border-red-500" : ""}`}>
+            <SelectValue placeholder="Select Event Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Wedding">Wedding</SelectItem>
+            <SelectItem value="Birthday">Birthday</SelectItem>
+            <SelectItem value="Corporate">Corporate</SelectItem>
+            <SelectItem value="Other">Other</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.eventType && <p className="text-red-500 text-xs mt-1">{errors.eventType}</p>}
       </div>
       <div>

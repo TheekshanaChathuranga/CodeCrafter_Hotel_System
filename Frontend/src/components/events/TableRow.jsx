@@ -1,4 +1,5 @@
 import React from 'react';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../ui/select";
 
 const TableRow = ({ row, index, foodOptions, handleTableChange, removeRow }) => {
   // foodOptions is now an array of objects: { name, unitType, unitPrice }
@@ -8,18 +9,21 @@ const TableRow = ({ row, index, foodOptions, handleTableChange, removeRow }) => 
     <tr className="border-b">
       <td className="px-4 py-2">{row.no}</td>
       <td className="px-4 py-2">
-        <select
-          value={row.description}
-          onChange={(e) => handleTableChange(index, 'description', e.target.value)}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+        <Select
+          value={row.description || ""}
+          onValueChange={(value) => handleTableChange(index, 'description', value)}
         >
-          <option value="">Select Food Item</option>
-          {foodOptions.map((option) => (
-            <option key={option._id || option.name} value={option.name}>
-              {option.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select Food Item" />
+          </SelectTrigger>
+          <SelectContent>
+            {foodOptions.map((option) => (
+              <SelectItem key={option._id || option.name} value={option.name}>
+                {option.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </td>
       <td className="px-4 py-2">
         <input

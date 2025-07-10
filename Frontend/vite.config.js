@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import commonjs from 'vite-plugin-commonjs';
+import path from 'path';
 
 
 export default defineConfig({
@@ -11,6 +12,11 @@ export default defineConfig({
     tailwindcss(),
     commonjs(),    // Keep Tailwind CSS plugin
   ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+    },
+  },
   server: {
     proxy: {
       '/api': {

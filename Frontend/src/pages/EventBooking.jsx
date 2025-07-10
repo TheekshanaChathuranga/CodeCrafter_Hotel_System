@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Popup from "./Popup";
+import { Card, CardHeader, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Dialog, DialogTrigger, DialogContent } from "../components/ui/dialog";
+import { Table, TableHeader, TableRow as ShadTableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
 import BookingForm from "../components/forms/BookingForm";
 import TableRow from "../components/events/TableRow";
 import ExtraRow from "../components/events/ExtraRow";
@@ -66,7 +69,6 @@ const EventBooking = () => {
   }, [location.state]);
 
   useEffect(() => {
-    // Fetch food items from backend
     setFoodLoading(true);
     foodService.getAllFoodItems()
       .then(items => {
@@ -285,123 +287,134 @@ const EventBooking = () => {
   const grandTotal = totalAmount + serviceCharge + extraAmount;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl w-full">
-        <h1 className="text-3xl font-bold text-blue-600 mb-6 text-center">
-          {editingEvent ? "Edit Event" : "Book Your Event"}
-        </h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <BookingForm formData={formData} errors={errors} handleChange={handleChange} />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-4xl">
+        <CardHeader className="text-center">
+          <h1 className="text-3xl font-bold text-blue-600 mb-2">
+            {editingEvent ? "Edit Event" : "Book Your Event"}
+          </h1>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <BookingForm formData={formData} errors={errors} handleChange={handleChange} />
 
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Food Items</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-2">No</th>
-                    <th className="px-4 py-2">Description</th>
-                    <th className="px-4 py-2">Unit</th>
-                    <th className="px-4 py-2">Quantity</th>
-                    <th className="px-4 py-2">Rate</th>
-                    <th className="px-4 py-2">Amount</th>
-                    <th className="px-4 py-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      row={row}
-                      index={index}
-                      foodOptions={foodItems}
-                      handleTableChange={handleTableChange}
-                      removeRow={removeRow}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4">Food Items</h3>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <ShadTableRow>
+                      <TableHead>No</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Action</TableHead>
+                    </ShadTableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tableData.map((row, index) => (
+                      <TableRow
+                        key={index}
+                        row={row}
+                        index={index}
+                        foodOptions={foodItems}
+                        handleTableChange={handleTableChange}
+                        removeRow={removeRow}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <Button
+                type="button"
+                onClick={addRow}
+                className="mt-4"
+              >
+                Add Row
+              </Button>
             </div>
-            <button
-              type="button"
-              onClick={addRow}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Add Row
-            </button>
-          </div>
 
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Extra Items</h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-2">No</th>
-                    <th className="px-4 py-2">Description</th>
-                    <th className="px-4 py-2">Unit</th>
-                    <th className="px-4 py-2">Quantity</th>
-                    <th className="px-4 py-2">Rate</th>
-                    <th className="px-4 py-2">Amount</th>
-                    <th className="px-4 py-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {extraFields.map((row, index) => (
-                    <ExtraRow
-                      key={index}
-                      row={row}
-                      index={index}
-                      unitOptions={unitOptions}
-                      handleExtraChange={handleExtraChange}
-                      removeExtraRow={removeExtraRow}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4">Extra Items</h3>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <ShadTableRow>
+                      <TableHead>No</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Action</TableHead>
+                    </ShadTableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {extraFields.map((row, index) => (
+                      <ExtraRow
+                        key={index}
+                        row={row}
+                        index={index}
+                        unitOptions={unitOptions}
+                        handleExtraChange={handleExtraChange}
+                        removeExtraRow={removeExtraRow}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <Button
+                type="button"
+                onClick={addExtraRow}
+                className="mt-4"
+              >
+                Add Extra Row
+              </Button>
             </div>
-            <button
-              type="button"
-              onClick={addExtraRow}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Add Extra Row
-            </button>
-          </div>
 
-          <SummarySection
-            totalAmount={totalAmount}
-            serviceCharge={serviceCharge}
-            extraAmount={extraAmount}
-            grandTotal={grandTotal}
-          />
+            <SummarySection
+              totalAmount={totalAmount}
+              serviceCharge={serviceCharge}
+              extraAmount={extraAmount}
+              grandTotal={grandTotal}
+            />
 
-          <div className="flex justify-end space-x-4 mt-8">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              {editingEvent ? "Update Event" : "Submit Booking"}
-            </button>
+            <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-4 mt-8">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => navigate(-1)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="default"
+              >
+                {editingEvent ? "Update Event" : "Submit Booking"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      {/* Dialog for popups */}
+      <Dialog open={!!popup.message} onOpenChange={() => setPopup({ message: "", type: "", showConfirm: false })}>
+        <DialogContent>
+          <div className="text-center">
+            <p className={popup.type === "error" ? "text-red-600" : popup.type === "warning" ? "text-yellow-600" : "text-gray-800"}>
+              {popup.message}
+            </p>
+            {popup.showConfirm && (
+              <div className="flex justify-center mt-4 space-x-4">
+                <Button onClick={popup.onConfirm} variant="default">Confirm</Button>
+                <Button onClick={() => setPopup({ message: "", type: "", showConfirm: false })} variant="secondary">Cancel</Button>
+              </div>
+            )}
           </div>
-        </form>
-      </div>
-      {popup.message && (
-        <Popup
-          message={popup.message}
-          type={popup.type}
-          showConfirm={popup.showConfirm}
-          onConfirm={popup.onConfirm}
-          onClose={() => setPopup({ message: "", type: "", showConfirm: false })}
-        />
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
