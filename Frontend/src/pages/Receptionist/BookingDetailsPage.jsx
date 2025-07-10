@@ -58,7 +58,7 @@ const BookingDetailsPage = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`http://localhost:5000/api/bookings/${id}`);
-      navigate('/reception/bookingsList', { state: { message: 'Booking deleted successfully' } });
+      navigate('/receptionist/bookingsList', { state: { message: 'Booking deleted successfully' } });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -170,10 +170,19 @@ const BookingDetailsPage = () => {
       )}
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-blue-800">Booking Details</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-blue-800">Booking Details</h1>
+          {booking.bookingType && (
+            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm ${
+              booking.bookingType === 'online' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+            }`}>
+              {booking.bookingType === 'online' ? 'Online Booking' : 'Reception Booking'}
+            </span>
+          )}
+        </div>
         <div className="flex space-x-2">
           <button
-            onClick={() => navigate('/reception/bookingsList')}
+            onClick={() => navigate('/receptionist/bookingsList')}
             className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
           >
             Back to Bookings
@@ -200,20 +209,42 @@ const BookingDetailsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-gray-500">Full Name</p>
-              <p className="text-lg">{booking.guestDetails.name}</p>
+              <p className="text-lg">{booking.guestDetails?.name || booking.fullName || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Mobile Number</p>
-              <p className="text-lg">{booking.guestDetails.mobile}</p>
+              <p className="text-lg">{booking.guestDetails?.mobile || booking.phoneNumber || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Email</p>
-              <p className="text-lg">{booking.guestDetails.email || 'N/A'}</p>
+              <p className="text-lg">{booking.guestDetails?.email || booking.email || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">WhatsApp</p>
-              <p className="text-lg">{booking.guestDetails.whatsapp || 'N/A'}</p>
+              <p className="text-lg">{booking.guestDetails?.whatsapp || booking.whatsappNumber || 'N/A'}</p>
             </div>
+            {booking.bookingType === 'online' && (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">NIC Number</p>
+                  <p className="text-lg">{booking.originalData?.nicNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Adults</p>
+                  <p className="text-lg">{booking.originalData?.adults || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Children</p>
+                  <p className="text-lg">{booking.originalData?.children || 0}</p>
+                </div>
+                {booking.originalData?.specialRequests && (
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-gray-500">Special Requests</p>
+                    <p className="text-lg">{booking.originalData.specialRequests}</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -223,27 +254,27 @@ const BookingDetailsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-gray-500">Check-In</p>
-              <p className="text-lg">{formatDate(booking.bookingDetails.checkIn)}</p>
+              <p className="text-lg">{formatDate(booking.bookingDetails?.checkIn || booking.checkIn)}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Check-Out</p>
-              <p className="text-lg">{formatDate(booking.bookingDetails.checkOut)}</p>
+              <p className="text-lg">{formatDate(booking.bookingDetails?.checkOut || booking.checkOut)}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Room Number</p>
-              <p className="text-lg">{booking.bookingDetails.roomNumber}</p>
+              <p className="text-lg">{booking.bookingDetails?.roomNumber || booking.roomNumber || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Room Type</p>
-              <p className="text-lg">{booking.bookingDetails.roomType}</p>
+              <p className="text-lg">{booking.bookingDetails?.roomType || booking.roomType || 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">AC Type</p>
-              <p className="text-lg">{booking.bookingDetails.acType}</p>
+              <p className="text-lg">{booking.bookingDetails?.acType || 'AC'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500">Package Type</p>
-              <p className="text-lg">{booking.bookingDetails.packageType.toUpperCase()}</p>
+              <p className="text-lg">{(booking.bookingDetails?.packageType || 'room-only').toUpperCase()}</p>
             </div>
           </div>
         </div>
@@ -251,24 +282,31 @@ const BookingDetailsPage = () => {
         {/* Payment Information */}
         <div className="p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Payment Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Payment Type</p>
-              <p className="text-lg capitalize">{booking.paymentDetails.paymentType}</p>
+          {booking.bookingType === 'reception' && booking.paymentDetails ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Payment Type</p>
+                <p className="text-lg capitalize">{booking.paymentDetails.paymentType}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                <p className="text-lg font-semibold">Rs.{booking.paymentDetails.totalAmount}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Advance Paid</p>
+                <p className="text-lg">Rs.{booking.paymentDetails.advanceAmount}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Remaining Amount</p>
+                <p className="text-lg">Rs.{booking.paymentDetails.remainingAmount}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Amount</p>
-              <p className="text-lg font-semibold">Rs.{booking.paymentDetails.totalAmount}</p>
+          ) : (
+            <div className="text-gray-500">
+              <p>Payment information not available for online bookings.</p>
+              <p className="text-sm mt-2">Payment will be collected at check-in.</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Advance Paid</p>
-              <p className="text-lg">Rs.{booking.paymentDetails.advanceAmount}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">Remaining Amount</p>
-              <p className="text-lg">Rs.{booking.paymentDetails.remainingAmount}</p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Status Information */}
@@ -281,11 +319,24 @@ const BookingDetailsPage = () => {
                 onChange={(e) => setStatus(e.target.value)}
                 className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="confirmed">Confirmed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="checked-in">Checked In</option>
-                <option value="checked-out">Checked Out</option>
-                <option value="no-show">No Show</option>
+                {booking.bookingType === 'online' ? (
+                  <>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="checked-in">Checked In</option>
+                    <option value="checked-out">Checked Out</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="checked-in">Checked In</option>
+                    <option value="checked-out">Checked Out</option>
+                    <option value="no-show">No Show</option>
+                  </>
+                )}
               </select>
               <button
                 onClick={handleStatusUpdate}
@@ -304,10 +355,11 @@ const BookingDetailsPage = () => {
             <div className="flex items-center space-x-4">
               <span className={`px-3 py-1 rounded-full text-sm ${
                 booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
                 booking.status === 'checked-in' ? 'bg-blue-100 text-blue-800' :
                 booking.status === 'checked-out' ? 'bg-purple-100 text-purple-800' :
-                'bg-yellow-100 text-yellow-800'
+                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-gray-100 text-gray-800'
               }`}>
                 {booking.status}
               </span>
@@ -352,6 +404,29 @@ const BookingDetailsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Document Information - Only for online bookings */}
+      {booking.bookingType === 'online' && booking.originalData?.document && (
+        <div className="p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Document</h2>
+          <div className="flex items-center space-x-4">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-2">Uploaded Document</p>
+              <a 
+                href={`http://localhost:5000${booking.originalData.document}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                View Document
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

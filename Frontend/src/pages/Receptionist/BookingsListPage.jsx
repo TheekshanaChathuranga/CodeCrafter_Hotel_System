@@ -63,6 +63,7 @@ const BookingsPage = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="py-3 px-4 border-b">Booking ID</th>
+              <th className="py-3 px-4 border-b">Type</th>
               <th className="py-3 px-4 border-b">Guest Name</th>
               <th className="py-3 px-4 border-b">Room No</th>
               <th className="py-3 px-4 border-b">Check-In</th>
@@ -75,15 +76,31 @@ const BookingsPage = () => {
             {bookings.map((booking) => (
               <tr key={booking._id} className="hover:bg-gray-50">
                 <td className="py-3 px-4 border-b">{booking._id.substring(0, 8)}...</td>
-                <td className="py-3 px-4 border-b">{booking.guestDetails.name}</td>
-                <td className="py-3 px-4 border-b">{booking.bookingDetails.roomNumber}</td>
-                <td className="py-3 px-4 border-b">{formatDate(booking.bookingDetails.checkIn)}</td>
-                <td className="py-3 px-4 border-b">{formatDate(booking.bookingDetails.checkOut)}</td>
+                <td className="py-3 px-4 border-b">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    booking.bookingType === 'online' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                  }`}>
+                    {booking.bookingType === 'online' ? 'Online' : 'Reception'}
+                  </span>
+                </td>
+                <td className="py-3 px-4 border-b">
+                  {booking.guestDetails?.name || booking.fullName || 'N/A'}
+                </td>
+                <td className="py-3 px-4 border-b">
+                  {booking.bookingDetails?.roomNumber || booking.roomNumber || 'N/A'}
+                </td>
+                <td className="py-3 px-4 border-b">
+                  {formatDate(booking.bookingDetails?.checkIn || booking.checkIn)}
+                </td>
+                <td className="py-3 px-4 border-b">
+                  {formatDate(booking.bookingDetails?.checkOut || booking.checkOut)}
+                </td>
                 <td className="py-3 px-4 border-b">
                   <span className={`px-2 py-1 rounded-full text-xs ${
                     booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
+                    booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-blue-100 text-blue-800'
                   }`}>
                     {booking.status}
                   </span>

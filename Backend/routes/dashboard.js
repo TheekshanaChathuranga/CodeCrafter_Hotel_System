@@ -1,5 +1,6 @@
 import express from 'express';
 import Booking from '../models/ReceptionBooking.js';
+import OnlineBooking from '../models/Booking.js';
 
 const router = express.Router();
 
@@ -11,8 +12,35 @@ router.get('/stats', async (req, res) => {
     const todayEnd = new Date(today);
     todayEnd.setHours(23, 59, 59, 999);
 
-    // Get all bookings
-    const allBookings = await Booking.find();
+    // Get all bookings from both collections
+    const receptionBookings = await Booking.find().lean();
+    const onlineBookings = await OnlineBooking.find().lean();
+    
+    // Transform online bookings to match reception booking structure
+    const transformedOnlineBookings = onlineBookings.map(booking => ({
+      _id: booking._id,
+      guestDetails: {
+        name: booking.fullName,
+        mobile: booking.phoneNumber
+      },
+      bookingDetails: {
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        roomNumber: booking.roomNumber,
+        roomType: booking.roomType,
+        acType: "AC",
+        packageType: "room-only"
+      },
+      paymentDetails: {
+        totalAmount: 0
+      },
+      status: booking.status,
+      createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt
+    }));
+    
+    // Combine all bookings
+    const allBookings = [...receptionBookings, ...transformedOnlineBookings];
 
     // Today's check-ins
     const todaysCheckIns = allBookings.filter(booking => {
@@ -106,7 +134,8 @@ router.get('/bookings/:date', async (req, res) => {
     const nextDay = new Date(targetDate);
     nextDay.setDate(nextDay.getDate() + 1);
 
-    const bookings = await Booking.find({
+    // Get bookings from both collections
+    const receptionBookings = await Booking.find({
       $or: [
         {
           'bookingDetails.checkIn': {
@@ -125,9 +154,64 @@ router.get('/bookings/:date', async (req, res) => {
           'bookingDetails.checkOut': { $gte: nextDay }
         }
       ]
-    }).sort({ 'bookingDetails.checkIn': 1 });
+    }).sort({ 'bookingDetails.checkIn': 1 }).lean();
 
-    res.json(bookings);
+    const onlineBookings = await OnlineBooking.find({
+      $or: [
+        {
+          'checkIn': {
+            $gte: targetDate,
+            $lt: nextDay
+          }
+        },
+        {
+          'checkOut': {
+            $gte: targetDate,
+            $lt: nextDay
+          }
+        },
+        {
+          'checkIn': { $lte: targetDate },
+          'checkOut': { $gte: nextDay }
+        }
+      ]
+    }).sort({ 'checkIn': 1 }).lean();
+
+    // Transform online bookings to match reception booking structure
+    const transformedOnlineBookings = onlineBookings.map(booking => ({
+      _id: booking._id,
+      guestDetails: {
+        name: booking.fullName,
+        mobile: booking.phoneNumber
+      },
+      bookingDetails: {
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+        roomNumber: booking.roomNumber,
+        roomType: booking.roomType,
+        acType: "AC",
+        packageType: "room-only"
+      },
+      paymentDetails: {
+        totalAmount: 0
+      },
+      status: booking.status,
+      createdAt: booking.createdAt,
+      updatedAt: booking.updatedAt,
+      bookingType: 'online'
+    }));
+
+    // Mark reception bookings
+    const markedReceptionBookings = receptionBookings.map(booking => ({
+      ...booking,
+      bookingType: 'reception'
+    }));
+
+    // Combine and sort by check-in date
+    const allBookings = [...markedReceptionBookings, ...transformedOnlineBookings]
+      .sort((a, b) => new Date(a.bookingDetails.checkIn) - new Date(b.bookingDetails.checkIn));
+
+    res.json(allBookings);
   } catch (error) {
     console.error('Error fetching bookings for date:', error);
     res.status(500).json({ error: 'Internal server error' });

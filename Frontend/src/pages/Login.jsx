@@ -52,7 +52,7 @@ const Login = () => {
         }else if(loggedInUser.role === "receptionist"){
           navigate("/receptionist");
         }else if(loggedInUser.role === "reception"){
-          navigate("/reception/home");
+          navigate("/receptionist");
         }else{
           navigate("/home");
         }

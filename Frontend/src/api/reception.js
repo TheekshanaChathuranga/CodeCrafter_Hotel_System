@@ -19,10 +19,10 @@ api.interceptors.request.use((config) => {
 
 // Reception API functions
 export const receptionAPI = {
-  // Get all bookings
+  // Get all bookings (both reception and online)
   getAllBookings: async () => {
     try {
-      // Try the working endpoint first
+      // Try the working endpoint first (now returns combined bookings)
       const response = await api.get('/bookings');
       return response.data;
     } catch (error) {
@@ -46,8 +46,8 @@ export const receptionAPI = {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
       return allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
-        const checkOut = new Date(booking.bookingDetails.checkOut);
+        const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+        const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
         return checkIn >= thirtyDaysAgo || checkOut >= thirtyDaysAgo;
       }).slice(0, 10); // Limit to 10 most recent
     } catch (error) {
@@ -63,8 +63,8 @@ export const receptionAPI = {
       const allBookings = await receptionAPI.getAllBookings();
       
       const todaysBookings = allBookings.filter(booking => {
-        const checkInDate = new Date(booking.bookingDetails.checkIn).toISOString().split('T')[0];
-        const checkOutDate = new Date(booking.bookingDetails.checkOut).toISOString().split('T')[0];
+        const checkInDate = new Date(booking.bookingDetails?.checkIn || booking.checkIn).toISOString().split('T')[0];
+        const checkOutDate = new Date(booking.bookingDetails?.checkOut || booking.checkOut).toISOString().split('T')[0];
         return checkInDate === today || checkOutDate === today;
       });
 
@@ -87,8 +87,8 @@ export const receptionAPI = {
       const allBookings = await receptionAPI.getAllBookings();
       
       return allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
-        const checkOut = new Date(booking.bookingDetails.checkOut);
+        const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+        const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
         const start = new Date(startDate);
         const end = new Date(endDate);
         
@@ -178,18 +178,18 @@ export const receptionAPI = {
 
     // Calculate stats for today
     const todaysCheckIns = allBookings.filter(booking => {
-      const checkIn = new Date(booking.bookingDetails.checkIn);
+      const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
       return checkIn >= today && checkIn <= todayEnd;
     }).length;
 
     const todaysCheckOuts = allBookings.filter(booking => {
-      const checkOut = new Date(booking.bookingDetails.checkOut);
+      const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
       return checkOut >= today && checkOut <= todayEnd;
     }).length;
 
     const currentlyOccupied = allBookings.filter(booking => {
-      const checkIn = new Date(booking.bookingDetails.checkIn);
-      const checkOut = new Date(booking.bookingDetails.checkOut);
+      const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+      const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
       return checkIn <= today && checkOut > today && booking.status === 'checked-in';
     }).length;
 
@@ -208,12 +208,12 @@ export const receptionAPI = {
       weekAgo.setDate(weekAgo.getDate() - 7);
 
       const recentCheckIns = allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
+        const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
         return checkIn >= weekAgo && checkIn <= todayEnd;
       }).length;
 
       const recentCheckOuts = allBookings.filter(booking => {
-        const checkOut = new Date(booking.bookingDetails.checkOut);
+        const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
         return checkOut >= weekAgo && checkOut <= todayEnd;
       }).length;
 
@@ -233,9 +233,10 @@ export const receptionAPI = {
     const occupiedByType = {};
     roomTypes.forEach(type => {
       occupiedByType[type] = allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
-        const checkOut = new Date(booking.bookingDetails.checkOut);
-        return booking.bookingDetails.roomType === type &&
+        const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+        const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut);
+        const roomType = booking.bookingDetails?.roomType || booking.roomType;
+        return roomType === type &&
                checkIn <= today && checkOut > today &&
                (booking.status === 'checked-in' || booking.status === 'confirmed');
       }).length;
@@ -288,8 +289,8 @@ export const receptionAPI = {
         const dateStr = date.toISOString().split('T')[0];
         
         return allBookings.filter(booking => {
-          const checkIn = new Date(booking.bookingDetails.checkIn).toISOString().split('T')[0];
-          const checkOut = new Date(booking.bookingDetails.checkOut).toISOString().split('T')[0];
+          const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn).toISOString().split('T')[0];
+          const checkOut = new Date(booking.bookingDetails?.checkOut || booking.checkOut).toISOString().split('T')[0];
           return checkIn <= dateStr && checkOut >= dateStr;
         });
       } catch (fallbackError) {

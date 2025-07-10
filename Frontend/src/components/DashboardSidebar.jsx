@@ -17,7 +17,7 @@ const DashboardSidebar = ({ onClose }) => {
     // Dashboard for both roles
     {
       title: "Dashboard",
-      url: { admin: "/admin", reception: "/reception/home" },
+      url: { admin: "/admin", reception: "/receptionist/home" },
       icon: <LayoutDashboard size={18} />,
       roles: ["admin", "reception"],
     },
@@ -49,7 +49,7 @@ const DashboardSidebar = ({ onClose }) => {
     // Reception and shared routes
     {
       title: "Room Booking",
-      url: { admin: "/admin/rooms", reception: "/reception/roomBooking" },
+      url: { admin: "/admin/rooms", reception: "/receptionist/roomBooking" },
       icon: <Hotel size={18} />,
       roles: ["reception"],
     },
@@ -57,7 +57,7 @@ const DashboardSidebar = ({ onClose }) => {
       title: "Reservations",
       url: {
         admin: "/admin/reservations",
-        reception: "/reception/bookingsList",
+        reception: "/receptionist/bookingsList",
       },
       icon: <BookOpen size={18} />,
       roles: ["admin", "reception"],
@@ -66,7 +66,7 @@ const DashboardSidebar = ({ onClose }) => {
       title: "Pool Booking",
       url: {
         admin: "/admin/pools",
-        reception: "/reception/pool-booking",
+        reception: "/receptionist/pool-booking",
       },
       icon: <LifeBuoy size={18} />,
       roles: ["admin", "reception"],
@@ -75,7 +75,7 @@ const DashboardSidebar = ({ onClose }) => {
       title: "Pool Schedules",
       url: {
         admin: "/admin/pool-schedules",
-        reception: "/reception/pool-schedules",
+        reception: "/receptionist/pool-schedules",
       },
       icon: <Clock size={18} />,
       roles: ["admin", "reception"],
@@ -83,7 +83,8 @@ const DashboardSidebar = ({ onClose }) => {
   ];
 
   const menuItems = allMenuItems.filter((item) =>
-    item.roles.includes(user.role)
+    item.roles.includes(user.role) || 
+    (user.role === "receptionist" && item.roles.includes("reception"))
   );
 
   const handleLinkClick = () => {
@@ -158,7 +159,7 @@ const DashboardSidebar = ({ onClose }) => {
       {/* Profile & Sign Out */}
       <div className="p-4 space-y-2">
         <Link
-          to={user.role === "admin" ? "/admin/profile" : "/reception/profile"}
+          to={user.role === "admin" ? "/admin/profile" : "/receptionist/profile"}
           onClick={handleLinkClick}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
             !isOpen ? "justify-center" : ""

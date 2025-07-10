@@ -36,13 +36,22 @@ app.use(cors({
     'http://localhost:5176', 
     'http://localhost:5177'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
 // Middleware
 app.use(express.json());
+
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
 
 // Check if MONGODB_URI is defined
 if (!MONGODB_URI) {
@@ -82,6 +91,10 @@ app.use('/api/receptionBookings', bookingRoutes);
 app.use('/api/receptionRooms', receptionRoomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/roomBookings', bookingRoutes);  // Add this route for room bookings
+
+// Admin booking confirmation routes
+import adminBookingRoutes from "./routes/adminBookingConfirmation.js";
+app.use('/api/admin/bookings', adminBookingRoutes);
 
 // Dashboard routes
 app.use('/api/dashboard', dashboardRoutes);

@@ -79,4 +79,4 @@ const bookingSchema = new mongoose.Schema({
 // Add index for better query performance
 bookingSchema.index({ roomNumber: 1, checkIn: 1, checkOut: 1 });
 
-export default mongoose.model('Booking', bookingSchema)
+export default mongoose.model('OnlineBooking', bookingSchema)
