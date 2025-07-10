@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       const userData = await authApi.verifyToken(token);
       setUser(userData);
 
-      return { success: true }; 
+      return { success: true, user: userData };
     } catch (error) {
       localStorage.removeItem('token');
       throw error; 
