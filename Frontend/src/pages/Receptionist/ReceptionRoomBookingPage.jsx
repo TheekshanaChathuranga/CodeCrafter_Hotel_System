@@ -248,298 +248,379 @@ const ReceptionRoomBookingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-blue-50 py-4 sm:py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-6 sm:py-12 px-4">
       {/* Success Popup Modal */}
       {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl transform transition-all">
             <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                <svg
-                  className="h-6 w-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-green-400 to-green-600 shadow-lg mb-4">
+                <div className="h-8 w-8 text-white font-bold text-2xl">✓</div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-3">Booking Successful!</h3>
-              <div className="mt-2 text-sm text-gray-500">
-                <p>Your booking has been confirmed.</p>
-                <p className="mt-2 font-semibold">Booking ID: {bookingId}</p>
-                <div className="mt-4 bg-blue-50 p-3 rounded text-left">
-                  <p className="font-medium">Guest: {adminDetails.name}</p>
-                  <p>Room: {selectedRoom} ({selectedRoomType})</p>
-                  <p>Check-in: {new Date(adminDetails.checkIn).toLocaleString()}</p>
-                  <p>Check-out: {new Date(adminDetails.checkOut).toLocaleString()}</p>
-                  <p className="mt-2 font-medium">Total Amount: Rs.{totalAmount}</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Booking Confirmed!</h3>
+              <p className="text-gray-600 mb-4">Your reservation has been successfully created.</p>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 mb-6">
+                <p className="text-lg font-bold text-blue-800 mb-4">Booking ID: {bookingId}</p>
+                <div className="text-left space-y-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-700">Guest:</span>
+                    <span className="text-gray-900">{adminDetails.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-700">Room:</span>
+                    <span className="text-gray-900">{selectedRoom} ({selectedRoomType})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-700">Check-in:</span>
+                    <span className="text-gray-900">{new Date(adminDetails.checkIn).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-700">Check-out:</span>
+                    <span className="text-gray-900">{new Date(adminDetails.checkOut).toLocaleDateString()}</span>
+                  </div>
+                  <div className="border-t pt-2 mt-3">
+                    <div className="flex justify-between">
+                      <span className="font-bold text-gray-800">Total Amount:</span>
+                      <span className="font-bold text-green-600 text-lg">Rs.{totalAmount}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4">
-                <button
-                  type="button"
-                  className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={closeSuccessPopup}
-                >
-                  Close
-                </button>
-              </div>
+              
+              <button
+                type="button"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+                onClick={closeSuccessPopup}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        <div className="bg-blue-600 p-4 sm:p-6 text-white">
-          <h2 className="text-xl sm:text-2xl font-bold text-center">Hotel Room Booking</h2>
+      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-white opacity-10 transform -skew-y-1"></div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center relative z-10">Hotel Room Booking System</h2>
+          <p className="text-center text-blue-100 mt-2 relative z-10">Complete your reservation in simple steps</p>
         </div>
 
         {showConfirmation ? (
-          <div className="p-6">
-            <h3 className="text-xl font-semibold mb-4 text-blue-800">Confirm Booking</h3>
-            <div className="bg-blue-50 p-4 rounded-lg mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="font-medium text-blue-700">Guest Details:</p>
-                  <p><span className="text-gray-600">Name:</span> {adminDetails.name}</p>
-                  <p><span className="text-gray-600">Mobile:</span> {adminDetails.mobile}</p>
-                  <p><span className="text-gray-600">Email:</span> {adminDetails.email || "N/A"}</p>
-                  <p><span className="text-gray-600">WhatsApp:</span> {adminDetails.whatsapp || "N/A"}</p>
+          <div className="p-8">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Review & Confirm Booking</h3>
+              <p className="text-gray-600">Please verify all details before confirming your reservation</p>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-xl shadow-sm">
+                    <h4 className="font-bold text-blue-800 mb-3 text-lg">Guest Information</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Name:</span>
+                        <span className="text-gray-900 font-semibold">{adminDetails.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Mobile:</span>
+                        <span className="text-gray-900">{adminDetails.mobile}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Email:</span>
+                        <span className="text-gray-900">{adminDetails.email || "Not provided"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">WhatsApp:</span>
+                        <span className="text-gray-900">{adminDetails.whatsapp || "Not provided"}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-blue-700">Booking Details:</p>
-                  <p><span className="text-gray-600">Check-in:</span> {new Date(adminDetails.checkIn).toLocaleString()}</p>
-                  <p><span className="text-gray-600">Check-out:</span> {new Date(adminDetails.checkOut).toLocaleString()}</p>
-                  <p><span className="text-gray-600">Room No:</span> {selectedRoom}</p>
-                  <p><span className="text-gray-600">Room Type:</span> {selectedRoomType}</p>
-                  <p><span className="text-gray-600">AC Type:</span> {acType}</p>
-                  <p><span className="text-gray-600">Package:</span> {packageType.toUpperCase()}</p>
+                
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-xl shadow-sm">
+                    <h4 className="font-bold text-blue-800 mb-3 text-lg">Booking Details</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Check-in:</span>
+                        <span className="text-gray-900">{new Date(adminDetails.checkIn).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Check-out:</span>
+                        <span className="text-gray-900">{new Date(adminDetails.checkOut).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Room:</span>
+                        <span className="text-gray-900 font-semibold">{selectedRoom}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Type:</span>
+                        <span className="text-gray-900">{selectedRoomType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">AC Type:</span>
+                        <span className="text-gray-900">{acType}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 font-medium">Package:</span>
+                        <span className="text-gray-900">{packageType.toUpperCase()}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 border-t pt-4">
-                <p className="font-medium text-blue-700">Payment Details:</p>
-                <p><span className="text-gray-600">Payment Type:</span> {paymentType === 'full' ? 'Full Payment' : paymentType === 'advance' ? 'Advance Payment' : 'No Payment'}</p>
-                <p><span className="text-gray-600">Advance Amount:</span> Rs.{advanceAmount || 0}</p>
-                <p><span className="text-gray-600">Remaining Amount:</span> Rs.{remainingAmount}</p>
-                <p className="font-semibold"><span className="text-gray-600">Total Amount:</span> Rs.{totalAmount}</p>
+              
+              <div className="mt-6 bg-white p-4 rounded-xl shadow-sm">
+                <h4 className="font-bold text-blue-800 mb-3 text-lg">Payment Summary</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Payment Type</p>
+                    <p className="font-semibold text-gray-900">
+                      {paymentType === 'full' ? 'Full Payment' : paymentType === 'advance' ? 'Advance Payment' : 'No Payment'}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Advance Paid</p>
+                    <p className="font-bold text-green-600 text-lg">Rs.{advanceAmount || 0}</p>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+                    <p className="font-bold text-blue-600 text-xl">Rs.{totalAmount}</p>
+                  </div>
+                </div>
+                {remainingAmount > 0 && (
+                  <div className="mt-3 p-3 bg-orange-50 rounded-lg text-center">
+                    <p className="text-sm text-gray-600 mb-1">Remaining Amount</p>
+                    <p className="font-bold text-orange-600 text-lg">Rs.{remainingAmount}</p>
+                  </div>
+                )}
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between gap-4">
               <button 
-                className="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                className="w-full sm:w-auto px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 border border-gray-300"
                 onClick={() => setShowConfirmation(false)}
               >
-                Back to Edit
+                ← Back to Edit
               </button>
               <button 
-                className={`w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center ${loading ? 'opacity-75' : ''}`}
+                className={`w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center ${loading ? 'opacity-75' : ''}`}
                 onClick={confirmBooking}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <div className="animate-spin -ml-1 mr-3 h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
                     Processing...
                   </>
-                ) : "Confirm & Book"}
+                ) : "Confirm & Book →"}
               </button>
             </div>
           </div>
         ) : (
-          <div className="p-6">
-            <h3 className="text-xl font-semibold mb-4 text-blue-800">Guest & Room Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Guest Information */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Enter full name"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.name ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.name}
-                  />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                </div>
+          <div className="p-8">
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Guest & Room Details</h3>
+              <p className="text-gray-600">Fill in the required information to proceed with the booking</p>
+            </div>
+            
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+              {/* Guest Information Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
+                <h4 className="text-xl font-bold text-blue-800 mb-6 pb-2 border-b border-blue-200">Guest Information</h4>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Enter guest's full name"
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.name ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                      onChange={handleInputChange}
+                      value={adminDetails.name}
+                    />
+                    {errors.name && <p className="mt-2 text-sm text-red-600 font-medium">{errors.name}</p>}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile No *</label>
-                  <input
-                    type="text"
-                    name="mobile"
-                    placeholder="10 digit mobile number"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.mobile ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.mobile}
-                  />
-                  {errors.mobile && <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>}
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Mobile Number *</label>
+                    <input
+                      type="text"
+                      name="mobile"
+                      placeholder="10 digit mobile number"
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.mobile ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                      onChange={handleInputChange}
+                      value={adminDetails.mobile}
+                    />
+                    {errors.mobile && <p className="mt-2 text-sm text-red-600 font-medium">{errors.mobile}</p>}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="email@example.com"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.email}
-                  />
-                  {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="guest@example.com"
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.email ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                      onChange={handleInputChange}
+                      value={adminDetails.email}
+                    />
+                    {errors.email && <p className="mt-2 text-sm text-red-600 font-medium">{errors.email}</p>}
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp No (Optional)</label>
-                  <input
-                    type="text"
-                    name="whatsapp"
-                    placeholder="10 digit WhatsApp number"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.whatsapp ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.whatsapp}
-                  />
-                  {errors.whatsapp && <p className="mt-1 text-sm text-red-600">{errors.whatsapp}</p>}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">WhatsApp Number</label>
+                    <input
+                      type="text"
+                      name="whatsapp"
+                      placeholder="10 digit WhatsApp number"
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.whatsapp ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                      onChange={handleInputChange}
+                      value={adminDetails.whatsapp}
+                    />
+                    {errors.whatsapp && <p className="mt-2 text-sm text-red-600 font-medium">{errors.whatsapp}</p>}
+                  </div>
                 </div>
               </div>
 
-              {/* Booking Information */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-in Date & Time *</label>
-                  <input
-                    type="datetime-local"
-                    name="checkIn"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.checkIn ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.checkIn}
-                    min={new Date().toISOString().slice(0, 16)}
-                  />
-                  {errors.checkIn && <p className="mt-1 text-sm text-red-600">{errors.checkIn}</p>}
-                </div>
+              {/* Booking Information Section */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-100">
+                <h4 className="text-xl font-bold text-purple-800 mb-6 pb-2 border-b border-purple-200">Booking Information</h4>
+                <div className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Check-in Date & Time *</label>
+                      <input
+                        type="datetime-local"
+                        name="checkIn"
+                        className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.checkIn ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                        onChange={handleInputChange}
+                        value={adminDetails.checkIn}
+                        min={new Date().toISOString().slice(0, 16)}
+                      />
+                      {errors.checkIn && <p className="mt-2 text-sm text-red-600 font-medium">{errors.checkIn}</p>}
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-out Date & Time *</label>
-                  <input
-                    type="datetime-local"
-                    name="checkOut"
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.checkOut ? "border-red-500" : "border-gray-300"}`}
-                    onChange={handleInputChange}
-                    value={adminDetails.checkOut}
-                    min={adminDetails.checkIn || new Date().toISOString().slice(0, 16)}
-                  />
-                  {errors.checkOut && <p className="mt-1 text-sm text-red-600">{errors.checkOut}</p>}
-                </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Check-out Date & Time *</label>
+                      <input
+                        type="datetime-local"
+                        name="checkOut"
+                        className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.checkOut ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                        onChange={handleInputChange}
+                        value={adminDetails.checkOut}
+                        min={adminDetails.checkIn || new Date().toISOString().slice(0, 16)}
+                      />
+                      {errors.checkOut && <p className="mt-2 text-sm text-red-600 font-medium">{errors.checkOut}</p>}
+                    </div>
+                  </div>
 
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Package Type *</label>
+                    <select
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.packageType ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
+                      value={packageType}
+                      onChange={handlePackageChange}
+                    >
+                      <option value="">Select Package Type</option>
+                      <option value="f/b">🍽️ Full Board (f/b) - All meals included</option>
+                      <option value="h/b">🥞 Half Board (h/b) - Breakfast & dinner</option>
+                      <option value="normal">🏨 Normal - Room only</option>
+                    </select>
+                    {errors.packageType && <p className="mt-2 text-sm text-red-600 font-medium">{errors.packageType}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Room Type *</label>
+                      <select
+                        className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.selectedRoomType ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm ${(packageType === "f/b" || packageType === "h/b") ? 'opacity-50' : ''}`}
+                        value={selectedRoomType}
+                        onChange={handleRoomTypeChange}
+                        disabled={packageType === "f/b" || packageType === "h/b"}
+                      >
+                        <option value="">Select Room Type</option>
+                        <option value="Single Room">Single Room</option>
+                        <option value="Double Room">Double Room</option>
+                        <option value="Triple Room">Triple Room</option>
+                      </select>
+                      {errors.selectedRoomType && <p className="mt-2 text-sm text-red-600 font-medium">{errors.selectedRoomType}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">AC Type *</label>
+                      <select
+                        className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.acType ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm ${(packageType === "f/b" || packageType === "h/b" || selectedRoom === "102") ? 'opacity-50' : ''}`}
+                        value={acType}
+                        onChange={(e) => setAcType(e.target.value)}
+                        disabled={packageType === "f/b" || packageType === "h/b" || selectedRoom === "102"}
+                      >
+                        <option value="">Select AC/Non-AC</option>
+                        <option value="AC">❄️ AC</option>
+                        <option value="Non-AC">🌬️ Non-AC</option>
+                      </select>
+                      {errors.acType && <p className="mt-2 text-sm text-red-600 font-medium">{errors.acType}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Room Number *</label>
+                    <select
+                      className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${errors.selectedRoom ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm ${!selectedRoomType ? 'opacity-50' : ''}`}
+                      value={selectedRoom}
+                      onChange={handleRoomChange}
+                      disabled={!selectedRoomType}
+                    >
+                      <option value="">Select Available Room</option>
+                      {availableRooms
+                        .filter(room => {
+                          if (selectedRoomType === "Single Room") return room.type === "Single Room";
+                          if (selectedRoomType === "Double Room") return room.type === "Double Room";
+                          if (selectedRoomType === "Triple Room") return room.type === "Triple Room";
+                          return false;
+                        })
+                        .map(room => (
+                          <option key={room.id} value={room.id}>
+                            Room {room.id} - {room.type} ({room.acType})
+                          </option>
+                        ))}
+                    </select>
+                    {errors.selectedRoom && <p className="mt-2 text-sm text-red-600 font-medium">{errors.selectedRoom}</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Information Section */}
+            <div className="mt-8 bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">
+              <h4 className="text-xl font-bold text-green-800 mb-6 pb-2 border-b border-green-200">Payment Information</h4>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Package Type *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Type *</label>
                   <select
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.packageType ? "border-red-500" : "border-gray-300"}`}
-                    value={packageType}
-                    onChange={handlePackageChange}
-                  >
-                    <option value="">Select Package</option>
-                    <option value="f/b">Full Board (f/b) - Includes all meals</option>
-                    <option value="h/b">Half Board (h/b) - Includes breakfast & dinner</option>
-                    <option value="normal">Normal - Room only</option>
-                  </select>
-                  {errors.packageType && <p className="mt-1 text-sm text-red-600">{errors.packageType}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
-                  <select
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.selectedRoomType ? "border-red-500" : "border-gray-300"}`}
-                    value={selectedRoomType}
-                    onChange={handleRoomTypeChange}
-                    disabled={packageType === "f/b" || packageType === "h/b"}
-                  >
-                    <option value="">Select Room Type</option>
-                    <option value="Single Room">Single Room</option>
-                    <option value="Double Room">Double Room</option>
-                    <option value="Triple Room">Triple Room</option>
-                  </select>
-                  {errors.selectedRoomType && <p className="mt-1 text-sm text-red-600">{errors.selectedRoomType}</p>}
-                </div>
-              </div>
-
-              {/* Room Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Room Number *</label>
-                <select
-                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.selectedRoom ? "border-red-500" : "border-gray-300"}`}
-                  value={selectedRoom}
-                  onChange={handleRoomChange}
-                  disabled={!selectedRoomType}
-                >
-                  <option value="">Select Room Number</option>
-                  {availableRooms
-                    .filter(room => {
-                      if (selectedRoomType === "Single Room") return room.type === "Single Room";
-                      if (selectedRoomType === "Double Room") return room.type === "Double Room";
-                      if (selectedRoomType === "Triple Room") return room.type === "Triple Room";
-                      return false;
-                    })
-                    .map(room => (
-                      <option key={room.id} value={room.id}>
-                        {room.id} - {room.type} ({room.acType})
-                      </option>
-                    ))}
-                </select>
-                {errors.selectedRoom && <p className="mt-1 text-sm text-red-600">{errors.selectedRoom}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">AC Type *</label>
-                <select
-                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.acType ? "border-red-500" : "border-gray-300"}`}
-                  value={acType}
-                  onChange={(e) => setAcType(e.target.value)}
-                  disabled={packageType === "f/b" || packageType === "h/b" || selectedRoom === "102"}
-                >
-                  <option value="">Select AC/Non-AC</option>
-                  <option value="AC">AC</option>
-                  <option value="Non-AC">Non-AC</option>
-                </select>
-                {errors.acType && <p className="mt-1 text-sm text-red-600">{errors.acType}</p>}
-              </div>
-
-              {/* Payment Information */}
-              <div className="md:col-span-2 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Type *</label>
-                  <select
-                    className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.paymentType ? "border-red-500" : "border-gray-300"}`}
+                    className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all ${errors.paymentType ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"} shadow-sm`}
                     value={paymentType}
                     onChange={handlePaymentTypeChange}
                   >
-                    <option value="">Select Payment Type</option>
-                    <option value="advance">Advance Payment</option>
-                    <option value="full">Full Payment</option>
-                    <option value="none">No Payment (Pay at Hotel)</option>
+                    <option value="">Select Payment Method</option>
+                    <option value="advance">💳 Advance Payment</option>
+                    <option value="full">💰 Full Payment</option>
+                    <option value="none">🏨 Pay at Hotel</option>
                   </select>
-                  {errors.paymentType && <p className="mt-1 text-sm text-red-600">{errors.paymentType}</p>}
+                  {errors.paymentType && <p className="mt-2 text-sm text-red-600 font-medium">{errors.paymentType}</p>}
                 </div>
 
                 {paymentType === "advance" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Advance Amount (Rs)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Advance Amount (Rs)</label>
                     <input
                       type="number"
                       placeholder="Enter advance amount"
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all shadow-sm"
                       value={advanceAmount}
                       onChange={handleAdvanceAmountChange}
                       min="0"
@@ -547,42 +628,43 @@ const ReceptionRoomBookingPage = () => {
                     />
                   </div>
                 )}
+              </div>
 
-                {paymentType && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="font-medium text-blue-700">Total Amount:</p>
-                        <p className="text-lg font-semibold">Rs.{totalAmount}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-blue-700">Remaining Amount:</p>
-                        <p className="text-lg font-semibold">RS.{remainingAmount}</p>
-                      </div>
+              {paymentType && (
+                <div className="mt-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h5 className="font-bold text-gray-800 mb-4 text-lg">Payment Summary</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm font-medium text-blue-600 mb-1">Total Amount</p>
+                      <p className="text-2xl font-bold text-blue-800">Rs.{totalAmount}</p>
                     </div>
                     {paymentType === "advance" && advanceAmount > 0 && (
-                      <div className="mt-2">
-                        <p className="font-medium text-blue-700">Advance Paid:</p>
-                        <p className="text-lg font-semibold text-green-600">Rs.{advanceAmount}</p>
+                      <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                        <p className="text-sm font-medium text-green-600 mb-1">Advance Paid</p>
+                        <p className="text-2xl font-bold text-green-800">Rs.{advanceAmount}</p>
                       </div>
                     )}
+                    <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <p className="text-sm font-medium text-orange-600 mb-1">Remaining</p>
+                      <p className="text-2xl font-bold text-orange-800">Rs.{remainingAmount}</p>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
               <button 
-                className="w-full sm:w-auto px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                className="w-full sm:w-auto px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 border border-gray-300"
                 onClick={resetForm}
               >
-                Reset Form
+                🔄 Reset Form
               </button>
               <button 
-                className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
                 onClick={handleBooking}
               >
-                Next: Confirm Booking
+                Next: Review Booking →
               </button>
             </div>
           </div>
