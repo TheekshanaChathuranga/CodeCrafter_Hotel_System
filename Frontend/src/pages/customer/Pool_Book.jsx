@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 //
 import Navbar from "../../components/Navbar";
+import { useAuth } from "../../context/UserAuthContext";
 
 const Pool_Book = () => {
+  const { user } = useAuth(); // Get authenticated user data
   const [pools, setPools] = useState([]);
   const [formData, setFormData] = useState({});
   const [bookingStatus, setBookingStatus] = useState({});
@@ -28,6 +30,26 @@ const Pool_Book = () => {
     };
     fetchPools();
   }, []);
+
+  // Auto-fill full name when pools are loaded and user is available
+  useEffect(() => {
+    if (user && pools.length > 0) {
+      const userFullName = user.fullName || user.username || "";
+      if (userFullName) {
+        setPools((currentPools) => {
+          const updatedFormData = {};
+          currentPools.forEach((pool) => {
+            updatedFormData[pool._id] = {
+              ...formData[pool._id],
+              fullName: userFullName,
+            };
+          });
+          setFormData((prev) => ({ ...prev, ...updatedFormData }));
+          return currentPools;
+        });
+      }
+    }
+  }, [user, pools.length]); // Depend on user and pools length
 
   const handleDateChange = async (e, poolId) => {
     const selectedDate = e.target.value;
@@ -71,6 +93,143 @@ const Pool_Book = () => {
     }));
   };
 
+  // Generate time options between pool's opening and closing times
+  const generateTimeOptions = (openingTime, closingTime) => {
+    const options = [];
+
+    // Convert opening and closing times to minutes
+    const [openHour, openMin] = openingTime.split(":").map(Number);
+    const [closeHour, closeMin] = closingTime.split(":").map(Number);
+
+    const openingMinutes = openHour * 60 + openMin;
+    const closingMinutes = closeHour * 60 + closeMin;
+
+    // Generate 30-minute intervals from opening to closing time
+    // But ensure checkout time (opening + 2 hours) doesn't exceed closing time
+    for (
+      let minutes = openingMinutes;
+      minutes <= closingMinutes - 120;
+      minutes += 30
+    ) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+
+      const timeValue = `${hours.toString().padStart(2, "0")}:${mins
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Format for display (12-hour format)
+      const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      const period = hours >= 12 ? "PM" : "AM";
+      const displayTime = `${displayHour.toString().padStart(2, "0")}:${mins
+        .toString()
+        .padStart(2, "0")} ${period}`;
+
+      options.push({ value: timeValue, display: displayTime });
+    }
+
+    return options;
+  };
+
+  // Generate check-out time options (from check-in time + 1 hour to closing time)
+  const generateCheckOutTimeOptions = (
+    openingTime,
+    closingTime,
+    checkInTime
+  ) => {
+    const options = [];
+
+    if (!checkInTime) return options;
+
+    // Convert times to minutes
+    const [closeHour, closeMin] = closingTime.split(":").map(Number);
+    const [checkInHour, checkInMin] = checkInTime.split(":").map(Number);
+
+    const closingMinutes = closeHour * 60 + closeMin;
+    const checkInMinutes = checkInHour * 60 + checkInMin;
+
+    // Generate options from check-in time + 1 hour to closing time
+    for (
+      let minutes = checkInMinutes + 60;
+      minutes <= closingMinutes;
+      minutes += 30
+    ) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+
+      const timeValue = `${hours.toString().padStart(2, "0")}:${mins
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Format for display (12-hour format)
+      const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+      const period = hours >= 12 ? "PM" : "AM";
+      const displayTime = `${displayHour.toString().padStart(2, "0")}:${mins
+        .toString()
+        .padStart(2, "0")} ${period}`;
+
+      options.push({ value: timeValue, display: displayTime });
+    }
+
+    return options;
+  };
+
+  // Handle Check-In Time change and auto-fill Check-Out Time
+  const handleCheckInTimeChange = (e, poolId) => {
+    const checkInTime = e.target.value;
+
+    // Calculate default Check-Out Time (2 hours after Check-In)
+    let defaultCheckOutTime = "";
+    if (checkInTime) {
+      const [hours, minutes] = checkInTime.split(":");
+      const checkInDate = new Date();
+      checkInDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+
+      // Add 2 hours for default checkout time
+      const checkOutDate = new Date(checkInDate.getTime() + 2 * 60 * 60 * 1000);
+
+      // Format back to HH:MM
+      const checkOutHours = checkOutDate.getHours().toString().padStart(2, "0");
+      const checkOutMinutes = checkOutDate
+        .getMinutes()
+        .toString()
+        .padStart(2, "0");
+      defaultCheckOutTime = `${checkOutHours}:${checkOutMinutes}`;
+
+      // Validate that default checkout time doesn't exceed pool closing time
+      const pool = pools.find((p) => p._id === poolId);
+      if (pool && pool.closingTime) {
+        const [closeHour, closeMin] = pool.closingTime.split(":").map(Number);
+        const closingMinutes = closeHour * 60 + closeMin;
+        const checkoutMinutes =
+          checkOutDate.getHours() * 60 + checkOutDate.getMinutes();
+
+        if (checkoutMinutes > closingMinutes) {
+          // Set checkout to closing time if 2 hours exceeds closing
+          defaultCheckOutTime = pool.closingTime;
+        }
+      }
+
+      // Clear any previous error
+      setFieldErrors((prev) => ({
+        ...prev,
+        [poolId]: {
+          ...prev[poolId],
+          checkInTime: undefined,
+        },
+      }));
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [poolId]: {
+        ...prev[poolId],
+        checkInTime: checkInTime,
+        checkOutTime: defaultCheckOutTime, // Auto-fill but user can change
+      },
+    }));
+  };
+
   const handleBookingRequest = (e, pool) => {
     e.preventDefault();
     setConfirmData({ event: e, pool });
@@ -99,7 +258,8 @@ const Pool_Book = () => {
       setBookingStatus((prev) => ({
         ...prev,
         [pool._id]: {
-          message: "Please fill all required fields correctly",
+          message:
+            "Please fill all required fields correctly. Make sure to select a Check-In Time.",
           error: true,
         },
       }));
@@ -207,26 +367,107 @@ const Pool_Book = () => {
               )}
 
               <div className="p-6 flex-1">
-                <h3 className="text-2xl font-semibold mb-2">{pool.name}</h3>
-                <p className="text-gray-700 mb-2">{pool.description}</p>
-                <p className="text-sm text-gray-600 mb-1">
-                  Capacity: {pool.capacity}
-                </p>
-                <p className="text-sm mb-1">
-                  Status:{" "}
-                  <span
-                    className={`font-semibold ${
-                      pool.poolStatus === "Available"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {pool.poolStatus}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-700 mb-4">
-                  Open: {pool.openingTime} - {pool.closingTime}
-                </p>
+                {/* Pool Header */}
+                <div className="mb-6">
+                  <h3 className="text-3xl font-bold text-gray-800 mb-3">
+                    {pool.name}
+                  </h3>
+                  <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                    {pool.description}
+                  </p>
+
+                  {/* Pool Details Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {/* Capacity Card */}
+                    <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                      <div className="flex items-center">
+                        <div className="text-blue-600 mr-3">
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Capacity</p>
+                          <p className="text-xl font-bold text-blue-700">
+                            {pool.capacity} People
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Status Card */}
+                    <div
+                      className={`rounded-lg p-4 border-l-4 ${
+                        pool.poolStatus === "Available"
+                          ? "bg-green-50 border-green-500"
+                          : "bg-red-50 border-red-500"
+                      }`}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`mr-3 ${
+                            pool.poolStatus === "Available"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Status</p>
+                          <p
+                            className={`text-xl font-bold ${
+                              pool.poolStatus === "Available"
+                                ? "text-green-700"
+                                : "text-red-700"
+                            }`}
+                          >
+                            {pool.poolStatus}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Opening Hours Card */}
+                    <div className="bg-orange-50 rounded-lg p-4 border-l-4 border-orange-500">
+                      <div className="flex items-center">
+                        <div className="text-orange-600 mr-3">
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Open Hours</p>
+                          <p className="text-lg font-bold text-orange-700">
+                            {pool.openingTime} - {pool.closingTime}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <form
                   onSubmit={(e) => handleBookingRequest(e, pool)}
@@ -301,6 +542,7 @@ const Pool_Book = () => {
                         name="date"
                         value={formData[pool._id]?.date || ""}
                         onChange={(e) => handleDateChange(e, pool._id)}
+                        min={new Date().toISOString().split("T")[0]}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
@@ -333,14 +575,26 @@ const Pool_Book = () => {
                       <label className="block text-gray-700 mb-2">
                         Check-In Time <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="time"
+                      <select
                         name="checkInTime"
                         value={formData[pool._id]?.checkInTime || ""}
-                        onChange={(e) => handleChange(e, pool._id)}
+                        onChange={(e) => handleCheckInTimeChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
-                      />
+                      >
+                        <option value="">Select Check-In Time</option>
+                        {generateTimeOptions(
+                          pool.openingTime,
+                          pool.closingTime
+                        ).map((timeOption) => (
+                          <option
+                            key={timeOption.value}
+                            value={timeOption.value}
+                          >
+                            {timeOption.display}
+                          </option>
+                        ))}
+                      </select>
                       {fieldErrors[pool._id]?.checkInTime && (
                         <div className="text-red-600 text-sm mt-1">
                           {fieldErrors[pool._id].checkInTime}
@@ -350,15 +604,31 @@ const Pool_Book = () => {
                     <div>
                       <label className="block text-gray-700 mb-2">
                         Check-Out Time <span className="text-red-500">*</span>
+                        <span className="text-sm text-gray-500 ml-2">
+                          (Auto-filled: Can be editable)
+                        </span>
                       </label>
-                      <input
-                        type="time"
+                      <select
                         name="checkOutTime"
                         value={formData[pool._id]?.checkOutTime || ""}
                         onChange={(e) => handleChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
-                      />
+                      >
+                        <option value="">Select Check-Out Time</option>
+                        {generateCheckOutTimeOptions(
+                          pool.openingTime,
+                          pool.closingTime,
+                          formData[pool._id]?.checkInTime
+                        ).map((timeOption) => (
+                          <option
+                            key={timeOption.value}
+                            value={timeOption.value}
+                          >
+                            {timeOption.display}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 

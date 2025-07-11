@@ -6,9 +6,11 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../context/UserAuthContext";
 
 const Room_Book = () => {
   const navigate = useNavigate(); // Initialize navigate
+  const { user } = useAuth(); // Get authenticated user data
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [bookingConfirmation, setBookingConfirmation] = useState(null);
   const [rooms, setRooms] = useState([]);
@@ -26,6 +28,10 @@ const Room_Book = () => {
     acOption: "all",
     minPrice: "",
     maxPrice: "",
+  });
+  // Form data state for controlled inputs
+  const [formInputs, setFormInputs] = useState({
+    fullName: "",
   });
 
   useEffect(() => {
@@ -129,9 +135,31 @@ const Room_Book = () => {
     setFilteredRooms(result);
   }, [filters, rooms]);
 
+  // Auto-fill full name when user data becomes available
+  useEffect(() => {
+    if (user) {
+      const userFullName = user.fullName || user.username || "";
+      if (userFullName) {
+        setFormInputs((prev) => ({
+          ...prev,
+          fullName: userFullName,
+        }));
+      }
+    }
+  }, [user]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle form input changes
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormInputs((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -245,7 +273,10 @@ const Room_Book = () => {
       formData.append("roomType", selectedRoom.type);
       formData.append("checkIn", bookingDates.checkIn.toISOString());
       formData.append("checkOut", bookingDates.checkOut.toISOString());
-      formData.append("fullName", e.target.elements.fullName.value.trim());
+      formData.append(
+        "fullName",
+        formInputs.fullName.trim() || e.target.elements.fullName.value.trim()
+      );
       formData.append(
         "phoneNumber",
         e.target.elements.phoneNumber.value.trim()
@@ -310,6 +341,12 @@ const Room_Book = () => {
       setShowBookingForm(false);
       setSelectedRoom(null);
       setError(null);
+
+      // Reset controlled form inputs
+      setFormInputs({
+        fullName: user?.fullName || user?.username || "", // Keep user name for next booking
+      });
+
       e.target.reset(); // Reset form fields including file input
     } catch (error) {
       console.error("Booking error:", error);
@@ -545,6 +582,8 @@ const Room_Book = () => {
                 <input
                   name="fullName"
                   type="text"
+                  value={formInputs.fullName}
+                  onChange={handleFormChange}
                   className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
