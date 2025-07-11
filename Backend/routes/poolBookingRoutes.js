@@ -15,13 +15,17 @@ router.post('/', async (req, res) => {
       checkOut,
       paymentType,
       advanceAmount,
-      status // allow status from frontend
+      status, // allow status from frontend
+      paymentProof // for online bookings
     } = req.body;
 
     // Validate required fields
     if (!name || !phone || !peopleCount || !checkIn) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
+
+    // Ensure peopleCount is a valid number and at least 1
+    const validPeopleCount = Math.max(parseInt(peopleCount) || 1, 1);
 
     const checkInDate = new Date(checkIn);
     let checkOutDate;
@@ -36,6 +40,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Minimum booking duration is 2 hours' });
     }
 
+    // Enhanced calculation logic with debugging
     const baseRate = 500;
     const additionalRate = 200;
     const baseHours = 2;
@@ -45,7 +50,16 @@ router.post('/', async (req, res) => {
     if (additionalHours > 0) {
       totalAmount += additionalHours * additionalRate;
     }
-    totalAmount *= peopleCount;
+    
+    // Multiply by people count - this is crucial
+    totalAmount = totalAmount * validPeopleCount;
+
+    // Ensure totalAmount is never 0 or negative
+    if (totalAmount <= 0) {
+      totalAmount = baseRate * validPeopleCount; // fallback calculation
+    }
+
+    console.log(`Booking calculation: ${validPeopleCount} people × ${baseRate} base rate = ${totalAmount} (duration: ${durationHours}hrs, additional: ${additionalHours}hrs)`);
 
     let advAmount = 0;
     let payType = paymentType || 'notPaid';
@@ -60,21 +74,39 @@ router.post('/', async (req, res) => {
     }
 
     // Store paymentType and advanceAmount in DB, and status if provided
-    const booking = new PoolBooking({
+    const bookingData = {
       name,
       phone,
       whatsapp,
       email,
-      peopleCount,
+      peopleCount: validPeopleCount,
       checkIn: checkInDate,
       checkOut: checkOutDate,
-      totalAmount,
+      totalAmount: totalAmount, // Explicitly ensure this is set
       paymentType: payType,
       advanceAmount: advAmount,
-      status: status || 'pending' // save status if sent from frontend
-    });
+      status: status || 'pending'
+    };
+
+    // Add payment proof if it's an online booking
+    if (paymentProof) {
+      bookingData.paymentProof = paymentProof;
+    }
+
+    const booking = new PoolBooking(bookingData);
 
     const savedBooking = await booking.save();
+
+    // Verify the saved booking has totalAmount
+    if (!savedBooking.totalAmount || savedBooking.totalAmount <= 0) {
+      console.error('Warning: Saved booking has invalid totalAmount:', savedBooking.totalAmount);
+      // Try to update it immediately
+      await PoolBooking.findByIdAndUpdate(savedBooking._id, { 
+        totalAmount: totalAmount 
+      });
+    }
+
+    console.log('Booking saved successfully with totalAmount:', savedBooking.totalAmount);
 
     res.status(201).json({
       message: 'Booking created successfully',
@@ -83,8 +115,9 @@ router.post('/', async (req, res) => {
         baseRate,
         additionalHours,
         additionalRate,
-        totalAmount: savedBooking.totalAmount,
-        perPersonAmount: savedBooking.totalAmount / peopleCount
+        totalAmount: totalAmount,
+        perPersonAmount: totalAmount / validPeopleCount,
+        peopleCount: validPeopleCount
       }
     });
 
