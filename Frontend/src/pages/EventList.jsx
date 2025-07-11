@@ -246,20 +246,14 @@ const EventList = () => {
                           <thead>
                             <tr className="bg-gray-100">
                               <th className="px-4 py-2 text-left">Description</th>
-                              <th className="px-4 py-2 text-left">Unit</th>
-                              <th className="px-4 py-2 text-right">Quantity</th>
                               <th className="px-4 py-2 text-right">Rate</th>
-                              <th className="px-4 py-2 text-right">Amount</th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedEvent.extraFields.map((item, index) => (
                               <tr key={index} className="border-b">
                                 <td className="px-4 py-2">{item.description}</td>
-                                <td className="px-4 py-2">{item.unit}</td>
-                                <td className="px-4 py-2 text-right">{item.quantity}</td>
-                                <td className="px-4 py-2 text-right">Rs. {item.rate.toFixed(2)}</td>
-                                <td className="px-4 py-2 text-right">Rs. {item.amount.toFixed(2)}</td>
+                                <td className="px-4 py-2 text-right">Rs. {item.rate?.toFixed(2) ?? '0.00'}</td>
                               </tr>
                             ))}
                           </tbody>

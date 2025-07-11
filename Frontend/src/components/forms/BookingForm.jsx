@@ -117,6 +117,18 @@ const BookingForm = ({ formData, errors, handleChange }) => {
         {errors.checkIn && <p className="text-red-500 text-xs mt-1">{errors.checkIn}</p>}
       </div>
       <div>
+        <Label htmlFor="checkInTime" className="mb-1">Check-In Time:</Label>
+        <Input
+          id="checkInTime"
+          type="time"
+          name="checkInTime"
+          value={formData.checkInTime}
+          onChange={handleChange}
+          aria-invalid={!!errors.checkInTime}
+        />
+        {errors.checkInTime && <p className="text-red-500 text-xs mt-1">{errors.checkInTime}</p>}
+      </div>
+      <div>
         <Label htmlFor="checkOut" className="mb-1">Check-Out Date:</Label>
         <Input
           id="checkOut"
@@ -128,6 +140,18 @@ const BookingForm = ({ formData, errors, handleChange }) => {
           min={formData.checkIn || today}
         />
         {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut}</p>}
+      </div>
+      <div>
+        <Label htmlFor="checkOutTime" className="mb-1">Check-Out Time:</Label>
+        <Input
+          id="checkOutTime"
+          type="time"
+          name="checkOutTime"
+          value={formData.checkOutTime}
+          onChange={handleChange}
+          aria-invalid={!!errors.checkOutTime}
+        />
+        {errors.checkOutTime && <p className="text-red-500 text-xs mt-1">{errors.checkOutTime}</p>}
       </div>
       <div>
         <Label htmlFor="email" className="mb-1">Email (Optional):</Label>

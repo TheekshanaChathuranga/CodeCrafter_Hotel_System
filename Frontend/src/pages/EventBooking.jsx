@@ -22,7 +22,9 @@ const EventBooking = () => {
     eventType: "",
     hall: "",
     checkIn: "",
+    checkInTime: "",
     checkOut: "",
+    checkOutTime: "",
     email: "",
     notes: "",
   });
@@ -48,6 +50,22 @@ const EventBooking = () => {
     return date.toISOString().split('T')[0];
   };
 
+  // Combine date and time to ISO string
+  const combineDateTime = (date, time) => {
+    if (!date) return null;
+    const formattedTime = time || "00:00";
+    // Ensure seconds for valid ISO if time only hh:mm
+    const isoString = new Date(`${date}T${formattedTime}:00`).toISOString();
+    return isoString;
+  };
+
+  // Helper to extract time (hh:mm) from ISO string
+  const extractTime = (iso) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toTimeString().slice(0,5);
+  };
+
   useEffect(() => {
     if (location.state?.event) {
       const event = location.state.event;
@@ -60,7 +78,9 @@ const EventBooking = () => {
         eventType: event.eventType || "",
         hall: event.hall || "",
         checkIn: event.checkIn ? formatDateForSubmission(event.checkIn) : "",
+        checkInTime: event.checkIn ? extractTime(event.checkIn) : "",
         checkOut: event.checkOut ? formatDateForSubmission(event.checkOut) : "",
+        checkOutTime: event.checkOut ? extractTime(event.checkOut) : "",
         email: event.email || "",
         notes: event.notes || "",
       });
@@ -96,9 +116,16 @@ const EventBooking = () => {
     if (!formData.noOfGuests || formData.noOfGuests < 1) newErrors.noOfGuests = "Number of Guests must be at least 1";
     if (!formData.eventType) newErrors.eventType = "Event Type is required";
     if (!formData.checkIn) newErrors.checkIn = "Check-In date is required";
+    if (!formData.checkInTime) newErrors.checkInTime = "Check-In time is required";
     if (!formData.checkOut) newErrors.checkOut = "Check-Out date is required";
-    if (formData.checkIn && formData.checkOut && new Date(formData.checkOut) <= new Date(formData.checkIn)) {
-      newErrors.checkOut = "Check-Out must be after Check-In";
+    if (!formData.checkOutTime) newErrors.checkOutTime = "Check-Out time is required";
+    // Validate date-time combined comparison
+    if (formData.checkIn && formData.checkInTime && formData.checkOut && formData.checkOutTime) {
+      const checkInDT = new Date(`${formData.checkIn}T${formData.checkInTime}:00`);
+      const checkOutDT = new Date(`${formData.checkOut}T${formData.checkOutTime}:00`);
+      if (checkOutDT <= checkInDT) {
+        newErrors.checkOutTime = "Check-Out must be after Check-In";
+      }
     }
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
@@ -169,8 +196,8 @@ const EventBooking = () => {
           const grandTotal = totalAmount + serviceCharge + extraAmount;
 
           // Format dates properly
-          const formattedCheckIn = formatDateForSubmission(formData.checkIn);
-          const formattedCheckOut = formatDateForSubmission(formData.checkOut);
+          const formattedCheckIn = combineDateTime(formData.checkIn, formData.checkInTime);
+          const formattedCheckOut = combineDateTime(formData.checkOut, formData.checkOutTime);
 
           // Validate dates
           if (new Date(formattedCheckOut) <= new Date(formattedCheckIn)) {
@@ -227,7 +254,19 @@ const EventBooking = () => {
               setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
             } catch (error) {
               console.error("Error creating event:", error);
-              const errorMessage = error.response?.data?.errors?.join('\n') || error.response?.data?.message || "Error submitting booking. Please try again.";
+              let errorMessage = "Error submitting booking. Please try again.";
+              if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+                errorMessage = (
+                  <div>
+                    <div className="font-semibold mb-2">Please fix the following errors:</div>
+                    <ul className="list-disc list-inside text-left">
+                      {error.response.data.errors.map((err, idx) => <li key={idx}>{err}</li>)}
+                    </ul>
+                  </div>
+                );
+              } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+              }
               setPopup({
                 message: errorMessage,
                 type: "error",
@@ -246,7 +285,9 @@ const EventBooking = () => {
             eventType: "",
             hall: "",
             checkIn: "",
+            checkInTime: "",
             checkOut: "",
+            checkOutTime: "",
             email: "",
             notes: "",
           });
@@ -268,6 +309,21 @@ const EventBooking = () => {
   const extraAmount = extraFields.reduce((sum, row) => sum + (row.selected ? row.rate : 0), 0);
   const serviceCharge = totalAmount * 0.1;
   const grandTotal = totalAmount + serviceCharge + extraAmount;
+
+  // Add a helper to check if the form is valid for submit
+  const isFormValid = () => {
+    return (
+      formData.name &&
+      formData.phone1 &&
+      formData.noOfGuests > 0 &&
+      formData.eventType &&
+      formData.hall &&
+      formData.checkIn &&
+      formData.checkInTime &&
+      formData.checkOut &&
+      formData.checkOutTime
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 sm:p-6">
@@ -368,6 +424,7 @@ const EventBooking = () => {
               <Button
                 type="submit"
                 variant="default"
+                disabled={!isFormValid()}
               >
                 {editingEvent ? "Update Event" : "Submit Booking"}
               </Button>

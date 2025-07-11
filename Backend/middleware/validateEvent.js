@@ -30,7 +30,7 @@ const validateEvent = (req, res, next) => {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     if (checkOutDate <= checkInDate) {
-      errors.push("Check-out date must be after check-in date");
+      errors.push("Check-out must be after check-in (date and time)");
     }
   }
 
@@ -63,12 +63,6 @@ const validateEvent = (req, res, next) => {
   if (extraFields && Array.isArray(extraFields)) {
     extraFields.forEach((item, index) => {
       if (item.description) {
-        if (!item.unit) errors.push(`Extra item ${index + 1}: Unit is required`);
-        if (item.quantity === undefined || item.quantity === null) {
-          errors.push(`Extra item ${index + 1}: Quantity is required`);
-        } else if (item.quantity < 0) {
-          errors.push(`Extra item ${index + 1}: Quantity must be non-negative`);
-        }
         if (item.rate === undefined || item.rate === null) {
           errors.push(`Extra item ${index + 1}: Rate is required`);
         } else if (item.rate < 0) {
