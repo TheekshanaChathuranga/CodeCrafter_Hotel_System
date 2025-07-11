@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/UserAuthContext";
 
@@ -6,9 +6,29 @@ import { useAuth } from "../context/UserAuthContext";
 const UserDropdown = ({ user, logout, colors }) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    // Add event listener when dropdown is open
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 focus:outline-none"

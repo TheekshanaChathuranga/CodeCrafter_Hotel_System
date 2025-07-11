@@ -130,6 +130,7 @@ import manageRoomRoutes from "./routes/manageRoom.js";
 import manageUserRoutes from "./routes/manageUser.js";
 import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
 import userBookings from "./routes/userBookings.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -198,6 +199,7 @@ app.use("/api/manage/rooms", manageRoomRoutes);
 app.use("/api/manage/users", manageUserRoutes);
 app.use("/api/admin/bookings", BookingConfirmationRoutes);
 app.use("/api/user-bookings", userBookings); // Add the new user bookings route
+app.use("/api/profile", profileRoutes); // Add profile routes
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

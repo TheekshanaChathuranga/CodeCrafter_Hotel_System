@@ -300,7 +300,7 @@ const MyBookings = () => {
             <div className="mt-4 flex justify-end sticky bottom-0 pt-2 bg-white border-t">
               <button
                 onClick={onClose}
-                className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors"
               >
                 Close
               </button>
@@ -362,8 +362,8 @@ const MyBookings = () => {
               </p>
             </div>
             <button
-              onClick={() => navigate("/")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={() => navigate("/room-booking")}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
               Book Another Room
             </button>
@@ -382,7 +382,7 @@ const MyBookings = () => {
               You haven't made any room bookings yet.
             </p>
             <button
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/room-booking")}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Book Your First Room
