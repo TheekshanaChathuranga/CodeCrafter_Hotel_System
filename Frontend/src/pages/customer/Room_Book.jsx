@@ -31,6 +31,11 @@ const Room_Book = () => {
     fullName: "",
   });
 
+  // Calendar state - Show calendars by default
+  const [showCheckInCalendar, setShowCheckInCalendar] = useState(true);
+  const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(true);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
   useEffect(() => {
     const fetchRooms = async () => {
       try {
@@ -207,6 +212,218 @@ const Room_Book = () => {
       ...prev,
       [type]: selectedDate,
     }));
+  };
+
+  // Calendar helper functions
+  const getCalendarDays = (month) => {
+    const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+    const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+    const startingDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+
+    return days;
+  };
+
+  const isDateDisabled = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
+  const isDateSelected = (date, type) => {
+    const targetDate =
+      type === "checkIn" ? bookingDates.checkIn : bookingDates.checkOut;
+    if (!targetDate) return false;
+
+    return (
+      date.getDate() === targetDate.getDate() &&
+      date.getMonth() === targetDate.getMonth() &&
+      date.getFullYear() === targetDate.getFullYear()
+    );
+  };
+
+  const isDateInRange = (date) => {
+    if (!bookingDates.checkIn || !bookingDates.checkOut) return false;
+    return date >= bookingDates.checkIn && date <= bookingDates.checkOut;
+  };
+
+  const handleCalendarDateClick = (day, type) => {
+    if (!day) return;
+
+    const selectedDate = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth(),
+      day
+    );
+
+    if (isDateDisabled(selectedDate)) return;
+
+    handleDateSelect(selectedDate, type);
+
+    // Keep calendars open - don't close them after selection
+  };
+
+  const navigateCalendarMonth = (direction) => {
+    setCalendarMonth((prev) => {
+      const newMonth = new Date(prev);
+      newMonth.setMonth(prev.getMonth() + direction);
+      return newMonth;
+    });
+  };
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Inline Calendar Component
+  const InlineCalendar = ({ type, isVisible }) => {
+    if (!isVisible) return null;
+
+    const days = getCalendarDays(calendarMonth);
+
+    return (
+      <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-80">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            type="button"
+            onClick={() => navigateCalendarMonth(-1)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+
+          <h3 className="text-lg font-semibold">
+            {monthNames[calendarMonth.getMonth()]} {calendarMonth.getFullYear()}
+          </h3>
+
+          <button
+            type="button"
+            onClick={() => navigateCalendarMonth(1)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Week Days Header */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {weekDays.map((day) => (
+            <div
+              key={day}
+              className="text-center text-sm font-medium text-gray-500 py-2"
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Calendar Days */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day, index) => {
+            if (!day) {
+              return <div key={index} className="p-2"></div>;
+            }
+
+            const date = new Date(
+              calendarMonth.getFullYear(),
+              calendarMonth.getMonth(),
+              day
+            );
+            const disabled = isDateDisabled(date);
+            const selected = isDateSelected(date, type);
+            const inRange = isDateInRange(date);
+
+            return (
+              <button
+                key={day}
+                type="button"
+                onClick={() => handleCalendarDateClick(day, type)}
+                disabled={disabled}
+                className={`
+                  p-2 text-sm rounded-lg transition-all relative
+                  ${
+                    disabled
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "hover:bg-blue-100 cursor-pointer"
+                  }
+                  ${selected ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+                  ${inRange && !selected ? "bg-blue-100 text-blue-700" : ""}
+                `}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Today Button */}
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={() => {
+              const today = new Date();
+              if (!isDateDisabled(today)) {
+                handleDateSelect(today, type);
+                setCalendarMonth(today);
+              }
+            }}
+            className="px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          >
+            Today
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const handleBookNow = (room) => {
@@ -547,30 +764,84 @@ const Room_Book = () => {
           </h2>
           <form onSubmit={handleBookingSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <div className="calendar-container">
                 <label className="block text-gray-700 mb-2">
                   Check-in Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={bookingDates.checkIn ? bookingDates.checkIn.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleDateSelect(new Date(e.target.value), "checkIn")}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                <div className="relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      bookingDates.checkIn
+                        ? bookingDates.checkIn.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Select check-in date"
+                    }
+                    className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-700"
+                    required
+                  />
+                  <svg
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <InlineCalendar
+                  type="checkIn"
+                  isVisible={showCheckInCalendar}
                 />
               </div>
-              <div>
+              <div className="calendar-container">
                 <label className="block text-gray-700 mb-2">
                   Check-out Date <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
-                  value={bookingDates.checkOut ? bookingDates.checkOut.toISOString().split('T')[0] : ''}
-                  onChange={(e) => handleDateSelect(new Date(e.target.value), "checkOut")}
-                  min={bookingDates.checkIn ? new Date(bookingDates.checkIn.getTime() + 24*60*60*1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
+                <div className="relative">
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      bookingDates.checkOut
+                        ? bookingDates.checkOut.toLocaleDateString("en-US", {
+                            weekday: "short",
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "Select check-out date"
+                    }
+                    className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-700"
+                    required
+                  />
+                  <svg
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <InlineCalendar
+                  type="checkOut"
+                  isVisible={showCheckOutCalendar}
                 />
               </div>
             </div>
@@ -639,7 +910,7 @@ const Room_Book = () => {
                   <option value="1">1 Adult</option>
                   <option value="2">2 Adults</option>
                   <option value="3">3 Adults</option>
-                  <option value="4">4+ Adults</option>
+                  <option value="4+">4+ Adults</option>
                 </select>
               </div>
               <div>
@@ -717,29 +988,140 @@ const Room_Book = () => {
       {/* Add this above the existing filters */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">Select Dates</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 mb-2">Check-in Date</label>
-              <input
-                type="date"
-                value={bookingDates.checkIn ? bookingDates.checkIn.toISOString().split('T')[0] : ''}
-                onChange={(e) => handleDateSelect(new Date(e.target.value), "checkIn")}
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <h3 className="text-lg font-semibold mb-6 flex items-center">
+            <svg
+              className="w-6 h-6 mr-2 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
+            </svg>
+            Select Your Stay Dates
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="calendar-container">
+              <label className="block text-gray-700 mb-3 font-medium">
+                Check-in Date
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    bookingDates.checkIn
+                      ? bookingDates.checkIn.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Select check-in date"
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                />
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <InlineCalendar type="checkIn" isVisible={showCheckInCalendar} />
             </div>
-            <div>
-              <label className="block text-gray-700 mb-2">Check-out Date</label>
-              <input
-                type="date"
-                value={bookingDates.checkOut ? bookingDates.checkOut.toISOString().split('T')[0] : ''}
-                onChange={(e) => handleDateSelect(new Date(e.target.value), "checkOut")}
-                min={bookingDates.checkIn ? new Date(bookingDates.checkIn.getTime() + 24*60*60*1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+            <div className="calendar-container">
+              <label className="block text-gray-700 mb-3 font-medium">
+                Check-out Date
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    bookingDates.checkOut
+                      ? bookingDates.checkOut.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Select check-out date"
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                />
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <InlineCalendar
+                type="checkOut"
+                isVisible={showCheckOutCalendar}
               />
             </div>
           </div>
+
+          {/* Display selected date range */}
+          {bookingDates.checkIn && bookingDates.checkOut && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div>
+                <h4 className="font-semibold text-blue-800 mb-2">
+                  Selected Stay Period
+                </h4>
+                <p className="text-blue-700">
+                  <span className="font-medium">Check-in:</span>{" "}
+                  {bookingDates.checkIn.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-blue-700">
+                  <span className="font-medium">Check-out:</span>{" "}
+                  {bookingDates.checkOut.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-blue-600 font-semibold mt-1">
+                  Duration:{" "}
+                  {Math.ceil(
+                    (bookingDates.checkOut - bookingDates.checkIn) /
+                      (1000 * 60 * 60 * 24)
+                  )}{" "}
+                  night(s)
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
