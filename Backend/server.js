@@ -1,13 +1,7 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.js';
-import eventRoutes from './routes/events.js';
-import foodItemsRoutes from './routes/fooditems.js';
-import uploadRoutes from './routes/upload.js';
-import validateEvent from './middleware/validateEvent.js';
-import errorHandler from './middleware/errorHandler.js';
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -26,24 +20,20 @@ if (!MONGODB_URI) {
 }
 
 // Connect to MongoDB
-mongoose.connect(MONGODB_URI)
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+mongoose
+  .connect(MONGODB_URI)
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch((error) => {
+    console.error("MongoDB connection error:", error);
+    process.exit(1);
+  });
 
 // Routes
-// app.use("/api/rooms", roomRoutes);
+app.use("/api/rooms", roomRoutes);
 
-// app.get("/api/health", (req, res) => {
-//   res.status(200).json({ status: "OK", message: "Server is running" });
-// });
-
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/fooditems', foodItemsRoutes);
-app.use('/api/upload', uploadRoutes);
-
-// Error handling middleware
-app.use(errorHandler);
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK", message: "Server is running" });
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
