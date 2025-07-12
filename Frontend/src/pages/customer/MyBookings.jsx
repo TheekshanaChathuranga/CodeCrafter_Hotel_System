@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../context/UserAuthContext";
 
 const MyBookings = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth(); // Get auth context
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,33 +33,89 @@ const MyBookings = () => {
   };
 
   useEffect(() => {
+    // Wait for auth context to load
+    if (authLoading) return;
+    
+    // If no user in auth context, redirect to login
+    if (!user) {
+      setError("You need to be logged in to view your bookings");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+      return;
+    }
+
     const fetchBookings = async () => {
       try {
         setLoading(true);
-        // Get user token and decode for userId
-        const token =
+        setError(null);
+        
+        // Get token with priority on the main 'token' key used by auth context
+        const token = localStorage.getItem("token") ||
           localStorage.getItem("userToken") ||
-          localStorage.getItem("token") ||
           localStorage.getItem("accessToken") ||
           localStorage.getItem("jwt");
 
+        console.log("=== TOKEN DEBUG ===");
+        console.log("User from context:", user);
+        console.log("Available tokens in localStorage:");
+        console.log("- token:", localStorage.getItem("token"));
+        console.log("- userToken:", localStorage.getItem("userToken"));
+        console.log("- accessToken:", localStorage.getItem("accessToken"));
+        console.log("- jwt:", localStorage.getItem("jwt"));
+        console.log("Selected token:", token ? `${token.substring(0, 20)}...` : 'None');
+        console.log("==================");
+
         if (!token) {
-          throw new Error("Please log in to view your bookings");
+          throw new Error("No authentication token found. Please log in again.");
         }
 
-        const decoded = jwtDecode(token);
-        const userId =
-          decoded.userId || decoded.id || decoded._id || decoded.sub;
+        // Try to decode the token to check its validity
+        let decoded;
+        try {
+          decoded = jwtDecode(token);
+          console.log("Decoded token:", decoded);
+          
+          // Check if token is expired
+          const currentTime = Date.now() / 1000;
+          if (decoded.exp && decoded.exp < currentTime) {
+            throw new Error("Token has expired");
+          }
+        } catch (decodeError) {
+          console.error("Token decode error:", decodeError);
+          throw new Error("Invalid authentication token. Please log in again.");
+        }
+
+        const userId = decoded.userId || decoded.id || decoded._id || decoded.sub;
 
         if (!userId) {
-          throw new Error(
-            "Unable to identify user. Please try logging in again."
-          );
+          throw new Error("Unable to identify user from token. Please log in again.");
+        }
+
+        console.log("Using userId:", userId);
+
+        // Test token validity by calling the verify endpoint
+        try {
+          const verifyResponse = await axios.get('http://localhost:5000/api/auth/verify', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log("✅ Token verification successful:", verifyResponse.data);
+        } catch (verifyError) {
+          console.error("❌ Token verification failed:", verifyError.response?.status, verifyError.response?.data);
+          
+          if (verifyError.response?.status === 401) {
+            throw new Error("Your session has expired. Please log in again.");
+          } else {
+            throw new Error("Authentication verification failed. Please try again.");
+          }
         }
 
         // Fetch bookings from backend
         const response = await axios.get(
-          `http://localhost:5000/api/user-bookings/user/${userId}`
+          `http://localhost:5000/api/user-bookings/user/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
         );
         console.log("Received bookings:", response.data); // Debug log
 
@@ -95,6 +153,34 @@ const MyBookings = () => {
         }
       } catch (err) {
         console.error("Error fetching bookings:", err);
+        
+        // Handle authentication errors specifically
+        if (err.response?.status === 401 || 
+            err.message.includes("session has expired") ||
+            err.message.includes("Invalid authentication token") ||
+            err.message.includes("Token has expired")) {
+          
+          // Clear all possible token storage keys
+          ["token", "userToken", "accessToken", "jwt"].forEach(key => {
+            localStorage.removeItem(key);
+          });
+          
+          setError("Your session has expired. Redirecting to login...");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+          return;
+        }
+        
+        // Handle other specific errors
+        if (err.message.includes("No authentication token found")) {
+          setError("Please log in to view your bookings");
+          setTimeout(() => {
+            navigate("/login");
+          }, 3000);
+          return;
+        }
+        
         const errorMessage =
           err.response?.data?.message ||
           err.message ||
@@ -106,7 +192,7 @@ const MyBookings = () => {
     };
 
     fetchBookings();
-  }, []);
+  }, [authLoading, user, navigate]);
 
   // Calculate booking status based on dates
   const getBookingStatus = (checkIn, checkOut) => {
@@ -311,7 +397,7 @@ const MyBookings = () => {
     );
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -327,7 +413,7 @@ const MyBookings = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-lg mx-4">
           <h2 className="text-xl font-semibold text-red-800 mb-2">
-            Something went wrong
+            {error.includes("session has expired") || error.includes("log in") ? "Authentication Required" : "Something went wrong"}
           </h2>
           <p className="text-red-600 mb-4">{error}</p>
           <div className="flex gap-4">
@@ -336,6 +422,12 @@ const MyBookings = () => {
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
               Try Again
+            </button>
+            <button
+              onClick={() => navigate("/login")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              {error.includes("session has expired") || error.includes("log in") ? "Login Again" : "Login"}
             </button>
             <button
               onClick={() => navigate("/")}
