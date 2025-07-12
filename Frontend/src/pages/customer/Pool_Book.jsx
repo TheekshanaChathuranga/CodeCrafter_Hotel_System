@@ -297,7 +297,29 @@ const Pool_Book = () => {
         bookingForm.append("whatsappNumber", data.whatsappNumber);
       }
 
-      await axios.post("http://localhost:5000/api/pool-booking", bookingForm);
+      // Debug: Log the form data
+      console.log("Sending booking data:", {
+        fullName: data.fullName,
+        date: data.date,
+        request: data.request || "",
+        guestCount: guestCount,
+        poolId: pool._id,
+        checkInTime: data.checkInTime,
+        checkOutTime: data.checkOutTime,
+        phoneNumber: data.phoneNumber,
+        whatsappNumber: data.whatsappNumber || "",
+        hasPaymentProof: !!data.proof,
+      });
+
+      const response = await axios.post(
+        "http://localhost:5000/api/pool-booking",
+        bookingForm,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       setBookingStatus((prev) => ({
         ...prev,
@@ -307,11 +329,10 @@ const Pool_Book = () => {
       setShowSuccess(true);
 
       setFormData((prev) => ({ ...prev, [pool._id]: {} }));
-      // Success popup handler
-      const handleSuccessOk = () => {
-        setShowSuccess(false);
-      };
     } catch (error) {
+      console.error("Booking error:", error);
+      console.error("Error response:", error.response?.data);
+
       // Handle backend field errors
       if (error.response && error.response.data && error.response.data.field) {
         setFieldErrors((prev) => ({
@@ -325,10 +346,24 @@ const Pool_Book = () => {
           ...prev,
           [pool._id]: { message: error.response.data.message, error: true },
         }));
-      } else {
+      } else if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        // Handle general backend errors
         setBookingStatus((prev) => ({
           ...prev,
-          [pool._id]: { message: "Booking failed", error: true },
+          [pool._id]: { message: error.response.data.message, error: true },
+        }));
+      } else {
+        // Handle network or other errors
+        setBookingStatus((prev) => ({
+          ...prev,
+          [pool._id]: {
+            message: `Booking failed: ${error.message || "Unknown error"}`,
+            error: true,
+          },
         }));
       }
     }
@@ -692,10 +727,19 @@ const Pool_Book = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowBookingForm(false)}
+                      onClick={() => {
+                        // Clear form data for this pool
+                        setFormData((prev) => ({ ...prev, [pool._id]: {} }));
+                        // Clear any error messages
+                        setBookingStatus((prev) => ({
+                          ...prev,
+                          [pool._id]: null,
+                        }));
+                        setFieldErrors((prev) => ({ ...prev, [pool._id]: {} }));
+                      }}
                       className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
                     >
-                      Cancel
+                      Clear Form
                     </button>
 
                     {bookingStatus[pool._id] && (

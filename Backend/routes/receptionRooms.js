@@ -8,16 +8,47 @@ router.get("/available", async (req, res) => {
   try {
     const { checkIn, checkOut } = req.query;
 
+    console.log("Available rooms request:", { checkIn, checkOut });
+
+    // Validate required parameters
+    if (!checkIn || !checkOut) {
+      return res.status(400).json({
+        error: "Check-in and check-out dates are required",
+        message: "Please provide both checkIn and checkOut parameters",
+      });
+    }
+
+    // Validate date format
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+      return res.status(400).json({
+        error: "Invalid date format",
+        message:
+          "Please provide valid ISO date strings for checkIn and checkOut",
+      });
+    }
+
+    if (checkOutDate <= checkInDate) {
+      return res.status(400).json({
+        error: "Invalid date range",
+        message: "Check-out date must be after check-in date",
+      });
+    }
+
     // Find rooms that are booked during the requested period and not cancelled or checked-out
     const bookedRooms = await Booking.find({
       status: { $nin: ["cancelled", "checked-out"] },
       $or: [
         {
-          checkIn: { $lt: new Date(checkOut) },
-          checkOut: { $gt: new Date(checkIn) },
+          checkIn: { $lt: checkOutDate },
+          checkOut: { $gt: checkInDate },
         },
       ],
     }).distinct("roomNumber");
+
+    console.log("Booked rooms:", bookedRooms);
 
     // All rooms in the hotel
     const allRooms = [
@@ -37,10 +68,14 @@ router.get("/available", async (req, res) => {
       (room) => !bookedRooms.includes(room.id)
     );
 
+    console.log("Available rooms:", availableRooms.length);
     res.json(availableRooms);
   } catch (error) {
     console.error("Error fetching available rooms:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({
+      error: "Internal server error",
+      message: error.message,
+    });
   }
 });
 

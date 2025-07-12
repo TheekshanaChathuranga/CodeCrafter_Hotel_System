@@ -203,18 +203,48 @@ const ReceptionRoomBookingPage = () => {
 
     setLoading(true);
 
+    // Find the selected room details from availableRooms
+    const selectedRoomDetails = availableRooms.find(
+      (room) => room.id === selectedRoom
+    );
+
+    if (!selectedRoomDetails) {
+      alert("❌ Selected room not found. Please select a room again.");
+      setLoading(false);
+      return;
+    }
+
+    // Ensure dates are properly formatted
+    const checkInDate = new Date(adminDetails.checkIn);
+    const checkOutDate = new Date(adminDetails.checkOut);
+
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+      alert("❌ Invalid date format. Please select valid dates.");
+      setLoading(false);
+      return;
+    }
+
     const bookingData = {
-      adminDetails,
-      selectedRoom: { roomNumber: selectedRoom, acType },
+      adminDetails: {
+        ...adminDetails,
+        checkIn: checkInDate.toISOString(),
+        checkOut: checkOutDate.toISOString(),
+      },
+      selectedRoom: {
+        roomNumber: selectedRoomDetails.id, // Use room ID as room number
+        acType: acType || selectedRoomDetails.acType, // Use selected acType or default from room
+      },
       selectedRoomType,
       packageType,
       paymentDetails: {
         paymentType,
-        advanceAmount: advanceAmount || 0,
-        remainingAmount,
-        totalAmount,
+        advanceAmount: Number(advanceAmount) || 0,
+        remainingAmount: Number(remainingAmount) || 0,
+        totalAmount: Number(totalAmount) || 0,
       },
     };
+
+    console.log("Sending booking data:", JSON.stringify(bookingData, null, 2));
 
     try {
       const response = await axios.post(
@@ -226,7 +256,15 @@ const ReceptionRoomBookingPage = () => {
       setShowConfirmation(false);
     } catch (error) {
       console.error("Error creating booking:", error);
-      alert("❌ Error creating booking. Please try again.");
+      console.error("Error response:", error.response?.data);
+
+      // Show more specific error message
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.response?.data?.details?.join(", ") ||
+        "Error creating booking. Please try again.";
+      alert(`❌ ${errorMessage}`);
     } finally {
       setLoading(false);
     }

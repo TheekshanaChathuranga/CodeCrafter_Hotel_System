@@ -125,7 +125,6 @@ import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import bookingRoutes from "./routes/booking.js";
 import poolRoutes from "./routes/managePool.js";
-// import poolBookingRoutes from "./routes/poolBooking.js";
 import poolBookingRoutes from "./routes/poolBookingRoutes.js";
 import manageRoomRoutes from "./routes/manageRoom.js";
 import manageUserRoutes from "./routes/manageUser.js";

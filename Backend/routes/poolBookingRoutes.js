@@ -1,167 +1,34 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import PoolBooking from "../models/PoolBooking.js";
 import Pool from "../models/Pool.js";
+
 const router = express.Router();
 
-// POST create new booking (ensure paymentType and advanceAmount are stored)
-router.post("/", async (req, res) => {
-  console.log("=== poolBookingRoutes.js POST route called ===");
-  console.log("Request body:", req.body);
-  try {
-    const {
-      name,
-      phone,
-      whatsapp,
-      email,
-      peopleCount,
-      checkIn,
-      checkOut,
-      paymentType,
-      advanceAmount,
-      status, // allow status from frontend
-      paymentProof, // for online bookings
-    } = req.body;
+// Emulate __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-    // Validate required fields
-    if (!name || !phone || !peopleCount || !checkIn) {
-      return res.status(400).json({ message: "Missing required fields" });
+// Setup Multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, "../uploads/proofs");
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
     }
-
-    // Basic phone validation - allow 10 digits with or without spaces/dashes
-    const cleanPhone = phone.replace(/[\s-]/g, "");
-    if (!/^[0-9]{10}$/.test(cleanPhone)) {
-      return res
-        .status(400)
-        .json({ message: "Phone number must be 10 digits" });
-    }
-
-    // Get default pool (first available pool) if no poolId provided
-    let poolId = req.body.poolId;
-    if (!poolId) {
-      const defaultPool = await Pool.findOne({ poolStatus: "Available" });
-      if (!defaultPool) {
-        return res.status(400).json({ message: "No available pools found" });
-      }
-      poolId = defaultPool._id;
-    }
-
-    // Ensure peopleCount is a valid number and at least 1
-    const validPeopleCount = Math.max(parseInt(peopleCount) || 1, 1);
-
-    const checkInDate = new Date(checkIn);
-    let checkOutDate;
-    if (checkOut) {
-      checkOutDate = new Date(checkOut);
-    } else {
-      checkOutDate = new Date(checkInDate.getTime() + 2 * 60 * 60 * 1000);
-    }
-
-    const durationHours = (checkOutDate - checkInDate) / (1000 * 60 * 60);
-    if (durationHours < 2) {
-      return res
-        .status(400)
-        .json({ message: "Minimum booking duration is 2 hours" });
-    }
-
-    // Enhanced calculation logic with debugging
-    const baseRate = 500;
-    const additionalRate = 200;
-    const baseHours = 2;
-    let totalAmount = baseRate;
-    const additionalHours = Math.ceil(durationHours - baseHours);
-
-    if (additionalHours > 0) {
-      totalAmount += additionalHours * additionalRate;
-    }
-
-    // Multiply by people count - this is crucial
-    totalAmount = totalAmount * validPeopleCount;
-
-    // Ensure totalAmount is never 0 or negative
-    if (totalAmount <= 0) {
-      totalAmount = baseRate * validPeopleCount; // fallback calculation
-    }
-
-    console.log(
-      `Booking calculation: ${validPeopleCount} people × ${baseRate} base rate = ${totalAmount} (duration: ${durationHours}hrs, additional: ${additionalHours}hrs)`
-    );
-
-    let advAmount = 0;
-    let payType = paymentType || "notPaid";
-    if (payType === "advance") {
-      advAmount = Number(advanceAmount) || 0;
-      if (advAmount <= 0 || advAmount > totalAmount) {
-        return res.status(400).json({ message: "Invalid advance amount" });
-      }
-    }
-    if (payType === "full") {
-      advAmount = totalAmount;
-    }
-
-    // Store paymentType and advanceAmount in DB, and status if provided
-    const bookingData = {
-      poolId,
-      name,
-      phone,
-      whatsapp,
-      email,
-      peopleCount: validPeopleCount,
-      checkIn: checkInDate,
-      checkOut: checkOutDate,
-      totalAmount: totalAmount, // Explicitly ensure this is set
-      paymentType: payType,
-      advanceAmount: advAmount,
-      status: status || "pending",
-    };
-
-    // Add payment proof if it's an online booking
-    if (paymentProof) {
-      bookingData.paymentProof = paymentProof;
-    }
-
-    const booking = new PoolBooking(bookingData);
-
-    const savedBooking = await booking.save();
-
-    // Verify the saved booking has totalAmount
-    if (!savedBooking.totalAmount || savedBooking.totalAmount <= 0) {
-      console.error(
-        "Warning: Saved booking has invalid totalAmount:",
-        savedBooking.totalAmount
-      );
-      // Try to update it immediately
-      await PoolBooking.findByIdAndUpdate(savedBooking._id, {
-        totalAmount: totalAmount,
-      });
-    }
-
-    console.log(
-      "Booking saved successfully with totalAmount:",
-      savedBooking.totalAmount
-    );
-
-    res.status(201).json({
-      message: "Booking created successfully",
-      booking: savedBooking,
-      pricing: {
-        baseRate,
-        additionalHours,
-        additionalRate,
-        totalAmount: totalAmount,
-        perPersonAmount: totalAmount / validPeopleCount,
-        peopleCount: validPeopleCount,
-      },
-    });
-  } catch (error) {
-    console.error("Booking creation error:", error);
-    res.status(500).json({
-      message: "Failed to create booking",
-      error: error.message,
-    });
-  }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
 });
+const upload = multer({ storage: storage });
 
-// Get all pool bookings with optional limit
+// Get all pool bookings with optional limit (this should come before /:poolId/:date)
 router.get("/", async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 0;
@@ -180,6 +47,307 @@ router.get("/", async (req, res) => {
     console.error("Error fetching bookings:", error);
     res.status(500).json({
       message: "Failed to fetch bookings",
+      error: error.message,
+    });
+  }
+});
+
+// GET pool details by ID (more specific route)
+router.get("/pool/:id", async (req, res) => {
+  try {
+    const pool = await Pool.findById(req.params.id);
+    if (!pool) return res.status(404).json({ message: "Pool not found" });
+    res.json(pool);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET total guests booked for a specific pool on a specific date
+// This route must come after the /pool/:id route to avoid conflicts
+router.get("/:poolId/:date", async (req, res) => {
+  const { poolId, date } = req.params;
+
+  // Validate date format (YYYY-MM-DD)
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(date)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid date format. Use YYYY-MM-DD" });
+  }
+
+  try {
+    console.log(`Checking availability for pool ${poolId} on ${date}`);
+
+    // Create date range for the entire day
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Search for bookings by both legacy and new date fields
+    const bookings = await PoolBooking.find({
+      poolId,
+      $or: [
+        { date: { $gte: startDate, $lte: endDate } },
+        { checkIn: { $gte: startDate, $lte: endDate } },
+      ],
+    });
+
+    const totalGuests = bookings.reduce(
+      (sum, booking) => sum + (booking.guestCount || booking.peopleCount || 0),
+      0
+    );
+
+    console.log(
+      `Found ${bookings.length} bookings with ${totalGuests} total guests`
+    );
+    res.json({ totalGuests });
+  } catch (err) {
+    console.error("Error fetching guest count:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST create new booking (handle both reception and online bookings)
+router.post("/", upload.single("paymentProof"), async (req, res) => {
+  console.log("=== poolBookingRoutes.js POST route called ===");
+  console.log("Request body:", req.body);
+  console.log("File uploaded:", !!req.file);
+
+  try {
+    const {
+      // Handle both legacy and new field names
+      name,
+      fullName,
+      phone,
+      phoneNumber,
+      whatsapp,
+      whatsappNumber,
+      email,
+      peopleCount,
+      guestCount,
+      checkIn,
+      date,
+      checkOut,
+      checkInTime,
+      checkOutTime,
+      request,
+      specificRequest,
+      paymentType,
+      advanceAmount,
+      totalAmount,
+      status, // allow status from frontend
+      paymentProof, // for online bookings
+      poolId,
+    } = req.body;
+
+    // Normalize field names - prefer the frontend field names
+    const normalizedName = fullName || name;
+    const normalizedPhone = phoneNumber || phone;
+    const normalizedWhatsapp = whatsappNumber || whatsapp;
+    const normalizedGuestCount = guestCount || peopleCount;
+    const normalizedRequest = request || specificRequest;
+
+    // Check if this is a reception booking (has status "approved" and different data structure)
+    const isReceptionBooking = status === "approved";
+
+    console.log("Is reception booking:", isReceptionBooking);
+
+    // Validate required fields
+    if (!normalizedName || !normalizedPhone || !normalizedGuestCount) {
+      return res.status(400).json({
+        message:
+          "Missing required fields: name, phone, and guestCount are required",
+      });
+    }
+
+    let newBooking;
+
+    if (isReceptionBooking) {
+      // Handle reception booking (from BookingForm.jsx)
+      console.log("Processing reception booking");
+
+      if (!checkIn || !checkOut) {
+        return res.status(400).json({
+          message:
+            "Check-in and check-out times are required for reception bookings",
+        });
+      }
+
+      // For reception bookings, checkIn/checkOut are DateTime objects
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+
+      if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+        return res.status(400).json({
+          message: "Invalid date format for check-in or check-out",
+        });
+      }
+
+      // Extract date (use checkIn date) and times
+      const bookingDate = checkInDate.toISOString().split("T")[0];
+      const extractedCheckInTime = checkInDate.toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const extractedCheckOutTime = checkOutDate.toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      console.log(`Reception booking details:
+        - Date: ${bookingDate}
+        - Check-in time: ${extractedCheckInTime}
+        - Check-out time: ${extractedCheckOutTime}
+        - Guest count: ${normalizedGuestCount}
+        - Total amount: ${totalAmount}`);
+
+      // Create reception booking
+      newBooking = new PoolBooking({
+        poolId: poolId || null,
+        fullName: normalizedName,
+        date: new Date(bookingDate),
+        guestCount: Number(normalizedGuestCount),
+        specificRequest: normalizedRequest || "",
+        checkInTime: extractedCheckInTime,
+        checkOutTime: extractedCheckOutTime,
+        phoneNumber: normalizedPhone,
+        whatsappNumber: normalizedWhatsapp || "",
+        email: email || "",
+        paymentProof: null, // No payment proof for reception bookings
+        status: "approved", // Reception bookings are pre-approved
+        paymentType: paymentType || "notPaid",
+        advanceAmount: Number(advanceAmount) || 0,
+        totalAmount: Number(totalAmount) || 0,
+      });
+    } else {
+      // Handle online booking (from customer forms)
+      console.log("Processing online booking");
+
+      // Validate required fields for online bookings
+      if (!date && !checkIn) {
+        return res.status(400).json({
+          message: "Date is required for online bookings",
+        });
+      }
+
+      if (!checkInTime || !checkOutTime) {
+        return res.status(400).json({
+          message:
+            "Check-in time and check-out time are required for online bookings",
+        });
+      }
+
+      // Validate payment proof file for online bookings
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Payment proof file is required for online bookings",
+        });
+      }
+
+      // Basic phone validation
+      const cleanPhone = normalizedPhone.replace(/[\s-]/g, "");
+      if (!/^[0-9]{10}$/.test(cleanPhone)) {
+        return res.status(400).json({
+          message: "Phone number must be 10 digits",
+        });
+      }
+
+      // Handle date
+      let bookingDate;
+      if (date) {
+        bookingDate = new Date(date);
+      } else {
+        bookingDate = new Date(checkIn);
+      }
+
+      // Validate booking date
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      bookingDate.setHours(0, 0, 0, 0);
+      if (isNaN(bookingDate.getTime()) || bookingDate < today) {
+        return res.status(400).json({
+          message: "Booking date must be today or a future date",
+        });
+      }
+
+      // Get pool or use default
+      let targetPoolId = poolId;
+      if (!targetPoolId) {
+        const defaultPool = await Pool.findOne({ poolStatus: "Available" });
+        if (!defaultPool) {
+          return res.status(400).json({ message: "No available pools found" });
+        }
+        targetPoolId = defaultPool._id;
+      }
+
+      // Check pool capacity
+      const existingBookings = await PoolBooking.find({
+        date: bookingDate,
+        status: { $ne: "cancelled" },
+      });
+
+      const totalExistingGuests = existingBookings.reduce(
+        (sum, booking) =>
+          sum + (booking.guestCount || booking.peopleCount || 0),
+        0
+      );
+
+      const pool = await Pool.findById(targetPoolId);
+      const poolCapacity = pool ? pool.capacity : 30;
+
+      if (totalExistingGuests + Number(normalizedGuestCount) > poolCapacity) {
+        return res.status(400).json({ message: "Pool capacity exceeded" });
+      }
+
+      // Handle file upload
+      const proofPath = req.file ? req.file.path : null;
+
+      // Create online booking
+      newBooking = new PoolBooking({
+        poolId: targetPoolId,
+        fullName: normalizedName,
+        date: bookingDate,
+        guestCount: Number(normalizedGuestCount),
+        specificRequest: normalizedRequest || "",
+        checkInTime,
+        checkOutTime,
+        phoneNumber: normalizedPhone,
+        whatsappNumber: normalizedWhatsapp || "",
+        email: email || "",
+        paymentProof: proofPath,
+        status: "pending",
+      });
+    }
+
+    // Save the booking
+    await newBooking.save();
+    console.log(
+      `${
+        isReceptionBooking ? "Reception" : "Online"
+      } pool booking created successfully:`,
+      newBooking._id
+    );
+
+    // Prepare response
+    const response = {
+      message: "Pool booking created successfully",
+      booking: newBooking,
+    };
+
+    // Add payment proof filename for online bookings
+    if (!isReceptionBooking && newBooking.paymentProof) {
+      response.paymentProof = path.basename(newBooking.paymentProof);
+    }
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.error("Booking creation error:", error);
+    res.status(500).json({
+      message: "Failed to create booking",
       error: error.message,
     });
   }
