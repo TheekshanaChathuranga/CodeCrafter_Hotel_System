@@ -78,9 +78,9 @@ const BookingList = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredBookings.map(booking => (
+          {filteredBookings.map((booking, index) => (
             <div 
-              key={booking._id} 
+              key={`admin-booking-${booking._id}-${index}`} 
               onClick={() => navigate(`/admin/bookingNotifications/${booking._id}`)}
               className="p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow"
             >

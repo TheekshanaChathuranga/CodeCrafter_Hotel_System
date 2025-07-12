@@ -1,5 +1,5 @@
 import express from 'express';
-import Booking from '../models/ReceptionBooking.js';
+import ReceptionBooking from '../models/ReceptionBooking.js';
 import OnlineBooking from '../models/Booking.js';
 
 const router = express.Router();
@@ -13,64 +13,55 @@ router.get('/stats', async (req, res) => {
     todayEnd.setHours(23, 59, 59, 999);
 
     // Get all bookings from both collections
-    const receptionBookings = await Booking.find().lean();
+    const receptionBookings = await ReceptionBooking.find().lean();
     const onlineBookings = await OnlineBooking.find().lean();
     
-    // Transform online bookings to match reception booking structure
-    const transformedOnlineBookings = onlineBookings.map(booking => ({
-      _id: booking._id,
-      guestDetails: {
-        name: booking.fullName,
-        mobile: booking.phoneNumber
-      },
-      bookingDetails: {
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        roomNumber: booking.roomNumber,
-        roomType: booking.roomType,
-        acType: "AC",
-        packageType: "room-only"
-      },
-      paymentDetails: {
-        totalAmount: 0
-      },
-      status: booking.status,
-      createdAt: booking.createdAt,
-      updatedAt: booking.updatedAt
-    }));
+    // Combine all bookings with a unified structure
+    const allBookings = [
+      ...receptionBookings.map(booking => ({ ...booking, bookingType: 'reception' })),
+      ...onlineBookings.map(booking => ({ ...booking, bookingType: 'online' }))
+    ];
     
-    // Combine all bookings
-    const allBookings = [...receptionBookings, ...transformedOnlineBookings];
-
     // Today's check-ins
     const todaysCheckIns = allBookings.filter(booking => {
-      const checkIn = new Date(booking.bookingDetails.checkIn);
+      const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+      if (!checkInDate) return false;
+      const checkIn = new Date(checkInDate);
       return checkIn >= today && checkIn <= todayEnd;
     }).length;
 
     // Today's check-outs
     const todaysCheckOuts = allBookings.filter(booking => {
-      const checkOut = new Date(booking.bookingDetails.checkOut);
+      const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
+      if (!checkOutDate) return false;
+      const checkOut = new Date(checkOutDate);
       return checkOut >= today && checkOut <= todayEnd;
     }).length;
 
     // Currently occupied rooms
     const currentlyOccupied = allBookings.filter(booking => {
-      const checkIn = new Date(booking.bookingDetails.checkIn);
-      const checkOut = new Date(booking.bookingDetails.checkOut);
+      const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+      const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
+      if (!checkInDate || !checkOutDate) return false;
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
       return checkIn <= today && checkOut > today && booking.status === 'checked-in';
     }).length;
 
     // Room availability by type
     const roomTypes = ['Single Room', 'Double Room', 'Triple Room'];
-    const totalRoomsByType = { 'Single Room': 5, 'Double Room': 15, 'Triple Room': 10 };
+    const totalRoomsByType = { 'Single Room': 1, 'Double Room': 5, 'Triple Room': 3 };
     
     const occupiedByType = {};
     roomTypes.forEach(type => {
       occupiedByType[type] = allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
-        const checkOut = new Date(booking.bookingDetails.checkOut);
-        return booking.bookingDetails.roomType === type &&
+        const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+        const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
+        const roomType = booking.bookingDetails?.roomType || booking.roomType;
+        if (!checkInDate || !checkOutDate || !roomType) return false;
+        const checkIn = new Date(checkInDate);
+        const checkOut = new Date(checkOutDate);
+        return roomType === type &&
                checkIn <= today && checkOut > today &&
                booking.status === 'checked-in';
       }).length;
@@ -86,25 +77,37 @@ router.get('/stats', async (req, res) => {
     // Revenue calculations
     const todaysRevenue = allBookings
       .filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
+        const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+        if (!checkInDate) return false;
+        const checkIn = new Date(checkInDate);
         return checkIn >= today && checkIn <= todayEnd;
       })
-      .reduce((sum, booking) => sum + booking.paymentDetails.totalAmount, 0);
+      .reduce((sum, booking) => {
+        const amount = booking.paymentDetails?.totalAmount || booking.totalAmount || 0;
+        return sum + amount;
+      }, 0);
 
     const monthlyRevenue = allBookings
       .filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
+        const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+        if (!checkInDate) return false;
+        const checkIn = new Date(checkInDate);
         return checkIn.getMonth() === today.getMonth() && 
                checkIn.getFullYear() === today.getFullYear();
       })
-      .reduce((sum, booking) => sum + booking.paymentDetails.totalAmount, 0);
+      .reduce((sum, booking) => {
+        const amount = booking.paymentDetails?.totalAmount || booking.totalAmount || 0;
+        return sum + amount;
+      }, 0);
 
     // Upcoming check-ins (next 3 days)
     const threeDaysFromNow = new Date(today);
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
     
     const upcomingCheckIns = allBookings.filter(booking => {
-      const checkIn = new Date(booking.bookingDetails.checkIn);
+      const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+      if (!checkInDate) return false;
+      const checkIn = new Date(checkInDate);
       return checkIn > todayEnd && checkIn <= threeDaysFromNow;
     }).length;
 
@@ -134,8 +137,8 @@ router.get('/bookings/:date', async (req, res) => {
     const nextDay = new Date(targetDate);
     nextDay.setDate(nextDay.getDate() + 1);
 
-    // Get bookings from both collections
-    const receptionBookings = await Booking.find({
+    // Get all bookings from both collections
+    const receptionBookings = await ReceptionBooking.find({
       $or: [
         {
           'bookingDetails.checkIn': {
@@ -177,39 +180,11 @@ router.get('/bookings/:date', async (req, res) => {
       ]
     }).sort({ 'checkIn': 1 }).lean();
 
-    // Transform online bookings to match reception booking structure
-    const transformedOnlineBookings = onlineBookings.map(booking => ({
-      _id: booking._id,
-      guestDetails: {
-        name: booking.fullName,
-        mobile: booking.phoneNumber
-      },
-      bookingDetails: {
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        roomNumber: booking.roomNumber,
-        roomType: booking.roomType,
-        acType: "AC",
-        packageType: "room-only"
-      },
-      paymentDetails: {
-        totalAmount: 0
-      },
-      status: booking.status,
-      createdAt: booking.createdAt,
-      updatedAt: booking.updatedAt,
-      bookingType: 'online'
-    }));
-
-    // Mark reception bookings
-    const markedReceptionBookings = receptionBookings.map(booking => ({
-      ...booking,
-      bookingType: 'reception'
-    }));
-
-    // Combine and sort by check-in date
-    const allBookings = [...markedReceptionBookings, ...transformedOnlineBookings]
-      .sort((a, b) => new Date(a.bookingDetails.checkIn) - new Date(b.bookingDetails.checkIn));
+    // Mark bookings with their type
+    const allBookings = [
+      ...receptionBookings.map(booking => ({ ...booking, bookingType: 'reception' })),
+      ...onlineBookings.map(booking => ({ ...booking, bookingType: 'online' }))
+    ];
 
     res.json(allBookings);
   } catch (error) {

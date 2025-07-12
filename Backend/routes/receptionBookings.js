@@ -1,5 +1,5 @@
 import express from 'express';
-import Booking from '../models/ReceptionBooking.js';
+import ReceptionBooking from '../models/ReceptionBooking.js';
 import OnlineBooking from '../models/Booking.js';
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 // Create new booking
 router.post('/', async (req, res) => {
   try {
-    const booking = new Booking({
+    const booking = new ReceptionBooking({
       guestDetails: {
         name: req.body.adminDetails.name,
         mobile: req.body.adminDetails.mobile,
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // Get reception bookings
-    const receptionBookings = await Booking.find().sort({ createdAt: -1 }).lean();
+    const receptionBookings = await ReceptionBooking.find().sort({ createdAt: -1 }).lean();
     
     // Get online bookings  
     const onlineBookings = await OnlineBooking.find().sort({ createdAt: -1 }).lean();
@@ -97,7 +97,7 @@ router.get('/', async (req, res) => {
 // Get single booking (handle both types)
 router.get('/:id', async (req, res) => {
   try {
-    let booking = await Booking.findById(req.params.id).lean();
+    let booking = await ReceptionBooking.findById(req.params.id).lean();
     let bookingType = 'reception';
     
     // If not found in reception bookings, try online bookings
@@ -153,7 +153,7 @@ router.get('/:id', async (req, res) => {
 // Update booking status (handle both types)
 router.patch('/:id', async (req, res) => {
   try {
-    let booking = await Booking.findByIdAndUpdate(
+    let booking = await ReceptionBooking.findByIdAndUpdate(
       req.params.id,
       { 
         status: req.body.status,
@@ -220,7 +220,7 @@ router.patch('/:id', async (req, res) => {
 // Delete booking (handle both types)
 router.delete('/:id', async (req, res) => {
   try {
-    let booking = await Booking.findByIdAndDelete(req.params.id);
+    let booking = await ReceptionBooking.findByIdAndDelete(req.params.id);
     
     // If not found in reception bookings, try online bookings
     if (!booking) {

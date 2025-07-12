@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/UserAuthContext';
+import { useNavigate } from 'react-router-dom';
 import { receptionAPI } from '../../api/reception';
 import SimpleCalendar from '../../components/SimpleCalendar';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -8,6 +9,7 @@ import AllBookingsModal from '../../components/AllBookingsModal';
 
 const ReceptionHome = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -18,7 +20,22 @@ const ReceptionHome = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showAllBookingsModal, setShowAllBookingsModal] = useState(false);
 
-  // Load dashboard data
+  // Helper function to safely access booking properties
+  const getBookingData = (booking) => {
+    return {
+      guestName: booking?.guestDetails?.name || booking?.fullName || 'Unknown Guest',
+      roomNumber: booking?.bookingDetails?.roomNumber || booking?.roomNumber || 'N/A',
+      roomType: booking?.bookingDetails?.roomType || booking?.roomType || 'Unknown',
+      checkIn: booking?.bookingDetails?.checkIn || booking?.checkIn || '',
+      checkOut: booking?.bookingDetails?.checkOut || booking?.checkOut || '',
+      mobile: booking?.guestDetails?.mobile || booking?.phoneNumber || 'N/A',
+      email: booking?.guestDetails?.email || booking?.email || '',
+      totalAmount: booking?.paymentDetails?.totalAmount || booking?.totalAmount || 0,
+      status: booking?.status || 'pending'
+    };
+  };
+
+  // Load dashboard data on component mount
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -68,11 +85,11 @@ const ReceptionHome = () => {
           todaysCheckIns: 0,
           todaysCheckOuts: 0,
           currentlyOccupied: 0,
-          totalAvailable: 30,
+          totalAvailable: 9,
           availableRooms: [
-            { type: 'Single Room', available: 5, total: 5, occupied: 0 },
-            { type: 'Double Room', available: 15, total: 15, occupied: 0 },
-            { type: 'Triple Room', available: 10, total: 10, occupied: 0 }
+            { type: 'Single Room', available: 1, total: 1, occupied: 0 },
+            { type: 'Double Room', available: 5, total: 5, occupied: 0 },
+            { type: 'Triple Room', available: 3, total: 3, occupied: 0 }
           ]
         });
         setTodaysBookings([]);
@@ -97,9 +114,16 @@ const ReceptionHome = () => {
       if (allBookings.length > 0) {
         const dateStr = selectedDate.toISOString().split('T')[0];
         const bookingsForDate = allBookings.filter(booking => {
-          const checkIn = new Date(booking.bookingDetails.checkIn).toISOString().split('T')[0];
-          const checkOut = new Date(booking.bookingDetails.checkOut).toISOString().split('T')[0];
-          return checkIn <= dateStr && checkOut >= dateStr;
+          const bookingData = getBookingData(booking);
+          if (!bookingData.checkIn || !bookingData.checkOut) return false;
+          
+          try {
+            const checkIn = new Date(bookingData.checkIn).toISOString().split('T')[0];
+            const checkOut = new Date(bookingData.checkOut).toISOString().split('T')[0];
+            return checkIn <= dateStr && checkOut >= dateStr;
+          } catch (error) {
+            return false;
+          }
         });
         setSelectedDateBookings(bookingsForDate);
       }
@@ -298,20 +322,22 @@ const ReceptionHome = () => {
             <div className="max-h-96 overflow-y-auto">
               {selectedDateBookings.length > 0 ? (
                 <ul className="divide-y divide-gray-200">
-                  {selectedDateBookings.map((booking) => (
-                    <li key={booking._id} className="px-4 py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {booking.guestDetails.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Room {booking.bookingDetails.roomNumber} - {booking.bookingDetails.roomType}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {formatTime(booking.bookingDetails.checkIn)} - {formatTime(booking.bookingDetails.checkOut)}
-                          </p>
-                        </div>
+                  {selectedDateBookings.map((booking) => {
+                    const bookingData = getBookingData(booking);
+                    return (
+                      <li key={booking._id} className="px-4 py-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {bookingData.guestName}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Room {bookingData.roomNumber} - {bookingData.roomType}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {formatTime(bookingData.checkIn)} - {formatTime(bookingData.checkOut)}
+                            </p>
+                          </div>
                         <div className="flex flex-col items-end space-y-1">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>
                             {booking.status}
@@ -337,7 +363,8 @@ const ReceptionHome = () => {
                         </div>
                       </div>
                     </li>
-                  ))}
+                    );
+                  })}
                 </ul>
               ) : (
                 <div className="px-4 py-8 text-center">
@@ -405,29 +432,31 @@ const ReceptionHome = () => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {todaysBookings.map((booking) => (
-                          <tr key={booking._id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              Room {booking.bookingDetails.roomNumber}
-                              <div className="text-xs text-gray-500">{booking.bookingDetails.roomType}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {booking.guestDetails.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div>{booking.guestDetails.mobile}</div>
-                              {booking.guestDetails.email && (
-                                <div className="text-xs text-gray-400">{booking.guestDetails.email}</div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {formatTime(booking.bookingDetails.checkIn)}
-                              <div className="text-xs text-gray-400">{formatDate(booking.bookingDetails.checkIn)}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {formatTime(booking.bookingDetails.checkOut)}
-                              <div className="text-xs text-gray-400">{formatDate(booking.bookingDetails.checkOut)}</div>
-                            </td>
+                        {todaysBookings.map((booking) => {
+                          const bookingData = getBookingData(booking);
+                          return (
+                            <tr key={booking._id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                Room {bookingData.roomNumber}
+                                <div className="text-xs text-gray-500">{bookingData.roomType}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {bookingData.guestName}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>{bookingData.mobile}</div>
+                                {bookingData.email && (
+                                  <div className="text-xs text-gray-400">{bookingData.email}</div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatTime(bookingData.checkIn)}
+                                <div className="text-xs text-gray-400">{formatDate(bookingData.checkIn)}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {formatTime(bookingData.checkOut)}
+                                <div className="text-xs text-gray-400">{formatDate(bookingData.checkOut)}</div>
+                              </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(booking.status)}`}>
                                 {booking.status}
@@ -456,7 +485,8 @@ const ReceptionHome = () => {
                               </div>
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -464,24 +494,26 @@ const ReceptionHome = () => {
                   {/* Mobile Card View */}
                   <div className="md:hidden">
                     <div className="space-y-4 p-4">
-                      {todaysBookings.map((booking) => (
-                        <div key={booking._id} className="bg-gray-50 rounded-lg p-4 space-y-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium text-gray-900">{booking.guestDetails.name}</h4>
-                              <p className="text-sm text-gray-500">Room {booking.bookingDetails.roomNumber} - {booking.bookingDetails.roomType}</p>
+                      {todaysBookings.map((booking) => {
+                        const bookingData = getBookingData(booking);
+                        return (
+                          <div key={booking._id} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-gray-900">{bookingData.guestName}</h4>
+                                <p className="text-sm text-gray-500">Room {bookingData.roomNumber} - {bookingData.roomType}</p>
+                              </div>
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(bookingData.status)}`}>
+                                {bookingData.status}
+                              </span>
                             </div>
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>
-                              {booking.status}
-                            </span>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-500">Check-in</p>
-                              <p className="font-medium">{formatTime(booking.bookingDetails.checkIn)}</p>
-                              <p className="text-xs text-gray-400">{formatDate(booking.bookingDetails.checkIn)}</p>
-                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-500">Check-in</p>
+                                <p className="font-medium">{formatTime(bookingData.checkIn)}</p>
+                                <p className="text-xs text-gray-400">{formatDate(bookingData.checkIn)}</p>
+                              </div>
                             <div>
                               <p className="text-gray-500">Check-out</p>
                               <p className="font-medium">{formatTime(booking.bookingDetails.checkOut)}</p>
@@ -520,7 +552,8 @@ const ReceptionHome = () => {
                             </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </>
@@ -612,13 +645,23 @@ const ReceptionHome = () => {
             <div className="px-4 py-5 sm:p-6">
               <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={() => window.location.href = '/receptionist/roomBooking'}
+                  onClick={() => navigate('/receptionist/roomBooking')}
                   className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-md text-sm font-medium transition duration-150 ease-in-out flex items-center justify-center space-x-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  <span>New Booking</span>
+                  <span>New Room Booking</span>
+                </button>
+                
+                <button 
+                  onClick={() => navigate('/receptionist/pool-booking')}
+                  className="bg-cyan-500 hover:bg-cyan-600 text-white py-3 px-4 rounded-md text-sm font-medium transition duration-150 ease-in-out flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>New Pool Booking</span>
                 </button>
                 
                 <button 
@@ -662,6 +705,16 @@ const ReceptionHome = () => {
                   </svg>
                   <span>View All Bookings</span>
                 </button>
+                
+                <button 
+                  onClick={() => navigate('/receptionist/pool-bookings')}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white py-3 px-4 rounded-md text-sm font-medium transition duration-150 ease-in-out flex items-center justify-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  <span>Pool Bookings List</span>
+                </button>
               </div>
             </div>
           </div>
@@ -673,27 +726,30 @@ const ReceptionHome = () => {
             <div className="px-4 py-5 sm:p-6">
               <div className="space-y-4">
                 {/* Recent activity based on today's bookings */}
-                {todaysBookings.slice(0, 4).map((booking, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-                      booking.status === 'confirmed' ? 'bg-blue-400' :
-                      booking.status === 'checked-in' ? 'bg-green-400' :
-                      booking.status === 'checked-out' ? 'bg-gray-400' :
-                      'bg-yellow-400'
-                    }`}></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{booking.guestDetails.name}</span>
-                        {booking.status === 'confirmed' && ' - Booking confirmed'}
-                        {booking.status === 'checked-in' && ' - Checked in'}
-                        {booking.status === 'checked-out' && ' - Checked out'}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Room {booking.bookingDetails.roomNumber} • {formatTime(booking.bookingDetails.checkIn)}
-                      </p>
+                {todaysBookings.slice(0, 4).map((booking, index) => {
+                  const bookingData = getBookingData(booking);
+                  return (
+                    <div key={index} className="flex items-start space-x-3">
+                      <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
+                        bookingData.status === 'confirmed' ? 'bg-blue-400' :
+                        bookingData.status === 'checked-in' ? 'bg-green-400' :
+                        bookingData.status === 'checked-out' ? 'bg-gray-400' :
+                        'bg-yellow-400'
+                      }`}></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          <span className="font-medium">{bookingData.guestName}</span>
+                          {bookingData.status === 'confirmed' && ' - Booking confirmed'}
+                          {bookingData.status === 'checked-in' && ' - Checked in'}
+                          {bookingData.status === 'checked-out' && ' - Checked out'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Room {bookingData.roomNumber} • {formatTime(bookingData.checkIn)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 
                 {todaysBookings.length === 0 && (
                   <div className="text-center text-gray-500 py-4">
@@ -704,7 +760,7 @@ const ReceptionHome = () => {
                 {todaysBookings.length > 4 && (
                   <div className="text-center pt-2">
                     <button 
-                      onClick={() => window.location.href = '/receptionist/bookingsList'}
+                      onClick={() => navigate('/receptionist/bookingsList')}
                       className="text-sm text-blue-600 hover:text-blue-800"
                     >
                       View all activity →

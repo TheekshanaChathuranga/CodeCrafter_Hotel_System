@@ -420,8 +420,8 @@ const BookingsList = () => {
           <>
             {/* Mobile Card Layout */}
             <div className="block lg:hidden space-y-4 mb-6">
-              {bookings.map(booking => (
-                <div key={booking._id} className="bg-white rounded-lg shadow-md p-4">
+              {bookings.map((booking, index) => (
+                <div key={`mobile-${booking._id}-${index}`} className="bg-white rounded-lg shadow-md p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <div className="font-medium text-gray-900">{booking.fullName || booking.name}</div>
@@ -530,8 +530,8 @@ const BookingsList = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {bookings.map(booking => (
-                      <tr key={booking._id}>
+                    {bookings.map((booking, index) => (
+                      <tr key={`desktop-${booking._id}-${index}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{booking.fullName || booking.name}</div>
                           <div className="text-sm text-gray-500">{booking.phoneNumber || booking.phone}</div>

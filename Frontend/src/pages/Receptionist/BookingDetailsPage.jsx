@@ -68,7 +68,7 @@ const BookingDetailsPage = () => {
 
   const handleEditNavigation = () => {
     setShowEditModal(false);
-    navigate(`/bookings/${id}/edit`);
+    navigate(`/receptionist/bookings/${id}/edit`);
   };
 
   const formatDate = (dateString) => {

@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import http from "http";
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -15,10 +16,10 @@ import roomRoutes from "./routes/manageRoom.js";
 import poolRoutes from "./routes/managePool.js";
 import userRoutes from './routes/manageUser.js';
 import bookingRoutes from "./routes/receptionBookings.js";
-import receptionRoomRoutes from "./routes/receptionRooms.js";
 import poolBookingRoutes from "./routes/poolBookingRoutes.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
+import receptionRoomsRoutes from "./routes/receptionRooms.js";
 
 // Configure environment variables
 dotenv.config();
@@ -53,7 +54,7 @@ app.use(cors({
     'http://localhost:5176',
     'http://localhost:5177'
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
@@ -82,9 +83,9 @@ app.use("/api/admin/bookings", BookingConfirmationRoutes);
 
 // Reception-specific routes
 app.use('/api/receptionBookings', bookingRoutes);
-app.use('/api/receptionRooms', receptionRoomRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/roomBookings', bookingRoutes);
+app.use('/api/receptionRooms', receptionRoomsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/poolBookings', poolBookingRoutes);
 
@@ -94,7 +95,8 @@ app.get("/api/health", (req, res) => {
     status: "OK",
     message: "Server is running",
     dbState: mongoose.connection.readyState,
-    dbName: mongoose.connection.name,
+    dbName: mongoose.connection.db?.databaseName || 'unknown',
+    dbHost: mongoose.connection.host || 'unknown',
     websocket: io.engine.clientsCount > 0 ? "active" : "inactive",
     connectedAdmins: adminSockets.size,
     timestamp: new Date().toISOString()
@@ -113,7 +115,7 @@ app.use((err, req, res, next) => {
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`MongoDB connected to: ${mongoose.connection.host}/${mongoose.connection.name}`);
+  console.log(`MongoDB connected to: ${mongoose.connection.host || 'unknown-host'}/${mongoose.connection.db?.databaseName || 'unknown-db'}`);
   console.log(`WebSocket server ready`);
 });
 

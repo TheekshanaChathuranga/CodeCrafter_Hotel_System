@@ -15,6 +15,16 @@ import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
 
+// Receptionist/Reception imports
+import ReceptionHome from "./pages/Receptionist/ReceptionHome";
+import ReceptionRoomBooking from "./pages/Receptionist/ReceptionRoomBookingPage";
+import BookingsListPage from "./pages/Receptionist/BookingsListPage";
+import BookingDetailsPage from "./pages/Receptionist/BookingDetailsPage";
+import BookingCalendar from "./pages/Receptionist/BookingCalendar";
+import ConfirmationPage from "./pages/Receptionist/ConfirmationPage";
+import BookingsList from "./components/Receptionist/BookingsList";
+import PoolBooking from "./components/Receptionist/PoolBooking";
+
 
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
@@ -65,9 +75,21 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<ManageRooms />} />
-          <Route path="rooms" element={<ManageRooms />} />
+          <Route index element={<ReceptionHome />} />
+          <Route path="home" element={<ReceptionHome />} />
+          <Route path="rooms" element={<ReceptionRoomBooking />} />
+          <Route path="roomBooking" element={<ReceptionRoomBooking />} />
+          <Route path="bookings" element={<BookingsListPage />} />
+          <Route path="bookingsList" element={<BookingsListPage />} />
+          <Route path="bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="bookings/:id/edit" element={<div>Edit Booking Page - Coming Soon</div>} />
+          <Route path="calendar" element={<BookingCalendar />} />
+          <Route path="confirmation" element={<ConfirmationPage />} />
+          <Route path="pool-booking" element={<PoolBooking />} />
+          <Route path="pool-bookings" element={<BookingsList />} />
+          <Route path="pool-schedules" element={<BookingsList />} />
           <Route path="pools" element={<ManagePools />} />
+          <Route path="profile" element={<div>Profile Page - Coming Soon</div>} />
         </Route>
 
         {/* reception routes - for backward compatibility */}
@@ -81,13 +103,19 @@ const App = () => {
         >
           <Route index element={<ReceptionHome />} />
           <Route path="home" element={<ReceptionHome />} />
+          <Route path="rooms" element={<ReceptionRoomBooking />} />
           <Route path="roomBooking" element={<ReceptionRoomBooking />} />
+          <Route path="bookings" element={<BookingsListPage />} />
           <Route path="bookingsList" element={<BookingsListPage />} />
           <Route path="bookings/:id" element={<BookingDetailsPage />} />
+          <Route path="bookings/:id/edit" element={<div>Edit Booking Page - Coming Soon</div>} />
+          <Route path="calendar" element={<BookingCalendar />} />
+          <Route path="confirmation" element={<ConfirmationPage />} />
           <Route path="pool-booking" element={<PoolBooking />} />
           <Route path="pool-bookings" element={<BookingsList />} />
           <Route path="pool-schedules" element={<BookingsList />} />
           <Route path="pools" element={<ManagePools />} />
+          <Route path="profile" element={<div>Profile Page - Coming Soon</div>} />
         </Route>
 
       </Routes>

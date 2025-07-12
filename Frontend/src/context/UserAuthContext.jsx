@@ -20,10 +20,8 @@ export const AuthProvider = ({ children }) => {
         try {
           // Verify with backend
           const userData = await authApi.verifyToken(token);
-          console.log('Auth Context - User data from token:', userData);
           setUser(userData);
         } catch (error) {
-          console.log('Auth Context - Token verification failed:', error);
           localStorage.removeItem('token');
         }
       }

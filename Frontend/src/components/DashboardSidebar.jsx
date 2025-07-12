@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Hotel, Users, Menu, LifeBuoy,
   CalendarCheck, UserCheck, Settings, LogOut, User,
-  Bell
+  Bell, LayoutDashboard, BookOpen, Clock
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
 
@@ -19,7 +19,7 @@ const DashboardSidebar = () => {
     // Dashboard for both roles
     {
       title: "Dashboard",
-      url: { admin: "/admin", reception: "/reception/home" },
+      url: { admin: "/admin", reception: "/receptionist/home" },
       icon: <LayoutDashboard size={18} />,
       roles: ["admin", "reception"],
     },
@@ -51,7 +51,7 @@ const DashboardSidebar = () => {
     // Reception and shared routes
     {
       title: "Room Booking",
-      url: { admin: "/admin/rooms", reception: "/reception/roomBooking" },
+      url: { admin: "/admin/rooms", reception: "/receptionist/rooms" },
       icon: <Hotel size={18} />,
       roles: ["reception"],
     },
@@ -59,7 +59,7 @@ const DashboardSidebar = () => {
       title: "Reservations",
       url: {
         admin: "/admin/reservations",
-        reception: "/reception/bookingsList",
+        reception: "/receptionist/bookings",
       },
       icon: <BookOpen size={18} />,
       roles: ["admin", "reception"],
@@ -68,7 +68,7 @@ const DashboardSidebar = () => {
       title: "Pool Booking",
       url: {
         admin: "/admin/pools",
-        reception: "/reception/pool-booking",
+        reception: "/receptionist/pool-booking",
       },
       icon: <LifeBuoy size={18} />,
       roles: ["admin", "reception"],
@@ -77,7 +77,7 @@ const DashboardSidebar = () => {
       title: "Pool Schedules",
       url: {
         admin: "/admin/pool-schedules",
-        reception: "/reception/pool-schedules",
+        reception: "/receptionist/pool-bookings",
       },
       icon: <Clock size={18} />,
       roles: ["admin", "reception"],
@@ -140,7 +140,7 @@ const DashboardSidebar = () => {
       {/* Profile and Sign Out Buttons */}
       <div className="space-y-2">
         <Link
-          to={user.role === "admin" ? "/admin/profile" : "/reception/profile"}
+          to={user.role === "admin" ? "/admin/profile" : "/receptionist/profile"}
           onClick={handleLinkClick}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
             !isOpen ? "justify-center" : ""

@@ -252,11 +252,16 @@ export const receptionAPI = {
     // Calculate revenue
     const monthlyRevenue = allBookings
       .filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
+        const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+        if (!checkInDate) return false;
+        const checkIn = new Date(checkInDate);
         return checkIn.getMonth() === today.getMonth() && 
                checkIn.getFullYear() === today.getFullYear();
       })
-      .reduce((sum, booking) => sum + booking.paymentDetails.totalAmount, 0);
+      .reduce((sum, booking) => {
+        const amount = booking.paymentDetails?.totalAmount || booking.totalAmount || 0;
+        return sum + amount;
+      }, 0);
 
     return {
       ...displayStats,
@@ -265,7 +270,9 @@ export const receptionAPI = {
       todaysRevenue: hasActivityToday ? 0 : monthlyRevenue, // Show monthly if no today activity
       monthlyRevenue,
       upcomingCheckIns: allBookings.filter(booking => {
-        const checkIn = new Date(booking.bookingDetails.checkIn);
+        const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
+        if (!checkInDate) return false;
+        const checkIn = new Date(checkInDate);
         return checkIn > today && booking.status === 'confirmed';
       }).length,
       totalBookings: allBookings.length,
