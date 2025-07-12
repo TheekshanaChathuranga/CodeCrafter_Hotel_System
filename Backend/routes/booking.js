@@ -114,9 +114,10 @@ router.post("/", upload.single("document"), async (req, res) => {
       adults: parseInt(req.body.adults),
       children: parseInt(req.body.children) || 0,
       specialRequests: req.body.specialRequests || "",
-      document: "/uploads/" + req.file.filename, // Fixed: use 'document' instead of 'documentPath'
+      documentPath: "/uploads/" + req.file.filename,
       user: req.body.user,
       status: "pending",
+      createdAt: new Date(),
     });
 
     // Save booking

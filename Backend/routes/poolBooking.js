@@ -173,18 +173,8 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     // Handle file upload
     const proofPath = req.file ? req.file.path : null;
 
-    // Create Date objects for checkIn and checkOut
-    const bookingDateStr = new Date(date).toISOString().split("T")[0]; // Get YYYY-MM-DD format
-    const checkInDateTime = new Date(
-      `${bookingDateStr}T${checkInTime}:00.000Z`
-    );
-    const checkOutDateTime = new Date(
-      `${bookingDateStr}T${checkOutTime}:00.000Z`
-    );
-
-    // Create new booking with all fields (both legacy and new format)
+    // Create new booking with all fields
     const newBooking = new PoolBooking({
-      // Legacy fields for compatibility
       poolId,
       fullName,
       date,
@@ -193,17 +183,10 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
       checkInTime,
       checkOutTime,
       phoneNumber,
+      //whatsappNumber: whatsappNumber || undefined,  // MongoDB doesn't store undefined values
       whatsappNumber: whatsappNumber || "",
       paymentProof: proofPath,
       status: "pending",
-
-      // New required fields for Mongoose validation
-      name: fullName,
-      phone: phoneNumber,
-      whatsapp: whatsappNumber || "",
-      peopleCount: requestedGuests,
-      checkIn: checkInDateTime,
-      checkOut: checkOutDateTime,
     });
 
     await newBooking.save();

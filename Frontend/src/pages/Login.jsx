@@ -48,13 +48,9 @@ const Login = () => {
 
         if (loggedInUser.role === "admin") {
           navigate("/admin");
-        } else if (
-          loggedInUser.role === "receptionist" ||
-          loggedInUser.role === "reception"
-        ) {
+        } else if (loggedInUser.role === "receptionist") {
           navigate("/receptionist");
         } else {
-          // Default route for regular users (customers)
           navigate("/");
         }
       } else {

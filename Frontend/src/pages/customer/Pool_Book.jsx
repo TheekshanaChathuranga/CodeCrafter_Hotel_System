@@ -15,7 +15,6 @@ const Pool_Book = () => {
   const [remainingSlots, setRemainingSlots] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmData, setConfirmData] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState({});
 
   useEffect(() => {
     const fetchPools = async () => {
@@ -85,76 +84,13 @@ const Pool_Book = () => {
 
   const handleChange = (e, poolId) => {
     const { name, value, files } = e.target;
-
-    // Handle file upload validation
-    if (name === "proof" && files && files[0]) {
-      const file = files[0];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-
-      if (file.size > maxSize) {
-        setFieldErrors((prev) => ({
-          ...prev,
-          [poolId]: {
-            ...prev[poolId],
-            paymentProof: "File size must be less than 5MB",
-          },
-        }));
-        return;
-      }
-
-      // Clear any previous error for this field
-      setFieldErrors((prev) => ({
-        ...prev,
-        [poolId]: {
-          ...prev[poolId],
-          paymentProof: undefined,
-        },
-      }));
-    }
-
-    // Handle phone number input validation (only allow digits)
-    if ((name === "phoneNumber" || name === "whatsappNumber") && value) {
-      const digitsOnly = value.replace(/\D/g, "");
-      if (digitsOnly.length > 10) {
-        return; // Don't allow more than 10 digits
-      }
-      setFormData((prev) => ({
-        ...prev,
-        [poolId]: {
-          ...prev[poolId],
-          [name]: digitsOnly,
-        },
-      }));
-    } else if (name === "fullName" && value) {
-      // Handle full name validation (only allow letters, spaces, and dots)
-      const validName = value.replace(/[^A-Za-z.\s]/g, "");
-      setFormData((prev) => ({
-        ...prev,
-        [poolId]: {
-          ...prev[poolId],
-          [name]: validName,
-        },
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [poolId]: {
-          ...prev[poolId],
-          [name]: files ? files[0] : value,
-        },
-      }));
-    }
-
-    // Clear field errors when user starts typing/selecting
-    if (fieldErrors[poolId]?.[name]) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [poolId]: {
-          ...prev[poolId],
-          [name]: undefined,
-        },
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [poolId]: {
+        ...prev[poolId],
+        [name]: files ? files[0] : value,
+      },
+    }));
   };
 
   // Generate time options between pool's opening and closing times
@@ -296,178 +232,41 @@ const Pool_Book = () => {
 
   const handleBookingRequest = (e, pool) => {
     e.preventDefault();
-
-    // Prevent multiple submissions
-    if (isSubmitting[pool._id]) {
-      return;
-    }
-
-    // Clear any previous booking status
-    setBookingStatus((prev) => ({
-      ...prev,
-      [pool._id]: null,
-    }));
-
     setConfirmData({ event: e, pool });
     setShowConfirm(true);
-  };
-
-  const validateForm = (data, pool) => {
-    const errors = {};
-
-    // Full Name validation - only English letters, spaces, and dots
-    if (!data.fullName?.trim()) {
-      errors.fullName = "Full name is required";
-    } else if (!/^[A-Za-z.\s]+$/.test(data.fullName.trim())) {
-      errors.fullName =
-        "Name can only contain English letters, spaces, and dots";
-    }
-
-    // Phone number validation - exactly 10 digits
-    if (!data.phoneNumber?.trim()) {
-      errors.phoneNumber = "Phone number is required";
-    } else if (!/^[0-9]{10}$/.test(data.phoneNumber.trim())) {
-      errors.phoneNumber = "Phone number must be exactly 10 digits";
-    }
-
-    // WhatsApp number validation - exactly 10 digits (if provided)
-    if (
-      data.whatsappNumber?.trim() &&
-      !/^[0-9]{10}$/.test(data.whatsappNumber.trim())
-    ) {
-      errors.whatsappNumber = "WhatsApp number must be exactly 10 digits";
-    }
-
-    // Date validation - must be today or future date
-    if (!data.date) {
-      errors.date = "Booking date is required";
-    } else {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const bookingDate = new Date(data.date);
-      bookingDate.setHours(0, 0, 0, 0);
-      if (isNaN(bookingDate.getTime()) || bookingDate < today) {
-        errors.date = "Booking date must be today or a future date";
-      }
-    }
-
-    // Guest count validation
-    const guestCount = parseInt(data.guestCount, 10);
-    if (!data.guestCount || isNaN(guestCount) || guestCount < 1) {
-      errors.guestCount = "Number of guests must be at least 1";
-    } else if (guestCount > pool.capacity) {
-      errors.guestCount = `Number of guests cannot exceed pool capacity (${pool.capacity})`;
-    }
-
-    // File validation
-    if (!data.proof) {
-      errors.paymentProof = "Payment proof is required";
-    }
-
-    // Time validation
-    if (!data.checkInTime) {
-      errors.checkInTime = "Check-in time is required";
-    }
-    if (!data.checkOutTime) {
-      errors.checkOutTime = "Check-out time is required";
-    }
-
-    // Check if check-in/check-out times are within pool hours
-    if (
-      data.checkInTime &&
-      data.checkOutTime &&
-      pool.openingTime &&
-      pool.closingTime
-    ) {
-      const timeToMinutes = (timeStr) => {
-        const [h, m] = timeStr.split(":").map(Number);
-        return h * 60 + m;
-      };
-
-      const checkInMins = timeToMinutes(data.checkInTime);
-      const checkOutMins = timeToMinutes(data.checkOutTime);
-      const openMins = timeToMinutes(pool.openingTime);
-      const closeMins = timeToMinutes(pool.closingTime);
-
-      if (checkInMins < openMins || checkInMins >= closeMins) {
-        errors.checkInTime = `Check-in time must be within pool hours (${pool.openingTime} - ${pool.closingTime})`;
-      }
-      if (checkOutMins > closeMins || checkOutMins <= openMins) {
-        errors.checkOutTime = `Check-out time must be within pool hours (${pool.openingTime} - ${pool.closingTime})`;
-      }
-      if (checkOutMins <= checkInMins) {
-        errors.checkOutTime = "Check-out time must be after check-in time";
-      }
-    }
-
-    return errors;
   };
 
   const handleConfirmYes = async () => {
     const { event, pool } = confirmData;
     const data = formData[pool._id];
+    const guestCount = parseInt(data?.guestCount, 10);
     setShowConfirm(false);
 
-    // Set submitting state
-    setIsSubmitting((prev) => ({
-      ...prev,
-      [pool._id]: true,
-    }));
+    setFieldErrors({});
 
-    // Clear previous errors and status
-    setFieldErrors((prev) => ({
-      ...prev,
-      [pool._id]: {},
-    }));
-
-    setBookingStatus((prev) => ({
-      ...prev,
-      [pool._id]: null,
-    }));
-
-    // Validate required fields
-    if (!data) {
+    if (
+      !data?.fullName ||
+      !data?.date ||
+      !data?.guestCount ||
+      !data?.proof ||
+      !data?.checkInTime ||
+      !data?.checkOutTime ||
+      !data?.phoneNumber ||
+      isNaN(guestCount) ||
+      guestCount < 1
+    ) {
       setBookingStatus((prev) => ({
         ...prev,
         [pool._id]: {
-          message: "Please fill all required fields.",
+          message:
+            "Please fill all required fields correctly. Make sure to select a Check-In Time.",
           error: true,
         },
       }));
-      setIsSubmitting((prev) => ({
-        ...prev,
-        [pool._id]: false,
-      }));
       return;
     }
-
-    // Validate form with backend-matching validation
-    const validationErrors = validateForm(data, pool);
-    if (Object.keys(validationErrors).length > 0) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [pool._id]: validationErrors,
-      }));
-      setBookingStatus((prev) => ({
-        ...prev,
-        [pool._id]: {
-          message: "Please fix the form errors before submitting.",
-          error: true,
-        },
-      }));
-      setIsSubmitting((prev) => ({
-        ...prev,
-        [pool._id]: false,
-      }));
-      return;
-    }
-
-    const guestCount = parseInt(data.guestCount, 10);
 
     try {
-      console.log("Starting booking process for pool:", pool._id);
-
-      // Check availability
       const res = await axios.get(
         `http://localhost:5000/api/pool-booking/${pool._id}/${data.date}`
       );
@@ -481,145 +280,25 @@ const Pool_Book = () => {
             error: true,
           },
         }));
-        setIsSubmitting((prev) => ({
-          ...prev,
-          [pool._id]: false,
-        }));
         return;
       }
 
-      // Additional validation before submitting
-      if (!data.proof || !data.proof.name) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Please select a payment proof file.",
-            error: true,
-          },
-        }));
-        setIsSubmitting((prev) => ({
-          ...prev,
-          [pool._id]: false,
-        }));
-        return;
-      }
-
-      // Check file type
-      const allowedTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "application/pdf",
-      ];
-      if (!allowedTypes.includes(data.proof.type)) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Please upload a valid image (JPG, PNG) or PDF file.",
-            error: true,
-          },
-        }));
-        setIsSubmitting((prev) => ({
-          ...prev,
-          [pool._id]: false,
-        }));
-        return;
-      }
-
-      // Create form data for submission - send only the fields expected by the backend route
       const bookingForm = new FormData();
-
-      // Required fields as expected by the backend route
-      bookingForm.append("fullName", data.fullName.trim());
+      bookingForm.append("fullName", data.fullName);
       bookingForm.append("date", data.date);
-      bookingForm.append("guestCount", guestCount.toString());
+      bookingForm.append("request", data.request || "");
+      bookingForm.append("guestCount", guestCount);
       bookingForm.append("paymentProof", data.proof);
       bookingForm.append("poolId", pool._id);
       bookingForm.append("checkInTime", data.checkInTime);
       bookingForm.append("checkOutTime", data.checkOutTime);
-      bookingForm.append("phoneNumber", data.phoneNumber.trim());
-
-      // Add model-required fields that the backend route doesn't handle properly
-      // These will help the model validation pass
-      const checkInDate = new Date(`${data.date}T${data.checkInTime}`);
-      const checkOutDate = new Date(`${data.date}T${data.checkOutTime}`);
-
-      // Validate Date objects
-      if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Invalid date or time format. Please check your input.",
-            error: true,
-          },
-        }));
-        setIsSubmitting((prev) => ({
-          ...prev,
-          [pool._id]: false,
-        }));
-        return;
+      bookingForm.append("phoneNumber", data.phoneNumber);
+      if (data.whatsappNumber) {
+        bookingForm.append("whatsappNumber", data.whatsappNumber);
       }
 
-      // Add the required Date fields for the model
-      bookingForm.append("checkIn", checkInDate.toISOString());
-      bookingForm.append("checkOut", checkOutDate.toISOString());
-      bookingForm.append("peopleCount", guestCount.toString());
+      await axios.post("http://localhost:5000/api/pool-booking", bookingForm);
 
-      // Optional fields
-      if (data.request?.trim()) {
-        bookingForm.append("request", data.request.trim());
-        bookingForm.append("specificRequest", data.request.trim()); // alias
-      }
-
-      if (data.whatsappNumber?.trim()) {
-        bookingForm.append("whatsappNumber", data.whatsappNumber.trim());
-      }
-
-      console.log("Submitting booking form...");
-      console.log("Form data values:", {
-        fullName: data.fullName.trim(),
-        date: data.date,
-        guestCount: guestCount.toString(),
-        peopleCount: guestCount.toString(),
-        poolId: pool._id,
-        checkInTime: data.checkInTime,
-        checkOutTime: data.checkOutTime,
-        checkIn: new Date(`${data.date}T${data.checkInTime}`).toISOString(),
-        checkOut: new Date(`${data.date}T${data.checkOutTime}`).toISOString(),
-        phoneNumber: data.phoneNumber.trim(),
-        whatsappNumber: data.whatsappNumber?.trim() || "",
-        request: data.request?.trim() || "",
-        specificRequest: data.request?.trim() || "",
-        proofFile: data.proof
-          ? `${data.proof.name} (${data.proof.size} bytes)`
-          : "No file",
-      });
-
-      // Get auth token if available
-      const token = localStorage.getItem("token");
-      const headers = {
-        "Content-Type": "multipart/form-data",
-      };
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      // Submit booking with improved error handling
-      const response = await axios.post(
-        "http://localhost:5000/api/pool-booking",
-        bookingForm,
-        {
-          headers,
-          timeout: 30000, // 30 second timeout
-          maxContentLength: 10 * 1024 * 1024, // 10MB max content length
-          maxBodyLength: 10 * 1024 * 1024, // 10MB max body length
-        }
-      );
-
-      console.log("Booking successful:", response.data);
-
-      // Success handling
       setBookingStatus((prev) => ({
         ...prev,
         [pool._id]: { message: "Booking successful!", error: false },
@@ -627,24 +306,14 @@ const Pool_Book = () => {
 
       setShowSuccess(true);
 
-      // Clear form data for this pool
-      setFormData((prev) => ({
-        ...prev,
-        [pool._id]: {
-          fullName: user?.fullName || user?.username || "", // Keep user's name
-        },
-      }));
+      setFormData((prev) => ({ ...prev, [pool._id]: {} }));
+      // Success popup handler
+      const handleSuccessOk = () => {
+        setShowSuccess(false);
+      };
     } catch (error) {
-      console.error("Booking error:", error);
-      console.error("Error details:", {
-        response: error.response,
-        message: error.message,
-        code: error.code,
-        config: error.config,
-      });
-
       // Handle backend field errors
-      if (error.response?.data?.field) {
+      if (error.response && error.response.data && error.response.data.field) {
         setFieldErrors((prev) => ({
           ...prev,
           [pool._id]: {
@@ -656,55 +325,12 @@ const Pool_Book = () => {
           ...prev,
           [pool._id]: { message: error.response.data.message, error: true },
         }));
-      } else if (error.response?.data?.message) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: { message: error.response.data.message, error: true },
-        }));
-      } else if (error.response?.status === 500) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Server error. Please try again later.",
-            error: true,
-          },
-        }));
-      } else if (error.code === "ECONNABORTED") {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Request timeout. Please try again.",
-            error: true,
-          },
-        }));
-      } else if (error.code === "ERR_NETWORK") {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: {
-            message: "Network error. Please check your connection.",
-            error: true,
-          },
-        }));
-      } else if (error.message) {
-        setBookingStatus((prev) => ({
-          ...prev,
-          [pool._id]: { message: `Error: ${error.message}`, error: true },
-        }));
       } else {
         setBookingStatus((prev) => ({
           ...prev,
-          [pool._id]: {
-            message: "Booking failed. Please try again.",
-            error: true,
-          },
+          [pool._id]: { message: "Booking failed", error: true },
         }));
       }
-    } finally {
-      // Reset submitting state
-      setIsSubmitting((prev) => ({
-        ...prev,
-        [pool._id]: false,
-      }));
     }
   };
 
@@ -856,7 +482,6 @@ const Pool_Book = () => {
                       <input
                         type="text"
                         name="fullName"
-                        placeholder="Enter your full name (letters, spaces, and dots only)"
                         value={formData[pool._id]?.fullName || ""}
                         onChange={(e) => handleChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -875,9 +500,6 @@ const Pool_Book = () => {
                       <input
                         type="tel"
                         name="phoneNumber"
-                        placeholder="Enter 10-digit phone number"
-                        pattern="[0-9]{10}"
-                        maxLength="10"
                         value={formData[pool._id]?.phoneNumber || ""}
                         onChange={(e) => handleChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -900,9 +522,7 @@ const Pool_Book = () => {
                       <input
                         type="tel"
                         name="whatsappNumber"
-                        placeholder="Optional - Enter 10-digit WhatsApp number"
-                        pattern="[0-9]{10}"
-                        maxLength="10"
+                        placeholder="Optional"
                         value={formData[pool._id]?.whatsappNumber || ""}
                         onChange={(e) => handleChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -1009,11 +629,6 @@ const Pool_Book = () => {
                           </option>
                         ))}
                       </select>
-                      {fieldErrors[pool._id]?.checkOutTime && (
-                        <div className="text-red-600 text-sm mt-1">
-                          {fieldErrors[pool._id].checkOutTime}
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -1027,17 +642,11 @@ const Pool_Book = () => {
                         type="number"
                         name="guestCount"
                         min="1"
-                        max={pool.capacity}
                         value={formData[pool._id]?.guestCount || ""}
                         onChange={(e) => handleChange(e, pool._id)}
                         className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         required
                       />
-                      {fieldErrors[pool._id]?.guestCount && (
-                        <div className="text-red-600 text-sm mt-1">
-                          {fieldErrors[pool._id].guestCount}
-                        </div>
-                      )}
                     </div>
                     {/* Payment Proof Upload */}
                     <div>
@@ -1056,11 +665,6 @@ const Pool_Book = () => {
                       <p className="text-sm text-gray-500 mt-1">
                         Max 5MB. Formats: JPG, PNG, PDF
                       </p>
-                      {fieldErrors[pool._id]?.paymentProof && (
-                        <div className="text-red-600 text-sm mt-1">
-                          {fieldErrors[pool._id].paymentProof}
-                        </div>
-                      )}
                     </div>
                   </div>
                   {/* Request */}
@@ -1082,14 +686,16 @@ const Pool_Book = () => {
                   <div className="pt-4 space-y-2">
                     <button
                       type="submit"
-                      disabled={isSubmitting[pool._id]}
-                      className={`w-full px-6 py-3 rounded-lg font-semibold transition-colors ${
-                        isSubmitting[pool._id]
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-gray-700"
-                      } text-white`}
+                      className="w-full bg-blue-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
                     >
-                      {isSubmitting[pool._id] ? "Processing..." : "Book Now"}
+                      Book Now
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBookingForm(false)}
+                      className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg font-semibold transition-colors"
+                    >
+                      Cancel
                     </button>
 
                     {bookingStatus[pool._id] && (
