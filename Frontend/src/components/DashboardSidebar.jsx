@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Hotel, Users, Menu, LifeBuoy,
-  CalendarCheck, UserCheck, Settings, LogOut, User,
-  Bell, LayoutDashboard, BookOpen, Clock
+  Hotel,
+  Users,
+  Menu,
+  LifeBuoy,
+  CalendarCheck,
+  UserCheck,
+  Settings,
+  LogOut,
+  User,
+  Bell,
+  LayoutDashboard,
+  BookOpen,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
-
-
 
 const DashboardSidebar = () => {
   const { user, logout } = useAuth();
@@ -19,9 +27,13 @@ const DashboardSidebar = () => {
     // Dashboard for both roles
     {
       title: "Dashboard",
-      url: { admin: "/admin", reception: "/receptionist/home" },
+      url: {
+        admin: "/admin",
+        receptionist: "/receptionist",
+        reception: "/receptionist",
+      },
       icon: <LayoutDashboard size={18} />,
-      roles: ["admin", "reception"],
+      roles: ["admin", "receptionist", "reception"],
     },
     // Admin-specific items
     {
@@ -51,36 +63,43 @@ const DashboardSidebar = () => {
     // Reception and shared routes
     {
       title: "Room Booking",
-      url: { admin: "/admin/rooms", reception: "/receptionist/rooms" },
+      url: {
+        admin: "/admin/rooms",
+        receptionist: "/receptionist/rooms",
+        reception: "/receptionist/rooms",
+      },
       icon: <Hotel size={18} />,
-      roles: ["reception"],
+      roles: ["receptionist", "reception"],
     },
     {
       title: "Reservations",
       url: {
         admin: "/admin/reservations",
+        receptionist: "/receptionist/bookings",
         reception: "/receptionist/bookings",
       },
       icon: <BookOpen size={18} />,
-      roles: ["admin", "reception"],
+      roles: ["admin", "receptionist", "reception"],
     },
     {
       title: "Pool Booking",
       url: {
         admin: "/admin/pools",
+        receptionist: "/receptionist/pool-booking",
         reception: "/receptionist/pool-booking",
       },
       icon: <LifeBuoy size={18} />,
-      roles: ["admin", "reception"],
+      roles: ["admin", "receptionist", "reception"],
     },
     {
       title: "Pool Schedules",
       url: {
         admin: "/admin/pool-schedules",
+        receptionist: "/receptionist/pool-bookings",
         reception: "/receptionist/pool-bookings",
       },
       icon: <Clock size={18} />,
-      roles: ["admin", "reception"],
+      roles: ["admin", "receptionist", "reception"],
     },
   ];
 
@@ -96,7 +115,9 @@ const DashboardSidebar = () => {
 
   return (
     <div
-      className={`bg-[#2C3E50] text-white h-full p-4 transition-all duration-300 flex flex-col justify-between ${isOpen ? "w-64" : "w-16"}`}
+      className={`bg-[#2C3E50] text-white h-full p-4 transition-all duration-300 flex flex-col justify-between ${
+        isOpen ? "w-64" : "w-16"
+      }`}
     >
       <div>
         <button
@@ -107,7 +128,11 @@ const DashboardSidebar = () => {
         </button>
 
         {/* User Info */}
-        <div className={`flex items-center gap-3 mb-8 ${!isOpen ? "justify-center" : ""}`}>
+        <div
+          className={`flex items-center gap-3 mb-8 ${
+            !isOpen ? "justify-center" : ""
+          }`}
+        >
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s"
             alt=""
@@ -127,7 +152,9 @@ const DashboardSidebar = () => {
             <li key={item.title}>
               <Link
                 to={item.url[user.role]}
-                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${!isOpen ? "justify-center" : ""}`}
+                className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${
+                  !isOpen ? "justify-center" : ""
+                }`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
                 {isOpen && <span>{item.title}</span>}
@@ -140,7 +167,9 @@ const DashboardSidebar = () => {
       {/* Profile and Sign Out Buttons */}
       <div className="space-y-2">
         <Link
-          to={user.role === "admin" ? "/admin/profile" : "/receptionist/profile"}
+          to={
+            user.role === "admin" ? "/admin/profile" : "/receptionist/profile"
+          }
           onClick={handleLinkClick}
           className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
             !isOpen ? "justify-center" : ""
@@ -151,7 +180,9 @@ const DashboardSidebar = () => {
         </Link>
         <button
           onClick={logout}
-          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full ${!isOpen ? "justify-center" : ""}`}
+          className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] w-full ${
+            !isOpen ? "justify-center" : ""
+          }`}
         >
           <LogOut size={18} />
           {isOpen && <span>Sign Out</span>}

@@ -1,11 +1,11 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema({
   guestDetails: {
     name: { type: String, required: true },
     mobile: { type: String, required: true },
     email: String,
-    whatsapp: String
+    whatsapp: String,
   },
   bookingDetails: {
     checkIn: { type: Date, required: true },
@@ -13,17 +13,21 @@ const bookingSchema = new mongoose.Schema({
     roomNumber: { type: String, required: true },
     roomType: { type: String, required: true },
     acType: { type: String, required: true },
-    packageType: { type: String, required: true }
+    packageType: { type: String, required: true },
   },
   paymentDetails: {
     paymentType: { type: String, required: true },
     advanceAmount: { type: Number, default: 0 },
     remainingAmount: { type: Number, default: 0 },
-    totalAmount: { type: Number, required: true }
+    totalAmount: { type: Number, required: true },
   },
-  status: { type: String, default: 'confirmed', enum: ['confirmed', 'cancelled', 'checked-in', 'checked-out', 'no-show'] },
+  status: {
+    type: String,
+    default: "confirmed",
+    enum: ["confirmed", "cancelled", "checked-in", "checked-out", "no-show"],
+  },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 
-export default mongoose.model('Booking', bookingSchema);
+export default mongoose.model("ReceptionBooking", bookingSchema);

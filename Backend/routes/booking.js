@@ -162,4 +162,23 @@ router.post("/", upload.single("document"), async (req, res) => {
   }
 });
 
+// GET route to fetch all bookings
+router.get("/", async (req, res) => {
+  try {
+    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
+
+    res.status(200).json({
+      success: true,
+      data: bookings,
+    });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch bookings",
+      error: error.message,
+    });
+  }
+});
+
 export default router;

@@ -125,12 +125,16 @@ import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import bookingRoutes from "./routes/booking.js";
 import poolRoutes from "./routes/managePool.js";
-import poolBookingRoutes from "./routes/poolBooking.js";
+// import poolBookingRoutes from "./routes/poolBooking.js";
+import poolBookingRoutes from "./routes/poolBookingRoutes.js";
 import manageRoomRoutes from "./routes/manageRoom.js";
 import manageUserRoutes from "./routes/manageUser.js";
 import BookingConfirmationRoutes from "./routes/adminBookingConfirmation.js";
 import userBookings from "./routes/userBookings.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import receptionBookingsRoutes from "./routes/receptionBookings.js";
+import receptionRoomsRoutes from "./routes/receptionRooms.js";
+import dashboardRoutes from "./routes/dashboard.js";
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -195,11 +199,15 @@ app.use("/api/rooms", roomRoutes); // Room availability routes
 app.use("/api/bookings", bookingRoutes); // Changed from booking to bookings to match frontend
 app.use("/api/pools", poolRoutes);
 app.use("/api/pool-booking", poolBookingRoutes); // Pool booking routes
+app.use("/api/poolBookings", poolBookingRoutes); // Pool bookings list routes (same as pool-booking)
 app.use("/api/manage/rooms", manageRoomRoutes);
 app.use("/api/manage/users", manageUserRoutes);
 app.use("/api/admin/bookings", BookingConfirmationRoutes);
 app.use("/api/user-bookings", userBookings); // Add the new user bookings route
 app.use("/api/profile", profileRoutes); // Add profile routes
+app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route
+app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
+app.use("/api/dashboard", dashboardRoutes); // Add dashboard routes
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

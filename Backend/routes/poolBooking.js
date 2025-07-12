@@ -203,4 +203,75 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
   }
 });
 
+// GET all pool bookings
+router.get("/", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 0;
+    const query = PoolBooking.find().sort({ createdAt: -1 });
+
+    if (limit > 0) {
+      query.limit(limit);
+    }
+
+    const bookings = await query.exec();
+    res.json({
+      count: bookings.length,
+      bookings: bookings,
+    });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({
+      message: "Failed to fetch bookings",
+      error: error.message,
+    });
+  }
+});
+
+// PUT update booking by ID
+router.put("/:id", async (req, res) => {
+  try {
+    const updateFields = {};
+    if ("fullName" in req.body) updateFields.fullName = req.body.fullName;
+    if ("phoneNumber" in req.body)
+      updateFields.phoneNumber = req.body.phoneNumber;
+    if ("whatsappNumber" in req.body)
+      updateFields.whatsappNumber = req.body.whatsappNumber;
+    if ("checkIn" in req.body) updateFields.checkIn = req.body.checkIn;
+    if ("checkOut" in req.body) updateFields.checkOut = req.body.checkOut;
+    if ("guestCount" in req.body) updateFields.guestCount = req.body.guestCount;
+    if ("peopleCount" in req.body)
+      updateFields.peopleCount = req.body.peopleCount;
+    if ("totalAmount" in req.body)
+      updateFields.totalAmount = req.body.totalAmount;
+    if ("paymentStatus" in req.body)
+      updateFields.paymentStatus = req.body.paymentStatus;
+    if ("status" in req.body) updateFields.status = req.body.status;
+    if ("notes" in req.body) updateFields.notes = req.body.notes;
+    if ("specificRequest" in req.body)
+      updateFields.specificRequest = req.body.specificRequest;
+    if ("paymentType" in req.body)
+      updateFields.paymentType = req.body.paymentType;
+    if ("advanceAmount" in req.body)
+      updateFields.advanceAmount = req.body.advanceAmount;
+
+    // Fallback for legacy fields
+    if ("name" in req.body) updateFields.name = req.body.name;
+    if ("phone" in req.body) updateFields.phone = req.body.phone;
+    if ("whatsapp" in req.body) updateFields.whatsapp = req.body.whatsapp;
+
+    const booking = await PoolBooking.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    res.json({ booking });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ message: err.message || "Failed to update booking" });
+  }
+});
+
 export default router;

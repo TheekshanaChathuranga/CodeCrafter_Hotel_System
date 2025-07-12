@@ -1,9 +1,12 @@
 import express from "express";
 import PoolBooking from "../models/PoolBooking.js";
+import Pool from "../models/Pool.js";
 const router = express.Router();
 
 // POST create new booking (ensure paymentType and advanceAmount are stored)
 router.post("/", async (req, res) => {
+  console.log("=== poolBookingRoutes.js POST route called ===");
+  console.log("Request body:", req.body);
   try {
     const {
       name,
@@ -22,6 +25,24 @@ router.post("/", async (req, res) => {
     // Validate required fields
     if (!name || !phone || !peopleCount || !checkIn) {
       return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Basic phone validation - allow 10 digits with or without spaces/dashes
+    const cleanPhone = phone.replace(/[\s-]/g, "");
+    if (!/^[0-9]{10}$/.test(cleanPhone)) {
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
+    }
+
+    // Get default pool (first available pool) if no poolId provided
+    let poolId = req.body.poolId;
+    if (!poolId) {
+      const defaultPool = await Pool.findOne({ poolStatus: "Available" });
+      if (!defaultPool) {
+        return res.status(400).json({ message: "No available pools found" });
+      }
+      poolId = defaultPool._id;
     }
 
     // Ensure peopleCount is a valid number and at least 1
@@ -79,6 +100,7 @@ router.post("/", async (req, res) => {
 
     // Store paymentType and advanceAmount in DB, and status if provided
     const bookingData = {
+      poolId,
       name,
       phone,
       whatsapp,
