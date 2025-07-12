@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
-  const [customDateFrom, setCustomDateFrom] = useState('');
-  const [customDateTo, setCustomDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/bookings');
+        const response = await axios.get(
+          "http://localhost:5000/api/receptionBookings"
+        );
         setBookings(response.data);
         setFilteredBookings(response.data);
         setLoading(false);
@@ -35,56 +37,78 @@ const BookingsPage = () => {
     let filtered = [...bookings];
 
     // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(booking => booking.status === statusFilter);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((booking) => booking.status === statusFilter);
     }
 
     // Date filter
-    if (dateFilter !== 'all') {
+    if (dateFilter !== "all") {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       switch (dateFilter) {
-        case 'today':
-          filtered = filtered.filter(booking => {
-            const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
-            const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+        case "today":
+          filtered = filtered.filter((booking) => {
+            const checkIn = new Date(
+              booking.bookingDetails?.checkIn || booking.checkIn
+            );
+            const checkInDate = new Date(
+              checkIn.getFullYear(),
+              checkIn.getMonth(),
+              checkIn.getDate()
+            );
             return checkInDate.getTime() === today.getTime();
           });
           break;
-        case 'tomorrow':
+        case "tomorrow":
           const tomorrow = new Date(today);
           tomorrow.setDate(tomorrow.getDate() + 1);
-          filtered = filtered.filter(booking => {
-            const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
-            const checkInDate = new Date(checkIn.getFullYear(), checkIn.getMonth(), checkIn.getDate());
+          filtered = filtered.filter((booking) => {
+            const checkIn = new Date(
+              booking.bookingDetails?.checkIn || booking.checkIn
+            );
+            const checkInDate = new Date(
+              checkIn.getFullYear(),
+              checkIn.getMonth(),
+              checkIn.getDate()
+            );
             return checkInDate.getTime() === tomorrow.getTime();
           });
           break;
-        case 'this_week':
+        case "this_week":
           const weekStart = new Date(today);
           weekStart.setDate(today.getDate() - today.getDay());
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekStart.getDate() + 6);
-          filtered = filtered.filter(booking => {
-            const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+          filtered = filtered.filter((booking) => {
+            const checkIn = new Date(
+              booking.bookingDetails?.checkIn || booking.checkIn
+            );
             return checkIn >= weekStart && checkIn <= weekEnd;
           });
           break;
-        case 'this_month':
+        case "this_month":
           const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-          const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          filtered = filtered.filter(booking => {
-            const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+          const monthEnd = new Date(
+            today.getFullYear(),
+            today.getMonth() + 1,
+            0
+          );
+          filtered = filtered.filter((booking) => {
+            const checkIn = new Date(
+              booking.bookingDetails?.checkIn || booking.checkIn
+            );
             return checkIn >= monthStart && checkIn <= monthEnd;
           });
           break;
-        case 'custom':
+        case "custom":
           if (customDateFrom && customDateTo) {
             const fromDate = new Date(customDateFrom);
             const toDate = new Date(customDateTo);
-            filtered = filtered.filter(booking => {
-              const checkIn = new Date(booking.bookingDetails?.checkIn || booking.checkIn);
+            filtered = filtered.filter((booking) => {
+              const checkIn = new Date(
+                booking.bookingDetails?.checkIn || booking.checkIn
+              );
               return checkIn >= fromDate && checkIn <= toDate;
             });
           }
@@ -96,14 +120,14 @@ const BookingsPage = () => {
   }, [bookings, statusFilter, dateFilter, customDateFrom, customDateTo]);
 
   const resetFilters = () => {
-    setStatusFilter('all');
-    setDateFilter('all');
-    setCustomDateFrom('');
-    setCustomDateTo('');
+    setStatusFilter("all");
+    setDateFilter("all");
+    setCustomDateFrom("");
+    setCustomDateTo("");
   };
 
   const formatDate = (dateString) => {
-    return format(new Date(dateString), 'MMM dd, yyyy HH:mm');
+    return format(new Date(dateString), "MMM dd, yyyy HH:mm");
   };
 
   if (loading) {
@@ -116,7 +140,10 @@ const BookingsPage = () => {
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+      <div
+        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
         <strong className="font-bold">Error:</strong>
         <span className="block sm:inline"> {error}</span>
       </div>
@@ -125,11 +152,13 @@ const BookingsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">All Bookings</h1>
-      
+      <h1 className="text-3xl font-bold text-center mb-8 text-blue-800">
+        All Bookings
+      </h1>
+
       <div className="mb-6">
-        <button 
-          onClick={() => navigate('/receptionist/roomBooking')}
+        <button
+          onClick={() => navigate("/receptionist/roomBooking")}
           className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-200"
         >
           + Create New Booking
@@ -138,12 +167,16 @@ const BookingsPage = () => {
 
       {/* Filter Section */}
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">Filter Bookings</h3>
-        
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+          Filter Bookings
+        </h3>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -162,7 +195,9 @@ const BookingsPage = () => {
 
           {/* Date Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Date Range
+            </label>
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
@@ -178,10 +213,12 @@ const BookingsPage = () => {
           </div>
 
           {/* Custom Date From */}
-          {dateFilter === 'custom' && (
+          {dateFilter === "custom" && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  From Date
+                </label>
                 <input
                   type="date"
                   value={customDateFrom}
@@ -191,7 +228,9 @@ const BookingsPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  To Date
+                </label>
                 <input
                   type="date"
                   value={customDateTo}
@@ -234,38 +273,58 @@ const BookingsPage = () => {
             {filteredBookings.map((booking) => (
               <tr key={booking._id} className="hover:bg-gray-50">
                 <td className="py-3 px-4 border-b">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    booking.bookingType === 'online' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                  }`}>
-                    {booking.bookingType === 'online' ? 'Online' : 'Reception'}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      booking.bookingType === "online"
+                        ? "bg-blue-100 text-blue-800"
+                        : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {booking.bookingType === "online" ? "Online" : "Reception"}
                   </span>
                 </td>
                 <td className="py-3 px-4 border-b">
                   <div>
                     <div className="font-medium text-gray-900">
-                      {booking.guestDetails?.name || booking.fullName || 'N/A'}
+                      {booking.guestDetails?.name || booking.fullName || "N/A"}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {booking.guestDetails?.mobile || booking.phoneNumber || booking.contactNumber || booking.mobile || 'No mobile number'}
+                      {booking.guestDetails?.mobile ||
+                        booking.phoneNumber ||
+                        booking.contactNumber ||
+                        booking.mobile ||
+                        "No mobile number"}
                     </div>
                   </div>
                 </td>
                 <td className="py-3 px-4 border-b">
-                  {booking.bookingDetails?.roomNumber || booking.roomNumber || 'N/A'}
+                  {booking.bookingDetails?.roomNumber ||
+                    booking.roomNumber ||
+                    "N/A"}
                 </td>
                 <td className="py-3 px-4 border-b">
-                  {formatDate(booking.bookingDetails?.checkIn || booking.checkIn)}
+                  {formatDate(
+                    booking.bookingDetails?.checkIn || booking.checkIn
+                  )}
                 </td>
                 <td className="py-3 px-4 border-b">
-                  {formatDate(booking.bookingDetails?.checkOut || booking.checkOut)}
+                  {formatDate(
+                    booking.bookingDetails?.checkOut || booking.checkOut
+                  )}
                 </td>
                 <td className="py-3 px-4 border-b">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                    booking.status === 'cancelled' || booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                    booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      booking.status === "confirmed"
+                        ? "bg-green-100 text-green-800"
+                        : booking.status === "cancelled" ||
+                          booking.status === "rejected"
+                        ? "bg-red-100 text-red-800"
+                        : booking.status === "pending"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
                     {booking.status}
                   </span>
                 </td>

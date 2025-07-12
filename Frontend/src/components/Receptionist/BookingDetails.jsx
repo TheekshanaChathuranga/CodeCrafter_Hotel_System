@@ -11,12 +11,17 @@ export default function BookingDetails() {
 
   useEffect(() => {
     if (bookingId) {
-      axios.get(`http://localhost:5000/api/bookings/${bookingId}`)
+      axios
+        .get(`http://localhost:5000/api/receptionBookings/${bookingId}`)
         .then((response) => {
           setBooking(response.data);
           setEditData({
-            checkIn: new Date(response.data.adminDetails.checkIn).toISOString().slice(0, 16),
-            checkOut: new Date(response.data.adminDetails.checkOut).toISOString().slice(0, 16),
+            checkIn: new Date(response.data.adminDetails.checkIn)
+              .toISOString()
+              .slice(0, 16),
+            checkOut: new Date(response.data.adminDetails.checkOut)
+              .toISOString()
+              .slice(0, 16),
           });
         })
         .catch((error) => {
@@ -38,23 +43,25 @@ export default function BookingDetails() {
   };
 
   const handleSave = () => {
-    axios.put(`http://localhost:5000/api/bookings/${bookingId}`, {
-      checkIn: new Date(editData.checkIn).toISOString(),
-      checkOut: new Date(editData.checkOut).toISOString(),
-    })
-    .then(() => {
-      alert("Booking updated successfully.");
-      setIsEditing(false);
-      window.location.reload();
-    })
-    .catch((error) => {
-      console.error("Error updating booking:", error);
-      alert("Failed to update booking.");
-    });
+    axios
+      .patch(`http://localhost:5000/api/receptionBookings/${bookingId}`, {
+        checkIn: new Date(editData.checkIn).toISOString(),
+        checkOut: new Date(editData.checkOut).toISOString(),
+      })
+      .then(() => {
+        alert("Booking updated successfully.");
+        setIsEditing(false);
+        window.location.reload();
+      })
+      .catch((error) => {
+        console.error("Error updating booking:", error);
+        alert("Failed to update booking.");
+      });
   };
 
   const deleteBooking = () => {
-    axios.delete(`http://localhost:5000/api/bookings/${bookingId}`)
+    axios
+      .delete(`http://localhost:5000/api/receptionBookings/${bookingId}`)
       .then(() => {
         alert("Booking cancelled successfully.");
         navigate("/receptionist/bookings");
@@ -88,16 +95,28 @@ export default function BookingDetails() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <span className="text-sm font-medium text-gray-600">Guest Name:</span>
-                    <p className="text-gray-900 font-medium">{booking.adminDetails.name}</p>
+                    <span className="text-sm font-medium text-gray-600">
+                      Guest Name:
+                    </span>
+                    <p className="text-gray-900 font-medium">
+                      {booking.adminDetails.name}
+                    </p>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-gray-600">Mobile:</span>
-                    <p className="text-gray-900 font-medium">{booking.adminDetails.mobile}</p>
+                    <span className="text-sm font-medium text-gray-600">
+                      Mobile:
+                    </span>
+                    <p className="text-gray-900 font-medium">
+                      {booking.adminDetails.mobile}
+                    </p>
                   </div>
                   <div className="sm:col-span-2">
-                    <span className="text-sm font-medium text-gray-600">WhatsApp:</span>
-                    <p className="text-gray-900 font-medium">{booking.adminDetails.whatsapp || "N/A"}</p>
+                    <span className="text-sm font-medium text-gray-600">
+                      WhatsApp:
+                    </span>
+                    <p className="text-gray-900 font-medium">
+                      {booking.adminDetails.whatsapp || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -110,15 +129,23 @@ export default function BookingDetails() {
                 {!isEditing ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Check-in:</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Check-in:
+                      </span>
                       <p className="text-gray-900 font-medium">
-                        {new Date(booking.adminDetails.checkIn).toLocaleString()}
+                        {new Date(
+                          booking.adminDetails.checkIn
+                        ).toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Check-out:</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Check-out:
+                      </span>
                       <p className="text-gray-900 font-medium">
-                        {new Date(booking.adminDetails.checkOut).toLocaleString()}
+                        {new Date(
+                          booking.adminDetails.checkOut
+                        ).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -159,12 +186,20 @@ export default function BookingDetails() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <span className="text-sm font-medium text-gray-600">Room No:</span>
-                    <p className="text-gray-900 font-medium">{booking.selectedRoom.roomNumber}</p>
+                    <span className="text-sm font-medium text-gray-600">
+                      Room No:
+                    </span>
+                    <p className="text-gray-900 font-medium">
+                      {booking.selectedRoom.roomNumber}
+                    </p>
                   </div>
                   <div>
-                    <span className="text-sm font-medium text-gray-600">AC Type:</span>
-                    <p className="text-gray-900 font-medium">{booking.selectedRoom.acType}</p>
+                    <span className="text-sm font-medium text-gray-600">
+                      AC Type:
+                    </span>
+                    <p className="text-gray-900 font-medium">
+                      {booking.selectedRoom.acType}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -173,23 +208,23 @@ export default function BookingDetails() {
             {/* Action Buttons */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4">
               {!isEditing ? (
-                <button 
-                  onClick={handleEditClick} 
+                <button
+                  onClick={handleEditClick}
                   className="flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                 >
                   ✏️ Edit Booking
                 </button>
               ) : (
-                <button 
-                  onClick={handleSave} 
+                <button
+                  onClick={handleSave}
                   className="flex-1 sm:flex-none px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
                 >
                   💾 Save Changes
                 </button>
               )}
-              
-              <button 
-                onClick={deleteBooking} 
+
+              <button
+                onClick={deleteBooking}
                 className="flex-1 sm:flex-none px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
               >
                 🗑️ Cancel Booking
