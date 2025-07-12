@@ -177,8 +177,5 @@ const roomSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Add index for better performance
-roomSchema.index({ roomNumber: 1 }, { unique: true });
-
 const Room = mongoose.model("Room", roomSchema);
 export default Room;

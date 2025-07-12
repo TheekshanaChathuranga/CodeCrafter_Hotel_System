@@ -33,27 +33,39 @@ const ReservationManagement = () => {
 
 
   useEffect(() => {
-    fetchReservations();
+    fetchAllEvents();
   }, []);
 
-  const fetchReservations = async () => {
+  const fetchAllEvents = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/reservations');
-      setReservations(response.data);
-      
-      const formattedEvents = response.data.map(reservation => ({
-        id: reservation._id,
-        title: `${reservation.user?.name || 'Guest'} - Room ${reservation.room?.roomNumber || ''}`,
-        start: new Date(reservation.checkInDate),
-        end: new Date(reservation.checkOutDate),
+      // Fetch room bookings (online bookings)
+      const roomRes = await axios.get('http://localhost:5000/api/admin/bookings/pending'); // adjust endpoint if needed
+      const roomEvents = roomRes.data.map(booking => ({
+        id: booking._id,
+        title: `${booking.fullName} - Room ${booking.roomNumber}`,
+        start: new Date(booking.checkIn),
+        end: new Date(booking.checkOut),
         allDay: false,
-        reservationData: reservation
+        reservationData: { ...booking, _category: 'room' },
+        type: 'room'
       }));
-      
-      setEvents(formattedEvents);
+
+      // Fetch event bookings
+      const eventRes = await axios.get('http://localhost:5000/api/event-bookings');
+      const eventEvents = eventRes.data.map(event => ({
+        id: event._id,
+        title: `${event.name} - ${event.eventType}`,
+        start: new Date(event.checkIn),
+        end: new Date(event.checkOut),
+        allDay: false,
+        reservationData: { ...event, _category: 'event' },
+        type: 'event'
+      }));
+
+      setEvents([...roomEvents, ...eventEvents]);
     } catch (error) {
-      handleError(error, 'Failed to fetch reservations');
+      handleError(error, 'Failed to fetch reservations or event bookings');
     } finally {
       setLoading(false);
     }
@@ -72,7 +84,7 @@ const ReservationManagement = () => {
         { status: newStatus }
       );
       enqueueSnackbar(`Reservation ${newStatus} successfully`, { variant: 'success' });
-      fetchReservations();
+      fetchAllEvents(); // Re-fetch all events to update status
       setShowModal(false);
     } catch (error) {
       handleError(error, 'Failed to update reservation');
@@ -88,7 +100,7 @@ const ReservationManagement = () => {
       setLoading(true);
       await axios.delete(`http://localhost:5000/api/reservations/delete/${selectedReservation._id}`);
       enqueueSnackbar('Reservation deleted successfully', { variant: 'success' });
-      fetchReservations();
+      fetchAllEvents(); // Re-fetch all events to remove the deleted one
       setShowModal(false);
     } catch (error) {
       handleError(error, 'Failed to delete reservation');
@@ -106,12 +118,18 @@ const ReservationManagement = () => {
 
   const eventStyleGetter = (event) => {
     let backgroundColor = '#3174ad';
-    if (event.reservationData.status === 'confirmed') {
-      backgroundColor = '#2ecc71';
-    } else if (event.reservationData.status === 'pending') {
-      backgroundColor = '#f39c12';
-    } else if (event.reservationData.status === 'cancelled') {
-      backgroundColor = '#e74c3c';
+
+    if (event.type === 'event') {
+      backgroundColor = '#3b82f6'; // system blue
+    } else {
+      // room booking status colors
+      if (event.reservationData.status === 'confirmed') {
+        backgroundColor = '#2ecc71';
+      } else if (event.reservationData.status === 'pending') {
+        backgroundColor = '#f39c12';
+      } else if (event.reservationData.status === 'cancelled' || event.reservationData.status === 'rejected') {
+        backgroundColor = '#e74c3c';
+      }
     }
 
     return {
@@ -204,16 +222,20 @@ const ReservationManagement = () => {
                   </h5>
                   <div className="space-y-2">
                     <p><strong>Room:</strong> {selectedReservation.room?.roomNumber || 'N/A'} ({selectedReservation.room?.type || 'N/A'})</p>
-                    <p><strong>Dates:</strong> {format(new Date(selectedReservation.checkInDate), 'MMM d, yyyy')} - {format(new Date(selectedReservation.checkOutDate), 'MMM d, yyyy')}</p>
-                    <p><strong>Status:</strong> 
-                      <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                        selectedReservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                        selectedReservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {selectedReservation.status}
-                      </span>
-                    </p>
+                    <p><strong>Dates:</strong> {format(new Date(selectedReservation.checkIn || selectedReservation.checkInDate), 'MMM d, yyyy')} - {format(new Date(selectedReservation.checkOut || selectedReservation.checkOutDate), 'MMM d, yyyy')}</p>
+                    <p><strong>Status:</strong>
+                        {selectedReservation.status ? (
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                            selectedReservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                            selectedReservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {selectedReservation.status}
+                          </span>
+                        ) : (
+                          <span className="ml-2 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">event</span>
+                        )}
+                      </p>
                     <p><strong>Total:</strong> ${selectedReservation.totalPrice?.toFixed(2) || '0.00'}</p>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import express from 'express';
-import Booking from '../models/Booking.js';
+import OnlineBooking from '../models/Booking.js';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all pending bookings
 router.get('/pending', async (req, res) => {
   try {
-    const bookings = await Booking.find({ status: 'pending' })
+    const bookings = await OnlineBooking.find({ status: 'pending' })
       .select('-__v')
       .lean();
     
@@ -21,7 +21,7 @@ router.get('/pending', async (req, res) => {
 // Get single booking details
 router.get('/pending/:id', async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
+    const booking = await OnlineBooking.findById(req.params.id);
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
@@ -37,7 +37,7 @@ router.patch('/:id/approve', async (req, res) => {
     // Temporarily hardcode processedBy for testing
     const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); 
     
-    const booking = await Booking.findByIdAndUpdate(
+    const booking = await OnlineBooking.findByIdAndUpdate(
       req.params.id,
       { 
         status: 'confirmed',
@@ -72,7 +72,7 @@ router.patch('/:id/reject', async (req, res) => {
     // Temporarily hardcode processedBy for testing
     const processedBy = new mongoose.Types.ObjectId('67ed21a0c1811a6b2f5480b4'); 
     
-    const booking = await Booking.findByIdAndUpdate(
+    const booking = await OnlineBooking.findByIdAndUpdate(
       req.params.id,
       { 
         status: 'rejected',
