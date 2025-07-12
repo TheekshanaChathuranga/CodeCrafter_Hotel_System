@@ -8,8 +8,9 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import EventBooking from "./pages/EventBooking";
 import EventList from "./pages/EventList";
-import MenuManagement from "./pages/MenuManagement";
 import ClientBooking from "./pages/ClientBooking";
+import Menu from "./pages/Menu";
+import MenuCardManagement from "./pages/MenuCardManagement";
 
 const App = () => {
   return (
@@ -23,9 +24,9 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/event-booking" element={<EventBooking />} />
           <Route path="/event-list" element={<EventList />} />
-          <Route path="/menu-management" element={<MenuManagement />} />
           <Route path="/client-booking" element={<ClientBooking />} />
-          <Route path="/" element={<EventBooking />} />
+          <Route path="/menu" element={<Menu />} />
+          <Route path="/menu-card-management" element={<MenuCardManagement />} />
         </Routes>
       </div>
     </Router>

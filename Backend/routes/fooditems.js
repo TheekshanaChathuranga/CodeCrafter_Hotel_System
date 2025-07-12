@@ -31,8 +31,8 @@ router.put('/:id', async (req, res) => {
 // Create a new food item
 router.post('/', async (req, res) => {
   try {
-    const { name, unitType, unitPrice, category } = req.body;
-    const newItem = new FoodItem({ name, unitType, unitPrice, category });
+    const { name, unitType, unitPrice, category, imageUrl } = req.body;
+    const newItem = new FoodItem({ name, unitType, unitPrice, category, imageUrl });
     await newItem.save();
     res.status(201).json(newItem);
   } catch (error) {
