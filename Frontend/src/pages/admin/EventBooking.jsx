@@ -238,6 +238,9 @@ const EventBooking = () => {
               await eventService.updateEvent(editingEvent._id, dataToSubmit);
               setEditingEvent(null);
               setPopup({ message: "Event updated successfully!", type: "success", showConfirm: false });
+              setTimeout(() => {
+                navigate("/admin/eventbooking");
+              }, 1000);
             } catch (error) {
               console.error("Error updating event:", error);
               const errorMessage = error.response?.data?.errors?.join('\n') || error.response?.data?.message || "Error updating event. Please try again.";
@@ -252,6 +255,9 @@ const EventBooking = () => {
             try {
               await eventService.createEvent(dataToSubmit);
               setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
+              setTimeout(() => {
+                navigate("/admin/eventbooking");
+              }, 1000);
             } catch (error) {
               console.error("Error creating event:", error);
               let errorMessage = "Error submitting booking. Please try again.";

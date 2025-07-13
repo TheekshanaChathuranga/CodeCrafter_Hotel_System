@@ -49,6 +49,18 @@ const DashboardSidebar = () => {
       roles: ["admin"],
     },
     {
+      title: "Event Booking",
+      url: { admin: "/event-booking" },
+      icon: <CalendarCheck size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Event List",
+      url: { admin: "/admin/event-list" },
+      icon: <Menu size={18} />,
+      roles: ["admin"],
+    },
+    {
       title: "Settings",
       url: { admin: "/admin/settings" },
       icon: <Settings size={18} />,
@@ -108,9 +120,7 @@ const DashboardSidebar = () => {
   );
 
   const handleLinkClick = () => {
-    if (onClose) {
-      onClose(); // Close mobile sidebar
-    }
+    // No-op: onClose is not defined or needed here
   };
 
   return (

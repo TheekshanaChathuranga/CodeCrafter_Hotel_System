@@ -6,14 +6,14 @@ import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import EventBooking from "./pages/admin/EventBooking";
 import MenuManagement from "./pages/admin/MenuManagement";
 import ClientBooking from "./pages/customer/ClientBooking";
 import DashboardLayout from "./layout/dashboardLayout";
+import EventList from "./pages/admin/EventList";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
 import ManageUsers from "./pages/admin/UserManagement";
-import ProtectedRoute from "./components/protectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
@@ -23,6 +23,8 @@ import Profile from "./pages/Profile";
 
 import Room_Book from "./pages/customer/Room_Book";
 import Pool_Book from "./pages/customer/Pool_Book";
+
+import EventBooking from "./pages/admin/EventBooking";
 
 // Receptionist/Reception imports
 import ReceptionHome from "./pages/Receptionist/ReceptionHome";
@@ -65,8 +67,12 @@ const App = () => {
 
     <Route path="/room-booking" element={<Room_Book />} />
     <Route path="/pool-booking" element={<Pool_Book />} />
-    <Route path="/event-booking" element={<ClientBooking />} />
+    <Route path="/event-booking" element={<EventBooking />} />
     <Route path="/profile" element={<Profile />} />
+    <Route
+      path="/event-booking"
+      element={<EventBooking />}
+    />
     <Route
       path="/mybookings"
       element={
@@ -89,6 +95,8 @@ const App = () => {
       <Route path="rooms" element={<ManageRooms />} />
       <Route path="pools" element={<ManagePools />} />
       <Route path="reservations" element={<ReservationCalendar />} />
+      <Route path="event-booking" element={<EventBooking />} />
+      <Route path="event-list" element={<EventList />} />
       <Route path="users" element={<ManageUsers />} />
       <Route
         path="bookingNotifications"
