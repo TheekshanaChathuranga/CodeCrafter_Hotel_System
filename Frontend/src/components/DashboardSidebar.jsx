@@ -78,12 +78,7 @@ const DashboardSidebar = () => {
     //   icon: <Menu size={18} />,
     //   roles: ["admin"],
     // },
-    {
-      title: "Settings",
-      url: { admin: "/admin/settings" },
-      icon: <Settings size={18} />,
-      roles: ["admin"],
-    },
+
 
     {
       title: "Notifications",
