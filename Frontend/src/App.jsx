@@ -6,6 +6,10 @@ import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import EventBooking from "./pages/EventBooking";
+import EventList from "./pages/EventList";
+import MenuManagement from "./pages/MenuManagement";
+import ClientBooking from "./pages/ClientBooking";
 import DashboardLayout from "./layout/dashboardLayout";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
@@ -41,126 +45,126 @@ const App = () => {
   const isReceptionRoute = location.pathname.startsWith("/reception");
 
   return (
-    <div>
-      {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && <Navbar />}
+<div>
+  {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && <Navbar />}
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        {/* <Route path="/about" element={<About />} /> */}
-        {/* <Route path="/contact" element={<Contact />} /> */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/unauthorized"
-          element={
-            <div className="flex items-center justify-center min-h-screen">
-              <h1 className="text-2xl text-red-500">Unauthorized Access</h1>
-            </div>
-          }
-        />
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="/home" element={<Home />} />
+    {/* <Route path="/about" element={<About />} /> */}
+    {/* <Route path="/contact" element={<Contact />} /> */}
+    <Route path="/login" element={<Login />} />
+    <Route path="/signup" element={<Signup />} />
+    <Route
+      path="/unauthorized"
+      element={
+        <div className="flex items-center justify-center min-h-screen">
+          <h1 className="text-2xl text-red-500">Unauthorized Access</h1>
+        </div>
+      }
+    />
 
-        <Route path="/room-booking" element={<Room_Book />} />
-        <Route path="/pool-booking" element={<Pool_Book />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route
-          path="/mybookings"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <MyBookings />
-            </ProtectedRoute>
-          }
-        />
+    <Route path="/room-booking" element={<Room_Book />} />
+    <Route path="/pool-booking" element={<Pool_Book />} />
+    <Route path="/profile" element={<Profile />} />
+    <Route
+      path="/mybookings"
+      element={
+        <ProtectedRoute allowedRoles={["user"]}>
+          <MyBookings />
+        </ProtectedRoute>
+      }
+    />
 
-        {/* Admin routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ManageRooms />} />
-          <Route path="rooms" element={<ManageRooms />} />
-          <Route path="pools" element={<ManagePools />} />
-          <Route path="reservations" element={<ReservationCalendar />} />
-          <Route path="users" element={<ManageUsers />} />
-          <Route
-            path="bookingNotifications"
-            element={<BookingConfirmation />}
-          />
-          <Route
-            path="bookingNotifications/:id"
-            element={<BookingConfirmationDetails />}
-          />
-        </Route>
+    {/* Admin routes */}
+    <Route
+      path="/admin"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <DashboardLayout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<ManageRooms />} />
+      <Route path="rooms" element={<ManageRooms />} />
+      <Route path="pools" element={<ManagePools />} />
+      <Route path="reservations" element={<ReservationCalendar />} />
+      <Route path="users" element={<ManageUsers />} />
+      <Route
+        path="bookingNotifications"
+        element={<BookingConfirmation />}
+      />
+      <Route
+        path="bookingNotifications/:id"
+        element={<BookingConfirmationDetails />}
+      />
+    </Route>
 
-        {/* receptionist routes */}
-        <Route
-          path="/receptionist"
-          element={
-            <ProtectedRoute allowedRoles={["receptionist", "reception"]}>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ReceptionHome />} />
-          <Route path="home" element={<ReceptionHome />} />
-          <Route path="rooms" element={<ReceptionRoomBooking />} />
-          <Route path="roomBooking" element={<ReceptionRoomBooking />} />
-          <Route path="bookings" element={<BookingsListPage />} />
-          <Route path="bookingsList" element={<BookingsListPage />} />
-          <Route path="bookings/:id" element={<BookingDetailsPage />} />
-          <Route
-            path="bookings/:id/edit"
-            element={<div>Edit Booking Page - Coming Soon</div>}
-          />
-          <Route path="calendar" element={<BookingCalendar />} />
-          <Route path="confirmation" element={<ConfirmationPage />} />
-          <Route path="pool-booking" element={<PoolBooking />} />
-          <Route path="pool-bookings" element={<BookingsList />} />
-          <Route path="pool-schedules" element={<BookingsList />} />
-          <Route path="pools" element={<ManagePools />} />
-          <Route
-            path="profile"
-            element={<div>Profile Page - Coming Soon</div>}
-          />
-        </Route>
+    {/* receptionist routes */}
+    <Route
+      path="/receptionist"
+      element={
+        <ProtectedRoute allowedRoles={["receptionist", "reception"]}>
+          <DashboardLayout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<ReceptionHome />} />
+      <Route path="home" element={<ReceptionHome />} />
+      <Route path="rooms" element={<ReceptionRoomBooking />} />
+      <Route path="roomBooking" element={<ReceptionRoomBooking />} />
+      <Route path="bookings" element={<BookingsListPage />} />
+      <Route path="bookingsList" element={<BookingsListPage />} />
+      <Route path="bookings/:id" element={<BookingDetailsPage />} />
+      <Route
+        path="bookings/:id/edit"
+        element={<div>Edit Booking Page - Coming Soon</div>}
+      />
+      <Route path="calendar" element={<BookingCalendar />} />
+      <Route path="confirmation" element={<ConfirmationPage />} />
+      <Route path="pool-booking" element={<PoolBooking />} />
+      <Route path="pool-bookings" element={<BookingsList />} />
+      <Route path="pool-schedules" element={<BookingsList />} />
+      <Route path="pools" element={<ManagePools />} />
+      <Route
+        path="profile"
+        element={<div>Profile Page - Coming Soon</div>}
+      />
+    </Route>
 
-        {/* reception routes - for backward compatibility */}
-        <Route
-          path="/reception"
-          element={
-            <ProtectedRoute allowedRoles={["reception", "receptionist"]}>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<ReceptionHome />} />
-          <Route path="home" element={<ReceptionHome />} />
-          <Route path="rooms" element={<ReceptionRoomBooking />} />
-          <Route path="roomBooking" element={<ReceptionRoomBooking />} />
-          <Route path="bookings" element={<BookingsListPage />} />
-          <Route path="bookingsList" element={<BookingsListPage />} />
-          <Route path="bookings/:id" element={<BookingDetailsPage />} />
-          <Route
-            path="bookings/:id/edit"
-            element={<div>Edit Booking Page - Coming Soon</div>}
-          />
-          <Route path="calendar" element={<BookingCalendar />} />
-          <Route path="confirmation" element={<ConfirmationPage />} />
-          <Route path="pool-booking" element={<PoolBooking />} />
-          <Route path="pool-bookings" element={<BookingsList />} />
-          <Route path="pool-schedules" element={<BookingsList />} />
-          <Route path="pools" element={<ManagePools />} />
-          <Route
-            path="profile"
-            element={<div>Profile Page - Coming Soon</div>}
-          />
-        </Route>
-      </Routes>
-    </div>
+    {/* reception routes - for backward compatibility */}
+    <Route
+      path="/reception"
+      element={
+        <ProtectedRoute allowedRoles={["reception", "receptionist"]}>
+          <DashboardLayout />
+        </ProtectedRoute>
+      }
+    >
+      <Route index element={<ReceptionHome />} />
+      <Route path="home" element={<ReceptionHome />} />
+      <Route path="rooms" element={<ReceptionRoomBooking />} />
+      <Route path="roomBooking" element={<ReceptionRoomBooking />} />
+      <Route path="bookings" element={<BookingsListPage />} />
+      <Route path="bookingsList" element={<BookingsListPage />} />
+      <Route path="bookings/:id" element={<BookingDetailsPage />} />
+      <Route
+        path="bookings/:id/edit"
+        element={<div>Edit Booking Page - Coming Soon</div>}
+      />
+      <Route path="calendar" element={<BookingCalendar />} />
+      <Route path="confirmation" element={<ConfirmationPage />} />
+      <Route path="pool-booking" element={<PoolBooking />} />
+      <Route path="pool-bookings" element={<BookingsList />} />
+      <Route path="pool-schedules" element={<BookingsList />} />
+      <Route path="pools" element={<ManagePools />} />
+      <Route
+        path="profile"
+        element={<div>Profile Page - Coming Soon</div>}
+      />
+    </Route>
+  </Routes>
+</div>
   );
 };
 

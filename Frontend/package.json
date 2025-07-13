@@ -10,6 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/public-sans": "^5.2.6",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.7",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.2.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.0.1",
@@ -18,11 +23,15 @@
     "@types/react-date-range": "^1.4.10",
     "@types/react-datepicker": "^6.2.0",
     "axios": "^1.8.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
+    "package_name": "^1.0.2",
+    "pnpm": "^10.13.1",
     "bootstrap": "^5.3.5",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.6.3",
     "jwt-decode": "^4.0.0",
-    "lucide-react": "^0.485.0",
     "moment": "^2.30.1",
     "notistack": "^3.0.2",
     "react": "^19.0.0",
@@ -31,8 +40,11 @@
     "react-date-range": "^2.0.1",
     "react-datepicker": "^8.4.0",
     "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0",
     "react-router-dom": "^7.4.1",
+    "sheetjs": "^2.0.0",
+    "tailwind-merge": "^3.3.1",
+    "xlsx": "^0.18.5",
+    "react-icons": "^5.5.0",
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1"
   },
@@ -48,6 +60,8 @@
     "globals": "^15.15.0",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.0.17",
-    "vite": "^6.2.0"
+    "tw-animate-css": "^1.3.5",
+    "vite": "^6.2.0",
+    "vite-plugin-commonjs": "^0.10.4"
   }
 }
