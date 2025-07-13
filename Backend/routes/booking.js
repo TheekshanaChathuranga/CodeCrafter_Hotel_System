@@ -225,4 +225,57 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET route to fetch a single booking by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking ID format",
+      });
+    }
+
+    const booking = await Booking.findById(id).lean();
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // Transform the data to match the expected format
+    const transformedBooking = {
+      ...booking,
+      bookingType: "online",
+      // Keep original data structure for compatibility
+      originalData: {
+        nicNumber: booking.nicNumber,
+        adults: booking.adults,
+        children: booking.children,
+        specialRequests: booking.specialRequests,
+        document: booking.documentPath,
+      },
+      // Also provide direct access to fields
+      nicNumber: booking.nicNumber,
+      adults: booking.adults,
+      children: booking.children,
+      specialRequests: booking.specialRequests,
+      documentPath: booking.documentPath,
+    };
+
+    res.status(200).json(transformedBooking);
+  } catch (error) {
+    console.error("Error fetching booking:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch booking",
+      error: error.message,
+    });
+  }
+});
+
 export default router;

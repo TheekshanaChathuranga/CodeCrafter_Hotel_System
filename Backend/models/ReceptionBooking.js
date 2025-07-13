@@ -14,6 +14,8 @@ const bookingSchema = new mongoose.Schema({
     roomType: { type: String, required: true },
     acType: { type: String, required: true },
     packageType: { type: String, required: true },
+    dayNightType: { type: String }, // Optional - only for normal package
+    additionalNote: { type: String }, // Optional - special requests or notes
   },
   paymentDetails: {
     paymentType: { type: String, required: true },

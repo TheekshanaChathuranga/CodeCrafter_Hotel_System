@@ -17,6 +17,8 @@ const ReceptionRoomBookingPage = () => {
   const [selectedRoom, setSelectedRoom] = useState("");
   const [acType, setAcType] = useState("");
   const [packageType, setPackageType] = useState("");
+  const [dayNightType, setDayNightType] = useState("");
+  const [additionalNote, setAdditionalNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [errors, setErrors] = useState({});
@@ -34,6 +36,21 @@ const ReceptionRoomBookingPage = () => {
       fetchAvailableRooms();
     }
   }, [adminDetails.checkIn, adminDetails.checkOut]);
+
+  // Recalculate total amount when relevant fields change
+  useEffect(() => {
+    if (selectedRoomType && packageType) {
+      if (packageType === "normal" && selectedRoomType !== "Honeymoon") {
+        // For normal package (except Honeymoon), need Day/Night and AC selection
+        if (dayNightType && acType) {
+          calculateTotalAmount();
+        }
+      } else {
+        // For other packages or Honeymoon, calculate immediately
+        calculateTotalAmount();
+      }
+    }
+  }, [selectedRoomType, acType, packageType, dayNightType]);
 
   const fetchAvailableRooms = async () => {
     try {
@@ -83,15 +100,12 @@ const ReceptionRoomBookingPage = () => {
     const selectedPackage = e.target.value;
     setPackageType(selectedPackage);
 
-    if (selectedPackage === "f/b" || selectedPackage === "h/b") {
-      setSelectedRoomType("Double Room");
-      setAcType("AC");
-      setSelectedRoom("");
-    } else {
-      setSelectedRoomType("");
-      setAcType("");
-      setSelectedRoom("");
-    }
+    // Reset all selections when package changes - no auto-selection
+    setSelectedRoomType("");
+    setAcType("");
+    setSelectedRoom("");
+    setDayNightType("");
+    setAdditionalNote("");
   };
 
   const validateFields = () => {
@@ -119,7 +133,17 @@ const ReceptionRoomBookingPage = () => {
     if (!selectedRoomType)
       newErrors.selectedRoomType = "Room type selection is required.";
     if (!selectedRoom) newErrors.selectedRoom = "Room selection is required.";
-    if (!acType) newErrors.acType = "AC/Non-AC selection is required.";
+    
+    // AC type is required for all packages and room types
+    if (!acType) {
+      newErrors.acType = "AC/Non-AC selection is required.";
+    }
+    
+    // Day/Night selection is required for normal package only
+    if (packageType === "normal" && !dayNightType) {
+      newErrors.dayNightType = "Day/Night selection is required for normal package.";
+    }
+    
     if (!paymentType) newErrors.paymentType = "Payment type is required.";
 
     setErrors(newErrors);
@@ -146,6 +170,8 @@ const ReceptionRoomBookingPage = () => {
     setSelectedRoom("");
     setAcType("");
     setPackageType("");
+    setDayNightType("");
+    setAdditionalNote("");
     setPaymentType("");
     setAdvanceAmount("");
     setTotalAmount(0);
@@ -156,16 +182,70 @@ const ReceptionRoomBookingPage = () => {
 
   const calculateTotalAmount = () => {
     let amount = 0;
-    if (selectedRoomType === "Single Room") {
-      amount = acType === "AC" ? 5000 : 4000;
-    } else if (selectedRoomType === "Double Room") {
-      amount = acType === "AC" ? 7500 : 5000;
-    } else if (selectedRoomType === "Triple Room") {
-      amount = acType === "AC" ? 9000 : 7500;
+    
+    if (packageType === "b/b") {
+      // B/B package has fixed prices regardless of AC type and Day/Night
+      if (selectedRoomType === "Single Room") {
+        amount = 7000;
+      } else if (selectedRoomType === "Double Room") {
+        amount = 9000;
+      } else if (selectedRoomType === "Triple Room") {
+        amount = 11000;
+      } else if (selectedRoomType === "Honeymoon") {
+        amount = 15000;
+      }
+    } else if (packageType === "h/b") {
+      // H/B package has fixed prices regardless of AC type and Day/Night
+      if (selectedRoomType === "Single Room") {
+        amount = 11000;
+      } else if (selectedRoomType === "Double Room") {
+        amount = 13500;
+      } else if (selectedRoomType === "Triple Room") {
+        amount = 15000;
+      } else if (selectedRoomType === "Honeymoon") {
+        amount = 18000;
+      }
+    } else if (packageType === "f/b") {
+      // F/B package has fixed prices regardless of AC type and Day/Night
+      if (selectedRoomType === "Single Room") {
+        amount = 15000;
+      } else if (selectedRoomType === "Double Room") {
+        amount = 17500;
+      } else if (selectedRoomType === "Triple Room") {
+        amount = 19000;
+      } else if (selectedRoomType === "Honeymoon") {
+        amount = 22000;
+      }
+    } else if (packageType === "normal") {
+      // Normal package pricing based on Room Type, AC/Non-AC, and Day/Night
+      if (selectedRoomType === "Honeymoon") {
+        // Honeymoon room has fixed price regardless of AC/Non-AC and Day/Night
+        amount = 10000;
+      } else {
+        // Day/Night pricing for other room types
+        if (dayNightType === "Day") {
+          if (acType === "Non-AC") {
+            if (selectedRoomType === "Single Room") amount = 3000;
+            else if (selectedRoomType === "Double Room") amount = 4000;
+            else if (selectedRoomType === "Triple Room") amount = 6000;
+          } else if (acType === "AC") {
+            if (selectedRoomType === "Single Room") amount = 4000;
+            else if (selectedRoomType === "Double Room") amount = 5000;
+            else if (selectedRoomType === "Triple Room") amount = 7500;
+          }
+        } else if (dayNightType === "Night") {
+          if (acType === "Non-AC") {
+            if (selectedRoomType === "Single Room") amount = 4000;
+            else if (selectedRoomType === "Double Room") amount = 6000;
+            else if (selectedRoomType === "Triple Room") amount = 7500;
+          } else if (acType === "AC") {
+            if (selectedRoomType === "Single Room") amount = 5000;
+            else if (selectedRoomType === "Double Room") amount = 7500;
+            else if (selectedRoomType === "Triple Room") amount = 9000;
+          }
+        }
+      }
     }
-
-    if (packageType === "f/b") amount *= 1.5;
-    if (packageType === "h/b") amount *= 1.3;
 
     setTotalAmount(amount);
     return amount;
@@ -236,6 +316,8 @@ const ReceptionRoomBookingPage = () => {
       },
       selectedRoomType,
       packageType,
+      dayNightType: packageType === "normal" ? dayNightType : null,
+      additionalNote: additionalNote.trim() || null,
       paymentDetails: {
         paymentType,
         advanceAmount: Number(advanceAmount) || 0,
@@ -278,7 +360,13 @@ const ReceptionRoomBookingPage = () => {
   const handleRoomTypeChange = (e) => {
     setSelectedRoomType(e.target.value);
     setSelectedRoom("");
+    
+    // Don't auto-set AC type, let reception choose manually
     setAcType("");
+    
+    // Reset Day/Night selection when room type changes
+    setDayNightType("");
+    
     calculateTotalAmount();
   };
 
@@ -288,14 +376,72 @@ const ReceptionRoomBookingPage = () => {
 
     const room = availableRooms.find((r) => r.id === roomId);
     if (room) {
-      if (room.id === "102") {
+      // Only auto-set Non-AC for room 102 (if it's specifically a Non-AC room)
+      if (room.id === "102" && room.acType === "Non-AC") {
         setAcType("Non-AC");
-      } else if (packageType === "f/b" || packageType === "h/b") {
-        setAcType("AC");
-      } else {
-        setAcType(room.acType || "");
+      }
+      // For all other rooms, let reception choose manually
+    }
+  };
+
+  // Helper function to get pricing information display
+  const getPricingInfo = () => {
+    if (!packageType || !selectedRoomType) return null;
+
+    if (packageType === "b/b") {
+      const prices = {
+        "Single Room": "Rs.7,000",
+        "Double Room": "Rs.9,000", 
+        "Triple Room": "Rs.11,000",
+        "Honeymoon": "Rs.15,000"
+      };
+      return `B/B Fixed Rate: ${prices[selectedRoomType]}`;
+    } else if (packageType === "h/b") {
+      const prices = {
+        "Single Room": "Rs.11,000",
+        "Double Room": "Rs.13,500",
+        "Triple Room": "Rs.15,000", 
+        "Honeymoon": "Rs.18,000"
+      };
+      return `H/B Fixed Rate: ${prices[selectedRoomType]}`;
+    } else if (packageType === "f/b") {
+      const prices = {
+        "Single Room": "Rs.15,000",
+        "Double Room": "Rs.17,500",
+        "Triple Room": "Rs.19,000",
+        "Honeymoon": "Rs.22,000"
+      };
+      return `F/B Fixed Rate: ${prices[selectedRoomType]}`;
+    } else if (packageType === "normal") {
+      if (selectedRoomType === "Honeymoon") {
+        return "Honeymoon Suite: Rs.10,000 (Fixed rate)";
+      } else if (dayNightType && acType) {
+        const dayPrices = {
+          "Single Room": { "AC": "Rs.4,000", "Non-AC": "Rs.3,000" },
+          "Double Room": { "AC": "Rs.5,000", "Non-AC": "Rs.4,000" },
+          "Triple Room": { "AC": "Rs.7,500", "Non-AC": "Rs.6,000" }
+        };
+        const nightPrices = {
+          "Single Room": { "AC": "Rs.5,000", "Non-AC": "Rs.4,000" },
+          "Double Room": { "AC": "Rs.7,500", "Non-AC": "Rs.6,000" },
+          "Triple Room": { "AC": "Rs.9,000", "Non-AC": "Rs.7,500" }
+        };
+        const priceSet = dayNightType === "Day" ? dayPrices : nightPrices;
+        return `${dayNightType} Rate (${acType}): ${priceSet[selectedRoomType]?.[acType]}`;
       }
     }
+    return null;
+  };
+
+  // Format date for display
+  const formatDisplayDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -378,6 +524,8 @@ const ReceptionRoomBookingPage = () => {
           <p className="text-center text-blue-100 mt-2 relative z-10">
             Complete your reservation in simple steps
           </p>
+          
+          {/* Navigation Tabs */}
         </div>
 
         {showConfirmation ? (
@@ -473,6 +621,14 @@ const ReceptionRoomBookingPage = () => {
                         </span>
                         <span className="text-gray-900">{acType}</span>
                       </div>
+                      {packageType === "normal" && dayNightType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 font-medium">
+                            Time:
+                          </span>
+                          <span className="text-gray-900">{dayNightType}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-600 font-medium">
                           Package:
@@ -481,6 +637,18 @@ const ReceptionRoomBookingPage = () => {
                           {packageType.toUpperCase()}
                         </span>
                       </div>
+                      {additionalNote && (
+                        <div className="pt-2 border-t border-gray-200">
+                          <div className="flex flex-col">
+                            <span className="text-gray-600 font-medium mb-1">
+                              Additional Notes:
+                            </span>
+                            <span className="text-gray-900 text-sm bg-gray-50 p-2 rounded italic">
+                              "{additionalNote}"
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -736,12 +904,15 @@ const ReceptionRoomBookingPage = () => {
                     >
                       <option value="">Select Package Type</option>
                       <option value="f/b">
-                        🍽️ Full Board (f/b) - All meals included
+                        🍽️ Full Board (f/b) - All meals included (Fixed rates)
                       </option>
                       <option value="h/b">
-                        🥞 Half Board (h/b) - Breakfast & dinner
+                        🥞 Half Board (h/b) - Breakfast & dinner (Fixed rates)
                       </option>
-                      <option value="normal">🏨 Normal - Room only</option>
+                      <option value="b/b">
+                        🍳 Bed & Breakfast (b/b) - Breakfast included (Fixed rates)
+                      </option>
+                      <option value="normal">🏨 Normal - Room only (Day/Night rates)</option>
                     </select>
                     {errors.packageType && (
                       <p className="mt-2 text-sm text-red-600 font-medium">
@@ -760,21 +931,15 @@ const ReceptionRoomBookingPage = () => {
                           errors.selectedRoomType
                             ? "border-red-400 bg-red-50"
                             : "border-gray-200 bg-white"
-                        } shadow-sm ${
-                          packageType === "f/b" || packageType === "h/b"
-                            ? "opacity-50"
-                            : ""
-                        }`}
+                        } shadow-sm`}
                         value={selectedRoomType}
                         onChange={handleRoomTypeChange}
-                        disabled={
-                          packageType === "f/b" || packageType === "h/b"
-                        }
                       >
                         <option value="">Select Room Type</option>
                         <option value="Single Room">Single Room</option>
                         <option value="Double Room">Double Room</option>
                         <option value="Triple Room">Triple Room</option>
+                        <option value="Honeymoon">Honeymoon Suite</option>
                       </select>
                       {errors.selectedRoomType && (
                         <p className="mt-2 text-sm text-red-600 font-medium">
@@ -792,20 +957,9 @@ const ReceptionRoomBookingPage = () => {
                           errors.acType
                             ? "border-red-400 bg-red-50"
                             : "border-gray-200 bg-white"
-                        } shadow-sm ${
-                          packageType === "f/b" ||
-                          packageType === "h/b" ||
-                          selectedRoom === "102"
-                            ? "opacity-50"
-                            : ""
-                        }`}
+                        } shadow-sm`}
                         value={acType}
                         onChange={(e) => setAcType(e.target.value)}
-                        disabled={
-                          packageType === "f/b" ||
-                          packageType === "h/b" ||
-                          selectedRoom === "102"
-                        }
                       >
                         <option value="">Select AC/Non-AC</option>
                         <option value="AC">❄️ AC</option>
@@ -818,6 +972,33 @@ const ReceptionRoomBookingPage = () => {
                       )}
                     </div>
                   </div>
+
+                  {/* Day/Night Selection - Only show for normal package */}
+                  {packageType === "normal" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Day/Night Selection *
+                      </label>
+                      <select
+                        className={`w-full p-4 border-2 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all ${
+                          errors.dayNightType
+                            ? "border-red-400 bg-red-50"
+                            : "border-gray-200 bg-white"
+                        } shadow-sm`}
+                        value={dayNightType}
+                        onChange={(e) => setDayNightType(e.target.value)}
+                      >
+                        <option value="">Select Day/Night</option>
+                        <option value="Day">☀️ Day Time</option>
+                        <option value="Night">🌙 Night Time</option>
+                      </select>
+                      {errors.dayNightType && (
+                        <p className="mt-2 text-sm text-red-600 font-medium">
+                          {errors.dayNightType}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -842,6 +1023,8 @@ const ReceptionRoomBookingPage = () => {
                             return room.type === "Double Room";
                           if (selectedRoomType === "Triple Room")
                             return room.type === "Triple Room";
+                          if (selectedRoomType === "Honeymoon")
+                            return room.type === "Double Room" || room.type === "Triple Room";
                           return false;
                         })
                         .map((room) => (
@@ -856,7 +1039,48 @@ const ReceptionRoomBookingPage = () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Pricing Information Display */}
+                  {getPricingInfo() && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+                      <div className="flex items-center">
+                        <span className="text-2xl mr-3">💰</span>
+                        <div>
+                          <p className="font-semibold text-gray-800">Current Pricing</p>
+                          <p className="text-lg font-bold text-green-600">{getPricingInfo()}</p>
+                          {totalAmount > 0 && (
+                            <p className="text-sm text-gray-600 mt-1">
+                              Total Amount: <span className="font-bold text-blue-600">Rs.{totalAmount.toLocaleString()}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
+              </div>
+            </div>
+
+            {/* Additional Note Section */}
+            <div className="mt-8 bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-2xl border border-indigo-100">
+              <h4 className="text-xl font-bold text-indigo-800 mb-6 pb-2 border-b border-indigo-200">
+                Additional Notes
+              </h4>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Special Requests or Notes (Optional)
+                </label>
+                <textarea
+                  placeholder="Any special requests, dietary requirements, accessibility needs, or other notes..."
+                  className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-sm resize-vertical"
+                  rows={4}
+                  value={additionalNote}
+                  onChange={(e) => setAdditionalNote(e.target.value)}
+                  maxLength={500}
+                />
+                <p className="mt-2 text-sm text-gray-500">
+                  {additionalNote.length}/500 characters
+                </p>
               </div>
             </div>
 
@@ -968,3 +1192,4 @@ const ReceptionRoomBookingPage = () => {
 };
 
 export default ReceptionRoomBookingPage;
+

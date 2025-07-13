@@ -201,6 +201,8 @@ mongoose
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes); // Room availability routes
+app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route (moved before general bookings)
+app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/bookings", bookingRoutes); // Changed from booking to bookings to match frontend
 app.use("/api/pools", poolRoutes);
 app.use("/api/pool-booking", poolBookingRoutes); // Pool booking routes
@@ -210,8 +212,6 @@ app.use("/api/manage/users", manageUserRoutes);
 app.use("/api/admin/bookings", BookingConfirmationRoutes);
 app.use("/api/user-bookings", userBookings); // Add the new user bookings route
 app.use("/api/profile", profileRoutes); // Add profile routes
-app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route
-app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/dashboard", dashboardRoutes); // Add dashboard routes
 app.use("/api/notifications", notificationRoutes); // Add notification routes
 
