@@ -219,7 +219,7 @@ router.get("/:id", async (req, res) => {
             roomType: booking.roomType,
             acType: "AC", // Default for online bookings
             packageType: "room-only", // Default for online bookings
-            additionalNote: booking.specialRequests, // Map specialRequests to additionalNote
+            additionalNote: booking.specialRequests || null,
           },
           paymentDetails: {
             paymentType: "pending",
@@ -231,16 +231,16 @@ router.get("/:id", async (req, res) => {
           createdAt: booking.createdAt,
           updatedAt: booking.updatedAt,
           bookingType: "online",
-          // Keep original data for reference with all fields
           originalData: {
-            ...booking, // Keep all original fields
-            document: booking.documentPath, // Map documentPath to document for compatibility
+            nicNumber: booking.nicNumber,
+            adults: booking.adults,
+            children: booking.children,
+            specialRequests: booking.specialRequests,
+            document: booking.documentPath,
           },
-          // Also provide direct access to these fields for frontend compatibility
+          // Add direct fields for compatibility
           fullName: booking.fullName,
           phoneNumber: booking.phoneNumber,
-          email: booking.email,
-          whatsappNumber: booking.whatsappNumber,
           roomNumber: booking.roomNumber,
           roomType: booking.roomType,
           checkIn: booking.checkIn,
@@ -307,6 +307,7 @@ router.patch("/:id", async (req, res) => {
             roomType: booking.roomType,
             acType: "AC",
             packageType: "room-only",
+            additionalNote: booking.specialRequests || null,
           },
           paymentDetails: {
             paymentType: "pending",
@@ -318,6 +319,25 @@ router.patch("/:id", async (req, res) => {
           createdAt: booking.createdAt,
           updatedAt: booking.updatedAt,
           bookingType: "online",
+          originalData: {
+            nicNumber: booking.nicNumber,
+            adults: booking.adults,
+            children: booking.children,
+            specialRequests: booking.specialRequests,
+            document: booking.documentPath,
+          },
+          // Add direct fields for compatibility
+          fullName: booking.fullName,
+          phoneNumber: booking.phoneNumber,
+          roomNumber: booking.roomNumber,
+          roomType: booking.roomType,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          nicNumber: booking.nicNumber,
+          adults: booking.adults,
+          children: booking.children,
+          specialRequests: booking.specialRequests,
+          documentPath: booking.documentPath,
         };
       }
     } else {
@@ -422,6 +442,7 @@ router.put("/:id", async (req, res) => {
         checkOut: adminDetails.checkOut,
         roomNumber: selectedRoom.roomNumber,
         roomType: selectedRoomType,
+        specialRequests: additionalNote || null, // Update specialRequests field
         updatedAt: new Date(),
       };
 
@@ -452,7 +473,7 @@ router.put("/:id", async (req, res) => {
             acType: selectedRoom.acType,
             packageType: packageType,
             dayNightType: dayNightType || null,
-            additionalNote: additionalNote || null,
+            additionalNote: booking.specialRequests || null, // Use the updated specialRequests
           },
           paymentDetails: {
             paymentType: paymentDetails.paymentType,
@@ -464,6 +485,25 @@ router.put("/:id", async (req, res) => {
           createdAt: booking.createdAt,
           updatedAt: booking.updatedAt,
           bookingType: "online",
+          originalData: {
+            nicNumber: booking.nicNumber,
+            adults: booking.adults,
+            children: booking.children,
+            specialRequests: booking.specialRequests,
+            document: booking.documentPath,
+          },
+          // Add direct fields for compatibility
+          fullName: booking.fullName,
+          phoneNumber: booking.phoneNumber,
+          roomNumber: booking.roomNumber,
+          roomType: booking.roomType,
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          nicNumber: booking.nicNumber,
+          adults: booking.adults,
+          children: booking.children,
+          specialRequests: booking.specialRequests,
+          documentPath: booking.documentPath,
         };
       }
     }

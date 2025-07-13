@@ -48,25 +48,15 @@ const BookingDetailsPage = () => {
           response = await axios.get(
             `http://localhost:5000/api/receptionBookings/${id}`
           );
-          console.log('Reception booking data received:', response.data);
         } catch (receptionError) {
           // If not found in reception bookings, try online bookings
           console.log('Not found in reception bookings, trying online bookings...');
           response = await axios.get(
             `http://localhost:5000/api/bookings/${id}`
           );
-          console.log('Online booking data received:', response.data);
         }
         
-        console.log('Final booking data to be set:', response.data);
-        
-        // Log specific fields we're looking for
-        console.log('Special requests check:', {
-          'bookingDetails.additionalNote': response.data.bookingDetails?.additionalNote,
-          'originalData.specialRequests': response.data.originalData?.specialRequests,
-          'specialRequests': response.data.specialRequests
-        });
-        
+        console.log('Booking data fetched:', response.data);
         setBooking(response.data);
         setStatus(response.data.status);
         setLoading(false);
@@ -235,35 +225,6 @@ const BookingDetailsPage = () => {
     return basePrice;
   };
 
-  const calculateOnlineBookingPayment = (bookingData) => {
-    // Calculate payment for online bookings based on room type
-    const roomType = bookingData.roomType || bookingData.bookingDetails?.roomType;
-    const roomNumber = bookingData.roomNumber || bookingData.bookingDetails?.roomNumber;
-    
-    const roomPrices = {
-      "Single Room": 3000,
-      "Double Room": 5000,
-      "Triple Room": 7000
-    };
-
-    // Base price from room type
-    let basePrice = roomPrices[roomType] || 3000;
-    
-    // You can add additional logic here based on roomNumber if needed
-    // For example, premium rooms might have different pricing
-    
-    return {
-      basePrice,
-      roomType,
-      roomNumber,
-      breakdown: {
-        "Single Room": "Rs.3,000",
-        "Double Room": "Rs.5,000", 
-        "Triple Room": "Rs.7,000"
-      }
-    };
-  };
-
   const handleAdvanceAmountChange = (e) => {
     const advance = Number(e.target.value) || 0;
     setAdvanceAmount(advance);
@@ -288,7 +249,13 @@ const BookingDetailsPage = () => {
     setAcType(bookingData.bookingDetails?.acType || "AC");
     setPackageType(bookingData.bookingDetails?.packageType || "normal");
     setDayNightType(bookingData.bookingDetails?.dayNightType || "");
-    setAdditionalNote(bookingData.bookingDetails?.additionalNote || "");
+    
+    // Handle additional note from multiple sources
+    const additionalNoteValue = bookingData.bookingDetails?.additionalNote || 
+                               bookingData.originalData?.specialRequests || 
+                               bookingData.specialRequests || "";
+    setAdditionalNote(additionalNoteValue);
+    
     setPaymentType(bookingData.paymentDetails?.paymentType || "cash");
     setAdvanceAmount(bookingData.paymentDetails?.advanceAmount || 0);
     setTotalAmount(bookingData.paymentDetails?.totalAmount || 0);
@@ -299,7 +266,8 @@ const BookingDetailsPage = () => {
 
   const updateBooking = async () => {
     if (!validateFields()) {
-      alert("❌ Please correct the highlighted errors before saving.");
+      setStatusModalMessage("❌ Please correct the highlighted errors before saving.");
+      setShowStatusModal(true);
       return;
     }
 
@@ -335,16 +303,36 @@ const BookingDetailsPage = () => {
 
     try {
       const response = await axios.put(`http://localhost:5000/api/receptionBookings/${editingBooking._id}`, bookingData);
-      alert("✅ Booking updated successfully!");
+      
+      // Close edit modal first
       setShowEditModal(false);
       setEditingBooking(null);
-      // Refresh the booking data with correct endpoint
-      const bookingResponse = await axios.get(`http://localhost:5000/api/receptionBookings/${id}`);
+      resetForm();
+      
+      // Show success modal
+      setStatusModalMessage("Booking has been updated successfully!");
+      setShowStatusModal(true);
+      
+      // Refresh the booking data - check which endpoint to use based on current booking type
+      let bookingResponse;
+      if (booking.bookingType === "online") {
+        // For online bookings, first try receptionBookings (which handles both), fallback to bookings
+        try {
+          bookingResponse = await axios.get(`http://localhost:5000/api/receptionBookings/${id}`);
+        } catch (error) {
+          bookingResponse = await axios.get(`http://localhost:5000/api/bookings/${id}`);
+        }
+      } else {
+        bookingResponse = await axios.get(`http://localhost:5000/api/receptionBookings/${id}`);
+      }
       setBooking(bookingResponse.data);
     } catch (error) {
       console.error("Error updating booking:", error);
-      console.error("Error response:", error.response);
-      alert(`❌ Error updating booking: ${error.response?.data?.error || error.message}`);
+      console.error("Error response:", error);
+      
+      // Show error modal instead of alert
+      setStatusModalMessage(`Error updating booking: ${error.response?.data?.error || error.message}`);
+      setShowStatusModal(true);
     } finally {
       setLoading(false);
     }
@@ -792,8 +780,15 @@ const BookingDetailsPage = () => {
         {showStatusModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all">
-              <h3 className="text-2xl font-bold text-green-600 mb-4">
-                Success!
+              <h3 className={`text-2xl font-bold mb-4 ${
+                statusModalMessage.includes("Error") || statusModalMessage.includes("❌") 
+                  ? "text-red-600" 
+                  : "text-green-600"
+              }`}>
+                {statusModalMessage.includes("Error") || statusModalMessage.includes("❌") 
+                  ? "Error!" 
+                  : "Success!"
+                }
               </h3>
               <p className="text-gray-600 mb-8 leading-relaxed">
                 {statusModalMessage}
@@ -801,7 +796,11 @@ const BookingDetailsPage = () => {
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowStatusModal(false)}
-                  className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg"
+                  className={`px-6 py-3 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg ${
+                    statusModalMessage.includes("Error") || statusModalMessage.includes("❌")
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  }`}
                 >
                   OK
                 </button>
@@ -1053,21 +1052,21 @@ const BookingDetailsPage = () => {
               (booking.originalData?.document || booking.documentPath) && (
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                   <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6">
-                    <h2 className="text-2xl font-bold text-white">Payment Proof / Document</h2>
+                    <h2 className="text-2xl font-bold text-white">Payment Proof</h2>
                   </div>
                   <div className="p-8">
                     <div className="space-y-6">
                       <div className="text-center">
                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-                          Uploaded Document / Payment Proof
+                          Uploaded Payment Proof
                         </p>
                         <div className="bg-purple-50 rounded-xl p-4 border border-purple-200 mb-4">
                           <p className="text-sm text-purple-700 font-medium mb-1">
                             📄 Document Details
                           </p>
-                          <p className="text-xs text-purple-600">
+                          {/* <p className="text-xs text-purple-600">
                             Document Path: {booking.documentPath || booking.originalData?.document}
-                          </p>
+                          </p> */}
                           <p className="text-xs text-purple-600 mt-1">
                             This document may contain payment proof, ID verification, or booking confirmation.
                           </p>
@@ -1082,7 +1081,7 @@ const BookingDetailsPage = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          View Document / Payment Proof
+                          View Payment Proof
                         </a>
                       </div>
                     </div>
@@ -1138,50 +1137,24 @@ const BookingDetailsPage = () => {
                     </div>
                   </div>
                 ) : booking.bookingType === "online" ? (
-                  (() => {
-                    const paymentCalc = calculateOnlineBookingPayment(booking);
-                    return (
-                      <div className="space-y-6">
-                        <div className="group">
-                          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                            Payment Status
-                          </p>
-                          <p className="text-xl text-gray-800 font-medium group-hover:text-orange-600 transition-colors">
-                            Pending - To be collected at check-in
-                          </p>
-                        </div>
-                        <div className="group">
-                          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                            Room Details
-                          </p>
-                          <p className="text-lg text-gray-800 font-medium">
-                            {paymentCalc.roomType} - Room {paymentCalc.roomNumber}
-                          </p>
-                        </div>
-                        <div className="group">
-                          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                            Estimated Total Amount
-                          </p>
-                          <p className="text-2xl text-gray-800 font-bold group-hover:text-orange-600 transition-colors">
-                            Rs.{paymentCalc.basePrice}
-                          </p>
-                        </div>
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                          <p className="text-sm text-blue-700 font-medium mb-2">
-                            📋 Price Breakdown (Base Room Rates)
-                          </p>
-                          <div className="grid grid-cols-1 gap-1 text-xs text-blue-600">
-                            <div>• Single Room: Rs.3,000</div>
-                            <div>• Double Room: Rs.5,000</div>
-                            <div>• Triple Room: Rs.7,000</div>
-                          </div>
-                          <p className="text-xs text-blue-600 mt-2 font-medium">
-                            💡 Final amount may vary based on additional services, packages, and duration selected at check-in.
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })()
+                  <div className="space-y-6">
+                    <div className="group">
+                      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Payment Status
+                      </p>
+                      <p className="text-xl text-gray-800 font-medium group-hover:text-orange-600 transition-colors">
+                        Pending - To be collected at check-in
+                      </p>
+                    </div>
+                    <div className="group">
+                      <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        Room Details
+                      </p>
+                      <p className="text-lg text-gray-800 font-medium">
+                        {booking.bookingDetails?.roomType || booking.roomType} - Room {booking.bookingDetails?.roomNumber || booking.roomNumber}
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   <div className="text-center py-8">
                     <div className="bg-gray-50 rounded-xl p-6">
