@@ -104,10 +104,14 @@ const App = () => {
           <Route path="reservations" element={<ReservationCalendar />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="menu-management" element={<MenuManagement />} />
+          <Route path="event-booking" element={<EventBooking />} />
+          <Route path="event-list" element={<EventList />} />
           <Route
             path="bookingNotifications"
             element={<BookingConfirmation />}
           />
+          <Route path="receptionists" element={<ManageReceptionists />} />
           <Route
             path="bookingNotifications/:id"
             element={<BookingConfirmationDetails />}

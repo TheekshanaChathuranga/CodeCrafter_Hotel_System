@@ -27,18 +27,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        // Proxy API requests to avoid CORS issues
-        '/api': {
-          target: env.VITE_API_URL || 'http://localhost:5000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/socket.io': {
-          target: env.VITE_SOCKET_URL || 'http://localhost:5000',
-          ws: true,
-          changeOrigin: true,
-        }
-      }
-    }
+        '/api': 'http://localhost:5000',
+      },
+    },
   };
 });
