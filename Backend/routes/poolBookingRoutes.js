@@ -153,7 +153,12 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     // Check if this is a reception booking (has status "approved" and different data structure)
     const isReceptionBooking = status === "approved";
 
+    console.log("=== POOL BOOKING DETECTION ===");
+    console.log("Request body status:", status);
     console.log("Is reception booking:", isReceptionBooking);
+    console.log("Request body keys:", Object.keys(req.body));
+    console.log("Has paymentProof file:", !!req.file);
+    console.log("=== END DETECTION ===");
 
     // Validate required fields
     if (!normalizedName || !normalizedPhone || !normalizedGuestCount) {
@@ -351,9 +356,14 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
       const io = req.app.get("io");
       const adminSockets = req.app.get("adminSockets");
 
+      console.log("Socket.io server available:", !!io);
+      console.log("Admin sockets count:", adminSockets ? adminSockets.size : 0);
+      console.log("Admin sockets Map:", adminSockets);
+
       // Emit both individual notifications and booking-created event
       if (io) {
         // Emit to all connected clients (for real-time updates)
+        console.log("Emitting pool-booking-created event to all clients");
         io.emit("pool-booking-created", {
           bookingId: newBooking._id,
           fullName: newBooking.fullName || newBooking.name,
@@ -366,7 +376,9 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
 
         // Emit targeted notifications to admin sockets
         if (adminSockets && adminSockets.size > 0) {
+          console.log("Emitting targeted notifications to admin sockets");
           adminSockets.forEach((socketId, adminId) => {
+            console.log(`Sending notification to admin ${adminId} with socket ${socketId}`);
             io.to(socketId).emit("bookingNotification", {
               type: "pool",
               title: "New Pool Booking",
@@ -375,7 +387,11 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
               notificationId: notification._id,
             });
           });
+        } else {
+          console.log("No admin sockets available for targeted notifications");
         }
+      } else {
+        console.log("Socket.io server not available");
       }
     } else {
       console.log("Skipping notification for reception booking");

@@ -5,15 +5,14 @@ const adminSockets = new Map();
 
 export const configureSocket = (httpServer) => {
   const io = new Server(httpServer, {
-    // Force pure WebSocket transport to avoid long-polling upgrade issues in
-    // some browsers/proxy setups. The client will also be set to use
-    // `transports: ['websocket']`.
-    transports: ["websocket"],
+    // Allow both polling and websocket for maximum compatibility
+    transports: ["polling", "websocket"],
     cors: {
       origin: "*", // Allow any origin during development
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true,
     },
+    allowEIO3: true, // Allow Engine.IO v3 clients
   });
 
   io.on("connection", (socket) => {
