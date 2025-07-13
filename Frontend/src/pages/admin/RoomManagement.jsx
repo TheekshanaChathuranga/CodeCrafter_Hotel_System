@@ -16,6 +16,8 @@ import {
   Typography,
 } from "@mui/material";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
   const [form, setForm] = useState({
@@ -86,7 +88,7 @@ const RoomManagement = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/rooms");
+      const response = await axios.get(`${API_URL}/manage/rooms`);
       setRooms(response.data);
     } catch (error) {
       setError({
@@ -178,7 +180,7 @@ const RoomManagement = () => {
 
     if (index < previewImages.length - newImages.length) {
       const imagePath = previewImages[index].replace(
-        "http://localhost:5000",
+        API_URL.replace("/api", ""),
         ""
       );
       setDeletedImages([...deletedImages, imagePath]);
@@ -297,13 +299,13 @@ const RoomManagement = () => {
 
       if (isEditing) {
         await axios.put(
-          `http://localhost:5000/api/rooms/update/${selectedRoom._id}`,
+          `${API_URL}/manage/rooms/update/${selectedRoom._id}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
         enqueueSnackbar("Room updated successfully", { variant: "success" });
       } else {
-        await axios.post("http://localhost:5000/api/rooms/add", formData, {
+        await axios.post(`${API_URL}/manage/rooms/add`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         enqueueSnackbar("Room added successfully", { variant: "success" });
@@ -360,7 +362,9 @@ const RoomManagement = () => {
     });
     setSelectedRoom(room);
     setPreviewImages(
-      room.images ? room.images.map((img) => `http://localhost:5000${img}`) : []
+      room.images
+        ? room.images.map((img) => `${API_URL.replace("/api", "")}${img}`)
+        : []
     );
     setShowForm(true);
     setIsEditing(true);
@@ -371,9 +375,7 @@ const RoomManagement = () => {
     try {
       console.log("handleDeleteConfirmed : ", selectedRoom._id);
       setLoading(true);
-      await axios.delete(
-        `http://localhost:5000/api/rooms/delete/${selectedRoom._id}`
-      );
+      await axios.delete(`${API_URL}/manage/rooms/delete/${selectedRoom._id}`);
       enqueueSnackbar("Room deleted successfully", { variant: "success" });
       fetchRooms();
       resetForm();
@@ -511,7 +513,6 @@ const RoomManagement = () => {
               Clear Filters
             </button>
           </div>
-
         </div>
       </div>
 

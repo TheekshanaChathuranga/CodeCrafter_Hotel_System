@@ -86,6 +86,7 @@ const App = () => {
           <Route path="pools" element={<ManagePools />} />
           <Route path="reservations" element={<ReservationCalendar />} />
           <Route path="users" element={<ManageUsers />} />
+          <Route path="profile" element={<Profile />} />
           <Route
             path="bookingNotifications"
             element={<BookingConfirmation />}
@@ -100,7 +101,7 @@ const App = () => {
         <Route
           path="/receptionist"
           element={
-            <ProtectedRoute allowedRoles={["receptionist", "reception"]}>
+            <ProtectedRoute allowedRoles={["receptionist", "reception", "admin"]}>
               <DashboardLayout />
             </ProtectedRoute>
           }

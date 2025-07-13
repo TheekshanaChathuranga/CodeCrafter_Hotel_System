@@ -25,6 +25,20 @@ const DashboardSidebar = () => {
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
+  // Helper to get correct image URL (copied from Profile.jsx)
+  const getProfileImage = (imgPath) => {
+    if (!imgPath || imgPath === "/img/default-profile.png")
+      return "/img/default-profile.png";
+    if (imgPath.startsWith("/uploads/")) {
+      return (
+        `${
+          import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+        }`.replace(/\/api$/, "") + imgPath
+      );
+    }
+    return imgPath;
+  };
+
   const allMenuItems = [
     // Dashboard for both roles
     {
@@ -50,12 +64,12 @@ const DashboardSidebar = () => {
       icon: <UserCheck size={18} />,
       roles: ["admin"],
     },
-    {
-      title: "Settings",
-      url: { admin: "/admin/settings" },
-      icon: <Settings size={18} />,
-      roles: ["admin"],
-    },
+    // {
+    //   title: "Settings",
+    //   url: { admin: "/admin/settings" },
+    //   icon: <Settings size={18} />,
+    //   roles: ["admin"],
+    // },
     {
       title: "Notifications",
       url: { admin: "/admin/bookingNotifications" },
@@ -66,12 +80,12 @@ const DashboardSidebar = () => {
     {
       title: "Room Booking",
       url: {
-        admin: "/admin/rooms",
+        admin: "/receptionist/rooms",
         receptionist: "/receptionist/rooms",
         reception: "/receptionist/rooms",
       },
       icon: <Hotel size={18} />,
-      roles: ["receptionist", "reception"],
+      roles: ["receptionist", "reception", "admin"],
     },
     {
       title: "Reservations",
@@ -86,7 +100,7 @@ const DashboardSidebar = () => {
     {
       title: "Pool Booking",
       url: {
-        admin: "/admin/pools",
+        admin: "/receptionist/pool-booking",
         receptionist: "/receptionist/pool-booking",
         reception: "/receptionist/pool-booking",
       },
@@ -96,12 +110,11 @@ const DashboardSidebar = () => {
     {
       title: "Pool Schedules",
       url: {
-        admin: "/admin/pool-schedules",
         receptionist: "/receptionist/pool-bookings",
         reception: "/receptionist/pool-bookings",
       },
       icon: <Clock size={18} />,
-      roles: ["admin", "receptionist", "reception"],
+      roles: ["receptionist", "reception"],
     },
   ];
 
@@ -138,14 +151,24 @@ const DashboardSidebar = () => {
           }`}
         >
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s"
-            alt=""
-            className="w-10 h-10 rounded-full object-cover"
+            src={getProfileImage(
+              user.profilePicture || "/img/default-profile.png"
+            )}
+            alt="Profile"
+            className="w-10 h-10 rounded-full object-cover border-2 border-gray-600"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/img/default-profile.png";
+            }}
           />
           {isOpen && (
             <div>
-              <div className="font-semibold">{user.username}</div>
-              <div className="text-sm text-gray-300">{user.role}</div>
+              <div className="font-semibold text-sm">
+                {user.fullName || user.username || "No Name"}
+              </div>
+              <div className="text-xs text-gray-300 capitalize">
+                {user.role}
+              </div>
             </div>
           )}
         </div>
@@ -199,6 +222,19 @@ const DashboardSidebar = () => {
 
       {/* Profile and Sign Out Buttons */}
       <div className="space-y-2">
+        {/* Go to Home button for admin */}
+        {user.role === "admin" && (
+          <Link
+            to="/"
+            onClick={handleLinkClick}
+            className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] transition-colors ${
+              !isOpen ? "justify-center" : ""
+            }`}
+          >
+            <LayoutDashboard size={18} />
+            {isOpen && <span>Go to Home</span>}
+          </Link>
+        )}
         <Link
           to={
             user.role === "admin" ? "/admin/profile" : "/receptionist/profile"
