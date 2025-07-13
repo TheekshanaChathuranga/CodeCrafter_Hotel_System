@@ -1,52 +1,80 @@
 import express from 'express';
 import ReceptionBooking from '../models/ReceptionBooking.js';
 import OnlineBooking from '../models/Booking.js';
+import PoolBooking from '../models/PoolBooking.js';
+import Pool from '../models/Pool.js';
+import Room from '../models/Room.js';
 
 const router = express.Router();
 
-// Get dashboard statistics
+// Get comprehensive dashboard statistics including pools
 router.get('/stats', async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayEnd = new Date(today);
     todayEnd.setHours(23, 59, 59, 999);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get all bookings from both collections
+    // Get all room bookings from both collections
     const receptionBookings = await ReceptionBooking.find().lean();
     const onlineBookings = await OnlineBooking.find().lean();
     
-    // Combine all bookings with a unified structure
-    const allBookings = [
+    // Get pool bookings
+    const poolBookings = await PoolBooking.find().populate('poolId', 'name').lean();
+    
+    // Combine all room bookings with a unified structure
+    const allRoomBookings = [
       ...receptionBookings.map(booking => ({ ...booking, bookingType: 'reception' })),
       ...onlineBookings.map(booking => ({ ...booking, bookingType: 'online' }))
     ];
     
-    // Today's check-ins
-    const todaysCheckIns = allBookings.filter(booking => {
+    // Today's room check-ins
+    const todaysRoomCheckIns = allRoomBookings.filter(booking => {
       const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
       if (!checkInDate) return false;
       const checkIn = new Date(checkInDate);
       return checkIn >= today && checkIn <= todayEnd;
-    }).length;
+    });
 
-    // Today's check-outs
-    const todaysCheckOuts = allBookings.filter(booking => {
+    // Today's room check-outs
+    const todaysRoomCheckOuts = allRoomBookings.filter(booking => {
       const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
       if (!checkOutDate) return false;
       const checkOut = new Date(checkOutDate);
       return checkOut >= today && checkOut <= todayEnd;
-    }).length;
+    });
 
     // Currently occupied rooms
-    const currentlyOccupied = allBookings.filter(booking => {
+    const currentlyOccupiedRooms = allRoomBookings.filter(booking => {
       const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
       const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
       if (!checkInDate || !checkOutDate) return false;
       const checkIn = new Date(checkInDate);
       const checkOut = new Date(checkOutDate);
-      return checkIn <= today && checkOut > today && booking.status === 'checked-in';
-    }).length;
+      return checkIn <= today && checkOut > today && (booking.status === 'checked-in' || booking.status === 'confirmed');
+    });
+
+    // Today's pool bookings
+    const todaysPoolBookings = poolBookings.filter(booking => {
+      const bookingDate = booking.date || booking.checkIn;
+      if (!bookingDate) return false;
+      const date = new Date(bookingDate);
+      return date >= today && date <= todayEnd;
+    });
+
+    // Pending bookings
+    const pendingRoomBookings = allRoomBookings.filter(booking => booking.status === 'pending');
+    const pendingPoolBookings = poolBookings.filter(booking => booking.status === 'pending');
+
+    // Resource counts
+    const [totalRooms, availableRooms, totalPools, availablePools] = await Promise.all([
+      Room.countDocuments(),
+      Room.countDocuments({ roomStatus: 'Available' }),
+      Pool.countDocuments(),
+      Pool.countDocuments({ poolStatus: 'Available' })
+    ]);
 
     // Room availability by type
     const roomTypes = ['Single Room', 'Double Room', 'Triple Room'];
@@ -54,7 +82,7 @@ router.get('/stats', async (req, res) => {
     
     const occupiedByType = {};
     roomTypes.forEach(type => {
-      occupiedByType[type] = allBookings.filter(booking => {
+      occupiedByType[type] = allRoomBookings.filter(booking => {
         const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
         const checkOutDate = booking.bookingDetails?.checkOut || booking.checkOut;
         const roomType = booking.bookingDetails?.roomType || booking.roomType;
@@ -67,7 +95,7 @@ router.get('/stats', async (req, res) => {
       }).length;
     });
 
-    const availableRooms = roomTypes.map(type => ({
+    const availableRoomsByType = roomTypes.map(type => ({
       type,
       available: totalRoomsByType[type] - (occupiedByType[type] || 0),
       total: totalRoomsByType[type],
@@ -75,7 +103,7 @@ router.get('/stats', async (req, res) => {
     }));
 
     // Revenue calculations
-    const todaysRevenue = allBookings
+    const todaysRevenue = allRoomBookings
       .filter(booking => {
         const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
         if (!checkInDate) return false;
@@ -87,7 +115,7 @@ router.get('/stats', async (req, res) => {
         return sum + amount;
       }, 0);
 
-    const monthlyRevenue = allBookings
+    const monthlyRevenue = allRoomBookings
       .filter(booking => {
         const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
         if (!checkInDate) return false;
@@ -104,7 +132,7 @@ router.get('/stats', async (req, res) => {
     const threeDaysFromNow = new Date(today);
     threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
     
-    const upcomingCheckIns = allBookings.filter(booking => {
+    const upcomingCheckIns = allRoomBookings.filter(booking => {
       const checkInDate = booking.bookingDetails?.checkIn || booking.checkIn;
       if (!checkInDate) return false;
       const checkIn = new Date(checkInDate);
@@ -112,16 +140,42 @@ router.get('/stats', async (req, res) => {
     }).length;
 
     res.json({
-      todaysCheckIns,
-      todaysCheckOuts,
-      currentlyOccupied,
-      totalAvailable: availableRooms.reduce((sum, room) => sum + room.available, 0),
-      availableRooms,
-      todaysRevenue,
-      monthlyRevenue,
-      upcomingCheckIns,
-      totalBookings: allBookings.length,
-      totalRooms: Object.values(totalRoomsByType).reduce((sum, count) => sum + count, 0)
+      rooms: {
+        todaysCheckIns: todaysRoomCheckIns.length,
+        todaysCheckOuts: todaysRoomCheckOuts.length,
+        currentlyOccupied: currentlyOccupiedRooms.length,
+        totalAvailable: availableRoomsByType.reduce((sum, room) => sum + room.available, 0),
+        availableByType: availableRoomsByType,
+        upcomingCheckIns,
+        totalBookings: allRoomBookings.length,
+        totalRooms: Object.values(totalRoomsByType).reduce((sum, count) => sum + count, 0),
+        pendingBookings: pendingRoomBookings.length,
+        receptionBookings: receptionBookings.length,
+        onlineBookings: onlineBookings.length
+      },
+      pools: {
+        todaysBookings: todaysPoolBookings.length,
+        pendingBookings: pendingPoolBookings.length,
+        totalBookings: poolBookings.length,
+        totalPools,
+        availablePools
+      },
+      revenue: {
+        today: todaysRevenue,
+        monthly: monthlyRevenue
+      },
+      overview: {
+        totalBookingsToday: todaysRoomCheckIns.length + todaysPoolBookings.length,
+        totalPendingBookings: pendingRoomBookings.length + pendingPoolBookings.length,
+        totalActivity: todaysRoomCheckIns.length + todaysRoomCheckOuts.length + todaysPoolBookings.length
+      },
+      recentActivity: {
+        todayRoomCheckIns: todaysRoomCheckIns.slice(0, 5),
+        todayRoomCheckOuts: todaysRoomCheckOuts.slice(0, 5),
+        todayPoolBookings: todaysPoolBookings.slice(0, 5),
+        pendingRoomBookings: pendingRoomBookings.slice(0, 5),
+        pendingPoolBookings: pendingPoolBookings.slice(0, 5)
+      }
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -190,6 +244,109 @@ router.get('/bookings/:date', async (req, res) => {
   } catch (error) {
     console.error('Error fetching bookings for date:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get combined bookings for a specific date (rooms and pools)
+router.get('/bookings-combined/:date', async (req, res) => {
+  try {
+    const { date } = req.params;
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    const nextDay = new Date(targetDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    // Get room bookings for the date
+    const receptionRoomBookings = await ReceptionBooking.find({
+      $or: [
+        {
+          'bookingDetails.checkIn': { $gte: targetDate, $lt: nextDay }
+        },
+        {
+          'bookingDetails.checkOut': { $gte: targetDate, $lt: nextDay }
+        },
+        {
+          'bookingDetails.checkIn': { $lte: targetDate },
+          'bookingDetails.checkOut': { $gte: nextDay }
+        }
+      ]
+    }).sort({ 'bookingDetails.checkIn': 1 }).lean();
+
+    const onlineRoomBookings = await OnlineBooking.find({
+      $or: [
+        { checkIn: { $gte: targetDate, $lt: nextDay } },
+        { checkOut: { $gte: targetDate, $lt: nextDay } },
+        { checkIn: { $lte: targetDate }, checkOut: { $gte: nextDay } }
+      ]
+    }).sort({ checkIn: 1 }).lean();
+
+    // Get pool bookings for the date
+    const poolBookings = await PoolBooking.find({
+      date: { $gte: targetDate, $lt: nextDay }
+    }).populate('poolId', 'name').sort({ checkInTime: 1 }).lean();
+
+    // Format the data for consistent frontend consumption
+    const formattedBookings = {
+      rooms: {
+        reception: receptionRoomBookings.map(booking => ({
+          ...booking,
+          bookingType: 'reception',
+          id: booking._id,
+          guestName: booking.guestDetails?.name || 'Unknown',
+          roomNumber: booking.bookingDetails?.roomNumber || 'N/A',
+          checkIn: booking.bookingDetails?.checkIn,
+          checkOut: booking.bookingDetails?.checkOut,
+          status: booking.status || 'confirmed'
+        })),
+        online: onlineRoomBookings.map(booking => ({
+          ...booking,
+          bookingType: 'online',
+          id: booking._id,
+          guestName: booking.fullName || 'Unknown',
+          roomNumber: booking.roomNumber || 'N/A',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          status: booking.status || 'pending'
+        }))
+      },
+      pools: poolBookings.map(booking => ({
+        ...booking,
+        bookingType: 'pool',
+        id: booking._id,
+        guestName: booking.fullName || booking.name || 'Unknown',
+        poolName: booking.poolId?.name || 'Unknown Pool',
+        date: booking.date,
+        checkInTime: booking.checkInTime,
+        checkOutTime: booking.checkOutTime,
+        guestCount: booking.guestCount || booking.peopleCount || 1,
+        status: booking.status || 'pending'
+      }))
+    };
+
+    const summary = {
+      date: targetDate.toISOString(),
+      totalBookings: receptionRoomBookings.length + onlineRoomBookings.length + poolBookings.length,
+      roomBookings: {
+        reception: receptionRoomBookings.length,
+        online: onlineRoomBookings.length,
+        total: receptionRoomBookings.length + onlineRoomBookings.length
+      },
+      poolBookings: poolBookings.length
+    };
+
+    res.json({
+      success: true,
+      bookings: formattedBookings,
+      summary
+    });
+
+  } catch (error) {
+    console.error('Error fetching combined bookings:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      message: error.message 
+    });
   }
 });
 

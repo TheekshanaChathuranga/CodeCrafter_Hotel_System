@@ -225,4 +225,213 @@ router.get("/", async (req, res) => {
   }
 });
 
+// GET route to fetch dashboard statistics for reception
+router.get("/dashboard-stats", async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const weekFromNow = new Date(today);
+    weekFromNow.setDate(weekFromNow.getDate() + 7);
+
+    // Get today's bookings
+    const todayBookings = await Booking.find({
+      checkIn: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    }).lean();
+
+    // Get check-ins for today
+    const todayCheckIns = await Booking.find({
+      checkIn: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+      status: "confirmed",
+    }).lean();
+
+    // Get check-outs for today
+    const todayCheckOuts = await Booking.find({
+      checkOut: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+      status: "confirmed",
+    }).lean();
+
+    // Get pending bookings
+    const pendingBookings = await Booking.find({
+      status: "pending",
+    }).lean();
+
+    // Get upcoming bookings (next 7 days)
+    const upcomingBookings = await Booking.find({
+      checkIn: {
+        $gte: today,
+        $lt: weekFromNow,
+      },
+      status: { $in: ["confirmed", "pending"] },
+    }).lean();
+
+    // Get current occupancy (guests currently checked in)
+    const currentOccupancy = await Booking.find({
+      checkIn: { $lte: today },
+      checkOut: { $gt: today },
+      status: "confirmed",
+    }).lean();
+
+    // Calculate revenue statistics
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+    const monthlyBookings = await Booking.find({
+      createdAt: {
+        $gte: monthStart,
+        $lt: monthEnd,
+      },
+      status: { $in: ["confirmed", "pending"] },
+    }).lean();
+
+    const stats = {
+      today: {
+        totalBookings: todayBookings.length,
+        checkIns: todayCheckIns.length,
+        checkOuts: todayCheckOuts.length,
+        pendingBookings: pendingBookings.length,
+      },
+      upcoming: {
+        weeklyBookings: upcomingBookings.length,
+        currentOccupancy: currentOccupancy.length,
+      },
+      monthly: {
+        totalBookings: monthlyBookings.length,
+        confirmed: monthlyBookings.filter((b) => b.status === "confirmed")
+          .length,
+        pending: monthlyBookings.filter((b) => b.status === "pending").length,
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      stats,
+      todayBookings: todayBookings.slice(0, 10), // Latest 10 for quick view
+      pendingBookings: pendingBookings.slice(0, 5), // Latest 5 pending
+      upcomingCheckIns: todayCheckIns.slice(0, 5),
+      upcomingCheckOuts: todayCheckOuts.slice(0, 5),
+    });
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch dashboard statistics",
+      error: error.message,
+    });
+  }
+});
+
+// GET route to fetch bookings by date range
+router.get("/by-date-range", async (req, res) => {
+  try {
+    const { startDate, endDate, status } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Start date and end date are required",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Include the entire end date
+
+    let query = {
+      $or: [
+        {
+          checkIn: { $gte: start, $lte: end },
+        },
+        {
+          checkOut: { $gte: start, $lte: end },
+        },
+        {
+          checkIn: { $lte: start },
+          checkOut: { $gte: end },
+        },
+      ],
+    };
+
+    if (status && status !== "all") {
+      query.status = status;
+    }
+
+    const bookings = await Booking.find(query)
+      .sort({ checkIn: 1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: bookings,
+      count: bookings.length,
+      dateRange: {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching bookings by date range:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch bookings",
+      error: error.message,
+    });
+  }
+});
+
+// PUT route to update booking status
+router.put("/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, processedBy } = req.body;
+
+    if (!["pending", "confirmed", "cancelled"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid status. Must be 'pending', 'confirmed', or 'cancelled'",
+      });
+    }
+
+    const booking = await Booking.findById(id);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    booking.status = status;
+    if (processedBy) {
+      booking.processedBy = processedBy;
+      booking.processedAt = new Date();
+    }
+
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Booking ${status} successfully`,
+      data: booking,
+    });
+  } catch (error) {
+    console.error("Error updating booking status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update booking status",
+      error: error.message,
+    });
+  }
+});
+
 export default router;
