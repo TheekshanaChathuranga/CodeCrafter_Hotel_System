@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
+  Utensils,
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
 import { useSocket } from "../context/SocketContext";
@@ -64,16 +65,42 @@ const DashboardSidebar = () => {
       icon: <UserCheck size={18} />,
       roles: ["admin"],
     },
-    // {
-    //   title: "Settings",
-    //   url: { admin: "/admin/settings" },
-    //   icon: <Settings size={18} />,
-    //   roles: ["admin"],
-    // },
+
+    {
+      title: "Event Booking",
+      url: { admin: "/admin/event-booking" },
+      icon: <CalendarCheck size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Event List",
+      url: { admin: "/admin/event-list" },
+      icon: <Menu size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Settings",
+      url: { admin: "/admin/settings" },
+      icon: <Settings size={18} />,
+      roles: ["admin"],
+    },
+
     {
       title: "Notifications",
       url: { admin: "/admin/bookingNotifications" },
       icon: <Bell size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Menu Management",
+      url: { admin: "/admin/menu-management" },
+      icon: <Utensils size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Receptionists",
+      url: { admin: "/admin/receptionists" },
+      icon: <Users size={18} />, // reuse Users icon
       roles: ["admin"],
     },
     // Reception and shared routes
@@ -123,6 +150,7 @@ const DashboardSidebar = () => {
   );
 
   const handleLinkClick = () => {
+
     console.log("handleLinkClick called");
     // Close mobile sidebar if onClose prop is provided
     if (typeof onClose === "function") {
