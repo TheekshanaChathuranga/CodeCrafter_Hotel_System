@@ -31,7 +31,17 @@ export default function ClientBooking() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+
+    if (name === "phone") {
+      // Allow only digits and limit to 10 characters
+      value = value.replace(/[^0-9]/g, "").slice(0, 10);
+    }
+    if (name === "attendees") {
+      // Prevent negative values and leading zeros
+      value = value.replace(/[^0-9]/g, "");
+    }
+
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -47,7 +57,7 @@ export default function ClientBooking() {
     if (!form.email) newErrors.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = "Invalid email";
     if (!form.phone) newErrors.phone = "Phone Number is required";
-    else if (!/^\d{10,15}$/.test(form.phone)) newErrors.phone = "Invalid phone number";
+    else if (!/^\d{10}$/.test(form.phone)) newErrors.phone = "Phone number must be exactly 10 digits";
     if (!form.eventType) newErrors.eventType = "Event Type is required";
     if (!form.eventDate) newErrors.eventDate = "Event Date is required";
     else {
@@ -70,8 +80,28 @@ export default function ClientBooking() {
     setIsSubmitting(true);
     try {
       // Here you would typically make an API call to submit the booking
-      // For now, we'll simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const payload = {
+        contactName: form.contactName,
+        email: form.email,
+        phone: form.phone,
+        eventType: form.eventType,
+        eventDate: form.eventDate,
+        eventTime: form.eventTime,
+        attendees: Number(form.attendees)
+      };
+      const res = await fetch(`${API_BASE_URL}/customer-events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to submit booking");
+      }
       
       alert("Event booking submitted successfully! You will receive a confirmation email shortly.");
       setForm(initialForm);
@@ -234,6 +264,7 @@ export default function ClientBooking() {
                   aria-invalid={!!errors.phone}
                   className={errors.phone ? "border-red-500" : ""}
                   disabled={isSubmitting}
+                  maxLength={10}
                 />
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>

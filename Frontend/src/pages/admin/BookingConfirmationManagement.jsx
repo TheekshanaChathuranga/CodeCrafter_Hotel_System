@@ -9,6 +9,7 @@ const BookingList = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const [eventBookings, setEventBookings] = useState([]);
 
   const API_BASE_URL =
     import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -32,8 +33,20 @@ const BookingList = () => {
     }
   };
 
+  const fetchEventBookings = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/customer-events/pending`);
+      const data = await res.json();
+      setEventBookings(Array.isArray(data) ? data : []);
+    } catch (err) {
+      enqueueSnackbar('Failed to fetch event bookings', { variant: 'error' });
+      setEventBookings([]);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
+    fetchEventBookings();
   }, []);
 
   const filteredBookings = bookings.filter((booking) => {
@@ -61,7 +74,7 @@ const BookingList = () => {
             />
           </div>
           <button
-            onClick={fetchBookings}
+            onClick={() => { fetchBookings(); fetchEventBookings(); }}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75] disabled:opacity-50"
           >
@@ -138,6 +151,31 @@ const BookingList = () => {
                   <Eye className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pending Events Section */}
+      <h1 className="text-2xl font-bold text-gray-800 mt-12">Pending Events</h1>
+      {eventBookings.length === 0 ? (
+        <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg mt-4">No pending events</div>
+      ) : (
+        <div className="bg-white rounded-lg shadow overflow-hidden mt-4">
+          <div className="grid grid-cols-12 bg-gray-100 p-4 font-semibold text-gray-700">
+            <div className="col-span-3">Contact Name</div>
+            <div className="col-span-2">Phone</div>
+            <div className="col-span-3">Email</div>
+            <div className="col-span-2">Event Type</div>
+            <div className="col-span-2">Attendees</div>
+          </div>
+          {eventBookings.map((ev, idx) => (
+            <div key={`event-booking-${ev._id}-${idx}`} className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center">
+              <div className="col-span-3 font-medium text-gray-800 truncate">{ev.contactName}</div>
+              <div className="col-span-2 text-gray-600 truncate">{ev.phone}</div>
+              <div className="col-span-3 text-gray-600 truncate">{ev.email}</div>
+              <div className="col-span-2 text-gray-800">{ev.eventType}</div>
+              <div className="col-span-2 text-gray-800">{ev.attendees}</div>
             </div>
           ))}
         </div>

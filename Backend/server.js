@@ -26,6 +26,7 @@ import receptionRoomsRoutes from "./routes/receptionRooms.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import uploadRoutes from "./routes/upload.js";
 import manageEventRoutes from "./routes/manageEvent.js";
+import customerEventRoutes from "./routes/customerEvents.js";
 
 // Middleware Imports
 import validateEvent from "./middleware/validateEvent.js";
@@ -115,6 +116,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/notifications", notificationRoutes); // Add notification routes
 // Event booking management
 app.use("/api", manageEventRoutes);
+app.use("/api/customer-events", customerEventRoutes);
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {
