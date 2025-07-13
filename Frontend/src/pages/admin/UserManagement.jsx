@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, RefreshCw, ChevronLeft, ChevronRight, Plus, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogActions,
@@ -27,6 +27,51 @@ const UserManagement = () => {
   const [usersPerPage] = useState(9); // Should match your default backend limit
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user", status: "active" });
+  const [editingUser, setEditingUser] = useState(null);
+
+  const handleSaveUser = async () => {
+    if (!newUser.username || !newUser.email || (!editingUser && !newUser.password)) {
+      enqueueSnackbar("Username, email and password are required", { variant: "warning" });
+      return;
+    }
+    try {
+      setLoading(true);
+      if (editingUser) {
+        const payload = { ...newUser };
+        if (!payload.password) delete payload.password;
+        await axios.put(`${API_URL}/manage/users/${editingUser._id}`, payload);
+        enqueueSnackbar("User updated successfully", { variant: "success" });
+      } else {
+        await axios.post(`${API_URL}/manage/users`, newUser);
+        enqueueSnackbar("User created successfully", { variant: "success" });
+      }
+      setAddDialogOpen(false);
+      setNewUser({ username: "", email: "", password: "", role: "user", status: "active" });
+      setEditingUser(null);
+      fetchUsers(currentPage);
+    } catch (err) {
+      console.error("Save user error:", err);
+      const msg = err.response?.data?.message || err.message || "Failed to save user";
+      enqueueSnackbar(msg, { variant: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openEditDialog = (user) => {
+    setEditingUser(user);
+    setNewUser({
+      username: user.username,
+      email: user.email,
+      password: "", // don't prefill password
+      role: user.role || "user",
+      status: user.status || "active",
+    });
+    setAddDialogOpen(true);
+  };
 
   const fetchUsers = async (page = 1) => {
     try {
@@ -163,6 +208,13 @@ const UserManagement = () => {
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
+          <button
+            onClick={() => setAddDialogOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75]"
+          >
+            <Plus className="w-4 h-4" />
+            Add Users
+          </button>
         </div>
       </div>
 
@@ -180,10 +232,11 @@ const UserManagement = () => {
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="grid grid-cols-12 bg-gray-100 p-4 font-semibold text-gray-700">
-            <div className="col-span-4 md:col-span-3">Username</div>
-            <div className="col-span-5 md:col-span-4">Email</div>
-            <div className="col-span-2 md:col-span-3">Role</div>
-            <div className="col-span-1 md:col-span-2 text-right">Actions</div>
+            <div className="col-span-3 md:col-span-3">Username</div>
+            <div className="col-span-4 md:col-span-4">Email</div>
+            <div className="col-span-2 md:col-span-2">Role</div>
+            <div className="col-span-2 md:col-span-2">Status</div>
+            <div className="col-span-1 md:col-span-1 text-right">Actions</div>
           </div>
 
           {users.map((user) => (
@@ -191,13 +244,13 @@ const UserManagement = () => {
               key={user._id}
               className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center"
             >
-              <div className="col-span-4 md:col-span-3 font-medium text-gray-800 truncate">
+              <div className="col-span-3 md:col-span-3 font-medium text-gray-800 truncate">
                 {user.username}
               </div>
-              <div className="col-span-5 md:col-span-4 text-gray-600 truncate">
+              <div className="col-span-4 md:col-span-4 text-gray-600 truncate">
                 {user.email}
               </div>
-              <div className="col-span-2 md:col-span-3">
+              <div className="col-span-2 md:col-span-2">
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
                     user.role === "admin"
@@ -210,7 +263,17 @@ const UserManagement = () => {
                   {user.role}
                 </span>
               </div>
-              <div className="col-span-1 md:col-span-2 flex justify-end">
+              <div className="col-span-2 md:col-span-2">
+                <span className={`px-2 py-1 text-xs rounded-full ${user.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>{user.status}</span>
+              </div>
+              <div className="col-span-1 md:col-span-1 flex justify-end gap-2">
+                <button
+                  onClick={() => openEditDialog(user)}
+                  className="p-2 text-blue-600 hover:text-blue-800"
+                  title="Edit user"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
                 <button
                   onClick={() => confirmDelete(user)}
                   disabled={loading}
@@ -309,6 +372,81 @@ const UserManagement = () => {
             autoFocus
           >
             {loading ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={addDialogOpen}
+        onClose={() => setAddDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>{editingUser ? "Edit User" : "Add Users"}</DialogTitle>
+        <DialogContent>
+          <div className="flex flex-col gap-4 mt-2">
+            <input
+              type="text"
+              placeholder="Username"
+              autoComplete="off"
+              value={newUser.username}
+              onChange={(e) =>
+                setNewUser({ ...newUser, username: e.target.value })
+              }
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              autoComplete="off"
+              value={newUser.email}
+              onChange={(e) =>
+                setNewUser({ ...newUser, email: e.target.value })
+              }
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              autoComplete="new-password"
+              value={newUser.password}
+              onChange={(e) =>
+                setNewUser({ ...newUser, password: e.target.value })
+              }
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            />
+            <select
+              value={newUser.role}
+              onChange={(e) =>
+                setNewUser({ ...newUser, role: e.target.value })
+              }
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            >
+              <option value="user">User</option>
+              <option value="receptionist">Receptionist</option>
+            </select>
+            <select
+              value={newUser.status}
+              onChange={(e) =>
+                setNewUser({ ...newUser, status: e.target.value })
+              }
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDialogOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSaveUser}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

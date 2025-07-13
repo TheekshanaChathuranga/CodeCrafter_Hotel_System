@@ -10,6 +10,7 @@ import ErrorDisplay from '../../components/ErrorDisplay';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import EventDetailsModal from "../../components/events/EventDetailsModal";
 
 
 const localizer = dateFnsLocalizer({
@@ -43,7 +44,7 @@ const ReservationManagement = () => {
       const roomRes = await axios.get('http://localhost:5000/api/admin/bookings/pending'); // adjust endpoint if needed
       const roomEvents = roomRes.data.map(booking => ({
         id: booking._id,
-        title: `${booking.fullName} - Room ${booking.roomNumber}`,
+        title: `${booking.fullName} - Room ${booking.roomNumber} (Room)`,
         start: new Date(booking.checkIn),
         end: new Date(booking.checkOut),
         allDay: false,
@@ -51,11 +52,11 @@ const ReservationManagement = () => {
         type: 'room'
       }));
 
-      // Fetch event bookings
-      const eventRes = await axios.get('http://localhost:5000/api/event-bookings');
+      // Fetch event bookings (same source used by EventList.jsx)
+      const eventRes = await axios.get('http://localhost:5000/api/events');
       const eventEvents = eventRes.data.map(event => ({
         id: event._id,
-        title: `${event.name} - ${event.eventType}`,
+        title: `${event.name} - ${event.eventType} (Event)`,
         start: new Date(event.checkIn),
         end: new Date(event.checkOut),
         allDay: false,
@@ -193,98 +194,106 @@ const ReservationManagement = () => {
         </div>
       )}
 
-      {selectedReservation && (
-        <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${showModal ? '' : 'hidden'}`}>
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">Reservation Details</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
-                <FiX size={24} />
-              </button>
-            </div>
-            
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h5 className="font-medium text-lg flex items-center mb-3">
-                    <FiUser className="mr-2" /> Guest Information
-                  </h5>
-                  <div className="space-y-2">
-                    <p><strong>Name:</strong> {selectedReservation.user?.name || 'N/A'}</p>
-                    <p><strong>Email:</strong> {selectedReservation.user?.email || 'N/A'}</p>
-                    <p><strong>Phone:</strong> {selectedReservation.user?.phone || 'N/A'}</p>
+      {selectedReservation && showModal && (
+        selectedReservation._category === 'event' ? (
+          <EventDetailsModal
+            event={selectedReservation}
+            onClose={() => setShowModal(false)}
+          />
+        ) : (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              {/* Existing reservation modal content */}
+              <div className="flex justify-between items-center p-4 border-b">
+                <h3 className="text-lg font-semibold">Reservation Details</h3>
+                <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-gray-700">
+                  <FiX size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h5 className="font-medium text-lg flex items-center mb-3">
+                      <FiUser className="mr-2" /> Guest Information
+                    </h5>
+                    <div className="space-y-2">
+                      <p><strong>Name:</strong> {selectedReservation.user?.name || 'N/A'}</p>
+                      <p><strong>Email:</strong> {selectedReservation.user?.email || 'N/A'}</p>
+                      <p><strong>Phone:</strong> {selectedReservation.user?.phone || 'N/A'}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-lg flex items-center mb-3">
+                      <FiCalendar className="mr-2" /> Reservation Details
+                    </h5>
+                    <div className="space-y-2">
+                      <p><strong>Room:</strong> {selectedReservation.room?.roomNumber || 'N/A'} ({selectedReservation.room?.type || 'N/A'})</p>
+                      <p><strong>Dates:</strong> {format(new Date(selectedReservation.checkIn || selectedReservation.checkInDate), 'MMM d, yyyy')} - {format(new Date(selectedReservation.checkOut || selectedReservation.checkOutDate), 'MMM d, yyyy')}</p>
+                      <p><strong>Status:</strong>
+                          {selectedReservation.status ? (
+                            <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                              selectedReservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              selectedReservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {selectedReservation.status}
+                            </span>
+                          ) : (
+                            <span className="ml-2 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">event</span>
+                          )}
+                        </p>
+                      <p><strong>Total:</strong> ${selectedReservation.totalPrice?.toFixed(2) || '0.00'}</p>
+                    </div>
                   </div>
                 </div>
                 
-                <div>
-                  <h5 className="font-medium text-lg flex items-center mb-3">
-                    <FiCalendar className="mr-2" /> Reservation Details
-                  </h5>
-                  <div className="space-y-2">
-                    <p><strong>Room:</strong> {selectedReservation.room?.roomNumber || 'N/A'} ({selectedReservation.room?.type || 'N/A'})</p>
-                    <p><strong>Dates:</strong> {format(new Date(selectedReservation.checkIn || selectedReservation.checkInDate), 'MMM d, yyyy')} - {format(new Date(selectedReservation.checkOut || selectedReservation.checkOutDate), 'MMM d, yyyy')}</p>
-                    <p><strong>Status:</strong>
-                        {selectedReservation.status ? (
-                          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                            selectedReservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            selectedReservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {selectedReservation.status}
-                          </span>
-                        ) : (
-                          <span className="ml-2 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">event</span>
-                        )}
-                      </p>
-                    <p><strong>Total:</strong> ${selectedReservation.totalPrice?.toFixed(2) || '0.00'}</p>
-                  </div>
+                <div className="mt-6">
+                  <h5 className="font-medium text-lg mb-2">Special Requests</h5>
+                  <p className="bg-gray-50 p-3 rounded">{selectedReservation.specialRequests || 'No special requests'}</p>
                 </div>
               </div>
               
-              <div className="mt-6">
-                <h5 className="font-medium text-lg mb-2">Special Requests</h5>
-                <p className="bg-gray-50 p-3 rounded">{selectedReservation.specialRequests || 'No special requests'}</p>
+              <div className="p-4 border-t flex justify-end space-x-3">
+                {selectedReservation.status !== 'confirmed' && (
+                  <button
+                    onClick={() => handleStatusChange('confirmed')}
+                    disabled={loading}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  >
+                    Confirm
+                  </button>
+                )}
+                
+                {selectedReservation.status !== 'cancelled' && (
+                  <button
+                    onClick={() => handleStatusChange('cancelled')}
+                    disabled={loading}
+                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => handleDelete()}
+                  disabled={loading}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
+                >
+                  Delete
+                </button>
+                
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Close
+                </button>
               </div>
             </div>
-            
-            <div className="p-4 border-t flex justify-end space-x-3">
-              {selectedReservation.status !== 'confirmed' && (
-                <button
-                  onClick={() => handleStatusChange('confirmed')}
-                  disabled={loading}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                >
-                  Confirm
-                </button>
-              )}
-              
-              {selectedReservation.status !== 'cancelled' && (
-                <button
-                  onClick={() => handleStatusChange('cancelled')}
-                  disabled={loading}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-              )}
-              
-              <button
-                onClick={() => handleDelete()}
-                disabled={loading}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
-              >
-                Delete
-              </button>
-              
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Close
-              </button>
-            </div>
           </div>
-        </div>
+        )
       )}
     </div>
   );

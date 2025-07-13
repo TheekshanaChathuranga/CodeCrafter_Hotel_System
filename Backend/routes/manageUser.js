@@ -65,7 +65,8 @@ router.post("/", async (req, res) => {
   try {
     const user = new User(req.body);
     const savedUser = await user.save();
-    res.status(201).json(savedUser);
+    const { password, ...userData } = savedUser.toObject();
+    res.status(201).json(userData);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -78,12 +79,12 @@ router.put("/:id", async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).select('-password');
-    
+    );
     if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
-    res.json(updatedUser);
+    const { password, ...userData } = updatedUser.toObject();
+    res.json(userData);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }

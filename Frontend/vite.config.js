@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
   // Load env variables based on mode (development/production)
@@ -12,6 +13,23 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
     ],
+    // Ensure that only a single copy of Emotion is bundled. This prevents the
+    // "You are loading @emotion/react when it is already loaded" warning that
+    // appears when multiple builds/versions end up in the final bundle.
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+      // Dedupe guarantees that Vite (via Rollup) treats these packages as
+      // externals and never bundles a second copy if a dependency brings in a
+      // nested version.
+      dedupe: ["@emotion/react", "@emotion/styled"],
+    },
+    optimizeDeps: {
+      // Also make the dependency optimizer aware that these two should be
+      // treated as pre-bundled singletons.
+      include: ["@emotion/react", "@emotion/styled"],
+    },
     define: {
       'process.env': {
         VITE_API_URL: JSON.stringify(env.VITE_API_URL),
@@ -21,18 +39,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        // Proxy API requests to avoid CORS issues
-        '/api': {
-          target: env.VITE_API_URL || 'http://localhost:5000',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/socket.io': {
-          target: env.VITE_SOCKET_URL || 'http://localhost:5000',
-          ws: true,
-          changeOrigin: true,
-        }
-      }
-    }
+        '/api': 'http://localhost:5000',
+      },
+    },
   };
 });
