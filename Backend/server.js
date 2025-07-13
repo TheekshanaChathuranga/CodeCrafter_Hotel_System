@@ -134,6 +134,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import receptionBookingsRoutes from "./routes/receptionBookings.js";
 import receptionRoomsRoutes from "./routes/receptionRooms.js";
 import dashboardRoutes from "./routes/dashboard.js";
+import notificationRoutes from "./routes/notifications.js";
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -166,7 +167,12 @@ const MONGODB_URI =
 // Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      process.env.CLIENT_URL,
+    ].filter(Boolean),
     credentials: true,
   })
 );
@@ -207,6 +213,7 @@ app.use("/api/profile", profileRoutes); // Add profile routes
 app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route
 app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/dashboard", dashboardRoutes); // Add dashboard routes
+app.use("/api/notifications", notificationRoutes); // Add notification routes
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

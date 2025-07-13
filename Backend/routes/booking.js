@@ -1,5 +1,6 @@
 import express from "express";
 import Booking from "../models/Booking.js";
+import Notification from "../models/Notification.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -123,6 +124,49 @@ router.post("/", upload.single("document"), async (req, res) => {
     // Save booking
     savedBooking = await newBooking.save();
     console.log("Booking saved successfully:", savedBooking._id);
+
+    // Create persistent notification for all admins
+    const notification = new Notification({
+      type: "booking",
+      title: "New Room Booking",
+      message: `${savedBooking.fullName} booked Room ${savedBooking.roomNumber}`,
+      bookingId: savedBooking._id,
+      adminId: null, // null means for all admins
+      isRead: false,
+    });
+
+    await notification.save();
+    console.log("Notification saved to database:", notification._id);
+
+    // Emit real-time notification to online admins
+    const io = req.app.get("io");
+    const adminSockets = req.app.get("adminSockets");
+
+    // Emit both individual notifications and booking-created event
+    if (io) {
+      // Emit to all connected clients (for real-time updates)
+      io.emit("booking-created", {
+        bookingId: savedBooking._id,
+        roomNumber: savedBooking.roomNumber,
+        fullName: savedBooking.fullName,
+        status: savedBooking.status,
+        createdAt: savedBooking.createdAt,
+        notificationId: notification._id,
+      });
+
+      // Emit targeted notifications to admin sockets
+      if (adminSockets && adminSockets.size > 0) {
+        adminSockets.forEach((socketId, adminId) => {
+          io.to(socketId).emit("bookingNotification", {
+            type: "room",
+            title: "New Room Booking",
+            message: `${savedBooking.fullName} booked Room ${savedBooking.roomNumber}`,
+            time: new Date().toISOString(),
+            notificationId: notification._id,
+          });
+        });
+      }
+    }
 
     // Send success response
     res.status(201).json({

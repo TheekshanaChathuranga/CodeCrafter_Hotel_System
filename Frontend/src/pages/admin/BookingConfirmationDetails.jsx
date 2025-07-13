@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, XCircle, FileText, Download, Clock } from "lucide-react";
-import { useSnackbar } from 'notistack';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  FileText,
+  Download,
+  Clock,
+} from "lucide-react";
+import { useSnackbar } from "notistack";
 import {
   Dialog,
   DialogActions,
@@ -10,7 +17,7 @@ import {
   DialogTitle,
   Button,
   CircularProgress,
-  Chip
+  Chip,
 } from "@mui/material";
 
 const BookingDetail = () => {
@@ -24,27 +31,28 @@ const BookingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const fetchBooking = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/admin/bookings/pending/${id}`, {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      const res = await fetch(`${API_BASE_URL}/admin/bookings/pending/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
-      
+
       if (!res.ok) {
-        throw new Error('Failed to fetch booking details');
+        throw new Error("Failed to fetch booking details");
       }
-      
+
       const data = await res.json();
       setBooking(data);
     } catch (err) {
-      console.error('Fetch error:', err);
-      enqueueSnackbar(err.message, { variant: 'error' });
-      navigate('/admin/bookingNotifications');
+      console.error("Fetch error:", err);
+      enqueueSnackbar(err.message, { variant: "error" });
+      navigate("/admin/bookingNotifications");
     } finally {
       setLoading(false);
     }
@@ -53,57 +61,63 @@ const BookingDetail = () => {
   const handleBookingAction = async () => {
     try {
       setActionLoading(true);
-      const url = `${API_BASE_URL}/api/admin/bookings/${id}/${actionType}`;
-      
+      const url = `${API_BASE_URL}/admin/bookings/${id}/${actionType}`;
+
       const options = {
-        method: 'PATCH',
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
       };
-  
+
       // Only add body for reject action
-      if (actionType === 'reject') {
+      if (actionType === "reject") {
         options.body = JSON.stringify({ reason: rejectionReason });
       }
-  
+
       const res = await fetch(url, options);
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || `Failed to ${actionType} booking`);
       }
-  
+
       const data = await res.json();
-      enqueueSnackbar(`Booking ${actionType}d successfully`, { variant: 'success' });
-      navigate('/admin/bookingNotifications');
+      enqueueSnackbar(`Booking ${actionType}d successfully`, {
+        variant: "success",
+      });
+      navigate("/admin/bookingNotifications");
     } catch (err) {
-      console.error('Action error:', err);
-      enqueueSnackbar(err.message, { variant: 'error' });
+      console.error("Action error:", err);
+      enqueueSnackbar(err.message, { variant: "error" });
     } finally {
       setActionLoading(false);
       setActionDialogOpen(false);
     }
   };
-  
 
   const viewDocument = () => {
     if (!booking?.document) {
-      enqueueSnackbar('No document available', { variant: 'warning' });
+      enqueueSnackbar("No document available", { variant: "warning" });
       return;
     }
-    window.open(`${API_BASE_URL}/uploads/${booking.document}`, '_blank');
+    window.open(`${API_BASE_URL}/uploads/${booking.document}`, "_blank");
   };
 
   const downloadDocument = () => {
     if (!booking?.document) {
-      enqueueSnackbar('No document available', { variant: 'warning' });
+      enqueueSnackbar("No document available", { variant: "warning" });
       return;
     }
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = `${API_BASE_URL}/uploads/${booking.document}`;
-    link.setAttribute('download', `document-${booking._id}${booking.document.includes('.pdf') ? '.pdf' : '.jpg'}`);
+    link.setAttribute(
+      "download",
+      `document-${booking._id}${
+        booking.document.includes(".pdf") ? ".pdf" : ".jpg"
+      }`
+    );
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -127,8 +141,8 @@ const BookingDetail = () => {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <XCircle className="w-16 h-16 text-red-500" />
         <p className="text-xl text-gray-700">Booking not found</p>
-        <button 
-          onClick={() => navigate('/admin/bookingNotifications')}
+        <button
+          onClick={() => navigate("/admin/bookingNotifications")}
           className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
         >
           Back to Bookings
@@ -138,15 +152,24 @@ const BookingDetail = () => {
   }
 
   const statusConfig = {
-    pending: { color: 'bg-yellow-100 text-yellow-800', icon: <Clock className="w-4 h-4" /> },
-    confirmed: { color: 'bg-green-100 text-green-800', icon: <CheckCircle2 className="w-4 h-4" /> },
-    rejected: { color: 'bg-red-100 text-red-800', icon: <XCircle className="w-4 h-4" /> }
+    pending: {
+      color: "bg-yellow-100 text-yellow-800",
+      icon: <Clock className="w-4 h-4" />,
+    },
+    confirmed: {
+      color: "bg-green-100 text-green-800",
+      icon: <CheckCircle2 className="w-4 h-4" />,
+    },
+    rejected: {
+      color: "bg-red-100 text-red-800",
+      icon: <XCircle className="w-4 h-4" />,
+    },
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <button 
-        onClick={() => navigate('/admin/bookingNotifications')}
+      <button
+        onClick={() => navigate("/admin/bookingNotifications")}
         className="flex items-center gap-2 mb-6 text-blue-600 hover:text-blue-800 transition-colors"
       >
         <ArrowLeft className="w-5 h-5" />
@@ -165,7 +188,9 @@ const BookingDetail = () => {
                 <Chip
                   label={booking.status}
                   icon={statusConfig[booking.status]?.icon}
-                  className={`${statusConfig[booking.status]?.color} capitalize`}
+                  className={`${
+                    statusConfig[booking.status]?.color
+                  } capitalize`}
                   size="small"
                 />
                 <span className="text-sm text-gray-500">
@@ -173,8 +198,8 @@ const BookingDetail = () => {
                 </span>
               </div>
             </div>
-            
-            {booking.status === 'pending' && (
+
+            {booking.status === "pending" && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
@@ -210,33 +235,39 @@ const BookingDetail = () => {
             <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
               Guest Information
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-gray-500">Full Name</p>
                 <p className="text-lg font-semibold">{booking.fullName}</p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Phone Number</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Phone Number
+                  </p>
                   <p className="text-lg">{booking.phoneNumber}</p>
                 </div>
                 {booking.whatsappNumber && (
                   <div>
-                    <p className="text-sm font-medium text-gray-500">WhatsApp</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      WhatsApp
+                    </p>
                     <p className="text-lg">{booking.whatsappNumber}</p>
                   </div>
                 )}
               </div>
-              
+
               {booking.nicNumber && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">NIC Number</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    NIC Number
+                  </p>
                   <p className="text-lg">{booking.nicNumber}</p>
                 </div>
               )}
-              
+
               {booking.email && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
@@ -251,11 +282,13 @@ const BookingDetail = () => {
             <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
               Booking Details
             </h2>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Room Number</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Room Number
+                  </p>
                   <p className="text-lg font-semibold">{booking.roomNumber}</p>
                 </div>
                 <div>
@@ -263,7 +296,7 @@ const BookingDetail = () => {
                   <p className="text-lg capitalize">{booking.roomType}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Check-In</p>
@@ -278,7 +311,7 @@ const BookingDetail = () => {
                   </p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Adults</p>
@@ -289,10 +322,12 @@ const BookingDetail = () => {
                   <p className="text-lg">{booking.children || 0}</p>
                 </div>
               </div>
-              
+
               {booking.specialRequests && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Special Requests</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Special Requests
+                  </p>
                   <p className="text-lg italic text-gray-700">
                     "{booking.specialRequests}"
                   </p>
@@ -344,9 +379,15 @@ const BookingDetail = () => {
               `Are you sure you want to approve this booking for ${booking.fullName}?`
             ) : (
               <div className="space-y-4">
-                <p>Are you sure you want to reject this booking for {booking.fullName}?</p>
+                <p>
+                  Are you sure you want to reject this booking for{" "}
+                  {booking.fullName}?
+                </p>
                 <div>
-                  <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="reason"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Reason for rejection (optional):
                   </label>
                   <textarea
@@ -363,7 +404,7 @@ const BookingDetail = () => {
           </DialogContentText>
         </DialogContent>
         <DialogActions className="bg-gray-50 px-6 py-4">
-          <Button 
+          <Button
             onClick={() => setActionDialogOpen(false)}
             disabled={actionLoading}
             color="inherit"
@@ -375,9 +416,13 @@ const BookingDetail = () => {
             color={actionType === "approve" ? "success" : "error"}
             disabled={actionLoading}
             variant="contained"
-            startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : null}
+            startIcon={
+              actionLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
+            }
           >
-            {actionLoading ? 'Processing...' : `Confirm ${actionType}`}
+            {actionLoading ? "Processing..." : `Confirm ${actionType}`}
           </Button>
         </DialogActions>
       </Dialog>
