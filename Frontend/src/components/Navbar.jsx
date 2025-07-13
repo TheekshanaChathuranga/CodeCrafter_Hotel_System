@@ -72,7 +72,7 @@ const UserDropdown = ({ user, logout, colors }) => {
             className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={() => setIsOpen(false)}
           >
-            View My Reservations
+            View My Room Reservations
           </Link>
           <button
             onClick={() => {
@@ -273,7 +273,7 @@ const Navbar = () => {
                   My Profile
                 </MobileLink>
                 <MobileLink to="/mybookings" onClick={toggleMenu}>
-                  View My Reservations
+                  View My Room Reservations
                 </MobileLink>
               </>
             )}

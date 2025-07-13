@@ -1,6 +1,7 @@
 import express from "express";
 import Room from "../models/Room.js";
 import Booking from "../models/Booking.js";
+import ReceptionBooking from "../models/ReceptionBooking.js";
 
 const router = express.Router();
 
@@ -58,8 +59,9 @@ router.get("/available", async (req, res) => {
       });
     }
 
-    // Find bookings that overlap with the requested period
-    const bookedRooms = await Booking.find({
+    // Find bookings that overlap with the requested period from both collections
+    // Check online bookings
+    const onlineBookedRooms = await Booking.find({
       status: { $in: ["pending", "confirmed"] },
       $or: [
         // Booking starts before check-out and ends after check-in
@@ -70,14 +72,39 @@ router.get("/available", async (req, res) => {
       ],
     }).select("roomNumber -_id");
 
-    console.log("Found booked rooms:", bookedRooms);
+    // Check reception bookings
+    const receptionBookedRooms = await ReceptionBooking.find({
+      status: { $in: ["confirmed", "checked-in"] }, // Reception bookings have different status options
+      $or: [
+        // Booking starts before check-out and ends after check-in
+        {
+          "bookingDetails.checkIn": { $lt: checkOutDate },
+          "bookingDetails.checkOut": { $gt: checkInDate },
+        },
+      ],
+    }).select("bookingDetails.roomNumber -_id");
 
-    // Get the room numbers that are booked
-    const bookedRoomNumbers = bookedRooms.map((booking) => booking.roomNumber);
+    console.log("Found online booked rooms:", onlineBookedRooms);
+    console.log("Found reception booked rooms:", receptionBookedRooms);
 
-    // Find all rooms that are not in the bookedRoomNumbers array and are available
+    // Get the room numbers that are booked from both collections
+    const onlineBookedRoomNumbers = onlineBookedRooms.map(
+      (booking) => booking.roomNumber
+    );
+    const receptionBookedRoomNumbers = receptionBookedRooms.map(
+      (booking) => booking.bookingDetails.roomNumber
+    );
+
+    // Combine both arrays and remove duplicates
+    const allBookedRoomNumbers = [
+      ...new Set([...onlineBookedRoomNumbers, ...receptionBookedRoomNumbers]),
+    ];
+
+    console.log("All booked room numbers:", allBookedRoomNumbers);
+
+    // Find all rooms that are not in the allBookedRoomNumbers array and are available
     const availableRooms = await Room.find({
-      roomNumber: { $nin: bookedRoomNumbers },
+      roomNumber: { $nin: allBookedRoomNumbers },
       roomStatus: "Available",
     });
 
