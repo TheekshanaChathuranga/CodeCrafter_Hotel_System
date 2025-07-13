@@ -57,6 +57,10 @@ router.post("/", upload.single("document"), async (req, res) => {
     const requiredFields = [
       "roomNumber",
       "roomType",
+      "roomAcOption",
+      "bookingType",
+      "pricePerUnit",
+      "totalPrice",
       "checkIn",
       "checkOut",
       "fullName",
@@ -68,6 +72,16 @@ router.post("/", upload.single("document"), async (req, res) => {
 
     if (missingFields.length > 0) {
       throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+    }
+
+    // Validate AC preference for Flexible rooms
+    if (req.body.roomAcOption === "Flexible" && !req.body.acType) {
+      throw new Error("AC type is required for flexible rooms");
+    }
+
+    // Validate booking type
+    if (!["Day", "Night"].includes(req.body.bookingType)) {
+      throw new Error("Invalid booking type. Must be 'Day' or 'Night'");
     }
 
     if (!req.file) {
@@ -106,6 +120,12 @@ router.post("/", upload.single("document"), async (req, res) => {
     const newBooking = new Booking({
       roomNumber: req.body.roomNumber,
       roomType: req.body.roomType,
+      roomAcOption: req.body.roomAcOption,
+      acType:
+        req.body.roomAcOption === "Flexible" ? req.body.acType : undefined,
+      bookingType: req.body.bookingType,
+      totalPrice: parseFloat(req.body.totalPrice),
+      pricePerUnit: parseFloat(req.body.pricePerUnit),
       checkIn: checkIn,
       checkOut: checkOut,
       fullName: req.body.fullName,
