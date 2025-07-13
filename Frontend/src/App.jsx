@@ -40,7 +40,7 @@ import PoolBooking from "./components/Receptionist/PoolBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
 
 import MenuPage from "./pages/customer/Menu";
-import ManageReceptionists from "./pages/admin/ManageReceptionists";
+// import ManageReceptionists from "./pages/admin/ManageReceptionists";
 
 const App = () => {
   const location = useLocation();
@@ -111,7 +111,7 @@ const App = () => {
             path="bookingNotifications"
             element={<BookingConfirmation />}
           />
-          <Route path="receptionists" element={<ManageReceptionists />} />
+          {/* <Route path="receptionists" element={<ManageReceptionists />} /> */}
           <Route
             path="bookingNotifications/:id"
             element={<BookingConfirmationDetails />}

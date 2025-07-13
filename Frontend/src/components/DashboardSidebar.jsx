@@ -97,12 +97,6 @@ const DashboardSidebar = () => {
       icon: <Utensils size={18} />,
       roles: ["admin"],
     },
-    {
-      title: "Receptionists",
-      url: { admin: "/admin/receptionists" },
-      icon: <Users size={18} />, // reuse Users icon
-      roles: ["admin"],
-    },
     // Reception and shared routes
     {
       title: "Room Booking",
