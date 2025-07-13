@@ -125,6 +125,7 @@ import authRoutes from "./routes/auth.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import bookingRoutes from "./routes/booking.js";
 import poolRoutes from "./routes/managePool.js";
+import enhancedPoolRoutes from "./routes/poolRoutes.js"; // Enhanced pool routes for frontend
 import poolBookingRoutes from "./routes/poolBookingRoutes.js";
 import manageRoomRoutes from "./routes/manageRoom.js";
 import manageUserRoutes from "./routes/manageUser.js";
@@ -204,7 +205,8 @@ app.use("/api/rooms", roomRoutes); // Room availability routes
 app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route (moved before general bookings)
 app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/bookings", bookingRoutes); // Changed from booking to bookings to match frontend
-app.use("/api/pools", poolRoutes);
+app.use("/api/pools", poolRoutes); // Admin pool management
+app.use("/api/pool-details", enhancedPoolRoutes); // Enhanced pool details routes for frontend
 app.use("/api/pool-booking", poolBookingRoutes); // Pool booking routes
 app.use("/api/poolBookings", poolBookingRoutes); // Pool bookings list routes (same as pool-booking)
 app.use("/api/manage/rooms", manageRoomRoutes);

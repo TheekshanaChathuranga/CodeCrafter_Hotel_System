@@ -1029,7 +1029,7 @@ const ReceptionRoomBookingPage = () => {
                         })
                         .map((room) => (
                           <option key={room.id} value={room.id}>
-                            Room {room.id} - {room.type} ({room.acType})
+                            Room {room.id} - {room.type}
                           </option>
                         ))}
                     </select>

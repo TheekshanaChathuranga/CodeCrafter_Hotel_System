@@ -450,6 +450,61 @@ export const receptionAPI = {
     }
   },
 
+  // Get comprehensive dashboard statistics (rooms and pools)
+  getDashboardStatsEnhanced: async () => {
+    try {
+      const response = await api.get("/dashboard/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching enhanced dashboard stats:", error);
+      throw error;
+    }
+  },
+
+  // Get combined bookings for a specific date
+  getCombinedBookingsForDate: async (date) => {
+    try {
+      const formattedDate = date.toISOString().split('T')[0];
+      const response = await api.get(`/dashboard/bookings-combined/${formattedDate}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching combined bookings for date:", error);
+      throw error;
+    }
+  },
+
+  // Get pool availability
+  getPoolAvailability: async (date, startTime, endTime, poolId = null) => {
+    try {
+      const params = new URLSearchParams({
+        date: date.toISOString().split('T')[0],
+        startTime,
+        endTime
+      });
+      
+      if (poolId) {
+        params.append('poolId', poolId);
+      }
+      
+      const response = await api.get(`/pool-details/availability?${params}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching pool availability:", error);
+      throw error;
+    }
+  },
+
+  // Get pool statistics
+  getPoolStats: async () => {
+    try {
+      const response = await api.get("/pool-details/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching pool stats:", error);
+      throw error;
+    }
+  },
+
   // Test API connection
   testConnection: async () => {
     try {
