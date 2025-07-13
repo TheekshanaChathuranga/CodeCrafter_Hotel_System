@@ -1,29 +1,38 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
-import commonjs from 'vite-plugin-commonjs';
-import path from 'path';
+import react from '@vitejs/plugin-react';
 
+export default defineConfig(({ mode }) => {
+  // Load env variables based on mode (development/production)
+  const env = loadEnv(mode, process.cwd(), '');
 
-export default defineConfig({
-  base: '/',
-  plugins: [
-    react(),          // Add React plugin for JSX support
-    tailwindcss(),
-    commonjs(),    // Keep Tailwind CSS plugin
-  ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
+  return {
+    base: '/',
+    plugins: [
+      react(),
+      tailwindcss(),
+    ],
+    define: {
+      'process.env': {
+        VITE_API_URL: JSON.stringify(env.VITE_API_URL),
+        VITE_SOCKET_URL: JSON.stringify(env.VITE_SOCKET_URL),
+        // Add other variables you need to expose to frontend
+      }
     },
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:5000', // Backend server URL
-        changeOrigin: true,              // Handle CORS by changing origin
-        secure: false,                   // For local dev, no HTTPS
-      },
-    },
-  },
+    server: {
+      proxy: {
+        // Proxy API requests to avoid CORS issues
+        '/api': {
+          target: env.VITE_API_URL || 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false,
+        },
+        '/socket.io': {
+          target: env.VITE_SOCKET_URL || 'http://localhost:5000',
+          ws: true,
+          changeOrigin: true,
+        }
+      }
+    }
+  };
 });
