@@ -49,6 +49,11 @@ router.post("/login", async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
+    // Prevent inactive users (receptionist and user roles) from logging in
+    if ((user.role === "user" || user.role === "receptionist") && user.status !== "active") {
+      return res.status(401).json({ message: "Account disabled. Please contact support" });
+    }
+
     //Backend validates and returns token
     const token = jwt.sign(
       {
