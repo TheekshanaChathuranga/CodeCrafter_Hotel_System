@@ -44,7 +44,7 @@ const ReservationManagement = () => {
       const roomRes = await axios.get('http://localhost:5000/api/admin/bookings/pending'); // adjust endpoint if needed
       const roomEvents = roomRes.data.map(booking => ({
         id: booking._id,
-        title: `${booking.fullName} - Room ${booking.roomNumber}`,
+        title: `${booking.fullName} - Room ${booking.roomNumber} (Room)`,
         start: new Date(booking.checkIn),
         end: new Date(booking.checkOut),
         allDay: false,
@@ -56,7 +56,7 @@ const ReservationManagement = () => {
       const eventRes = await axios.get('http://localhost:5000/api/events');
       const eventEvents = eventRes.data.map(event => ({
         id: event._id,
-        title: `${event.name} - ${event.eventType}`,
+        title: `${event.name} - ${event.eventType} (Event)`,
         start: new Date(event.checkIn),
         end: new Date(event.checkOut),
         allDay: false,

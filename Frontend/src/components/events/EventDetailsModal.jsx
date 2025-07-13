@@ -114,6 +114,7 @@ const EventDetailsModal = ({ event, onClose }) => {
                   <table className="min-w-full">
                     <thead>
                       <tr className="bg-gray-100">
+                        <th className="px-4 py-2 text-left">Category</th>
                         <th className="px-4 py-2 text-left">Description</th>
                         <th className="px-4 py-2 text-left">Unit</th>
                         <th className="px-4 py-2 text-right">Quantity</th>
@@ -124,6 +125,7 @@ const EventDetailsModal = ({ event, onClose }) => {
                     <tbody>
                       {event.tableData.map((item, idx) => (
                         <tr key={idx} className="border-b">
+                          <td className="px-4 py-2">{item.category}</td>
                           <td className="px-4 py-2">{item.description}</td>
                           <td className="px-4 py-2">{item.unit}</td>
                           <td className="px-4 py-2 text-right">{item.quantity}</td>

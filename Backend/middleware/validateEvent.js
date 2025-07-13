@@ -45,6 +45,7 @@ const validateEvent = (req, res, next) => {
   } else {
     tableData.forEach((item, index) => {
       if (!item.description) errors.push(`Food item ${index + 1}: Description is required`);
+      if (!item.category) errors.push(`Food item ${index + 1}: Category is required`);
       if (!item.unit) errors.push(`Food item ${index + 1}: Unit is required`);
       if (item.quantity === undefined || item.quantity === null) {
         errors.push(`Food item ${index + 1}: Quantity is required`);
@@ -88,4 +89,4 @@ const validateEvent = (req, res, next) => {
   next();
 };
 
-export default validateEvent; 
+export default validateEvent;

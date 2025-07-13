@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const tableDataSchema = new mongoose.Schema({
+  category: String,
   description: String,
   unit: String,
   quantity: Number,

@@ -29,7 +29,7 @@ const EventBooking = () => {
     notes: "",
   });
   const [tableData, setTableData] = useState([
-    { no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
+    { no: 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 },
   ]);
   const [extraFields, setExtraFields] = useState([
     { description: "Pool Side reservation", rate: 5000, selected: false },
@@ -84,7 +84,7 @@ const EventBooking = () => {
         email: event.email || "",
         notes: event.notes || "",
       });
-      setTableData(event.tableData || [{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+      setTableData(event.tableData || [{ no: 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
       setExtraFields(event.extraFields || [{ description: "Pool Side reservation", rate: 5000, selected: false }, { description: "Boat ride", rate: 5000, selected: false }]);
     }
   }, [location.state]);
@@ -142,7 +142,14 @@ const EventBooking = () => {
 
   const handleTableChange = (index, field, value) => {
     const updatedData = [...tableData];
-    if (field === "description") {
+    if (field === "category") {
+      updatedData[index].category = value;
+      // Reset dependent fields when category changes
+      updatedData[index].description = "";
+      updatedData[index].unit = "";
+      updatedData[index].rate = 0;
+      updatedData[index].amount = 0;
+    } else if (field === "description") {
       // Find the selected food item from foodItems
       const selectedFood = foodItems.find(item => item.name === value);
       updatedData[index].description = value;
@@ -159,7 +166,7 @@ const EventBooking = () => {
   };
 
   const addRow = () => {
-    setTableData([...tableData, { no: tableData.length + 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+    setTableData([...tableData, { no: tableData.length + 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
   };
 
   const removeRow = (index) => {
@@ -214,6 +221,7 @@ const EventBooking = () => {
             checkIn: formattedCheckIn,
             checkOut: formattedCheckOut,
             tableData: tableData.map(row => ({
+              category: row.category,
               description: row.description,
               unit: row.unit,
               quantity: Number(row.quantity),
@@ -297,7 +305,7 @@ const EventBooking = () => {
             email: "",
             notes: "",
           });
-          setTableData([{ no: 1, description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
+          setTableData([{ no: 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
           setExtraFields([{ description: "Pool Side reservation", rate: 5000, selected: false }, { description: "Boat ride", rate: 5000, selected: false }]);
         } catch (error) {
           console.error("Error submitting booking:", error);
@@ -350,6 +358,7 @@ const EventBooking = () => {
                   <TableHeader>
                     <ShadTableRow>
                       <TableHead>No</TableHead>
+                      <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Quantity</TableHead>
                       <TableHead>Rate</TableHead>
