@@ -39,6 +39,8 @@ import PoolBooking from "./components/Receptionist/PoolBooking";
 // import RoomBooking from "./pages/reception/RoomBooking";
 // import PoolsBooking from "./pages/reception/PoolsBooking";
 
+import MenuPage from "./pages/customer/Menu";
+
 const App = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith("/admin");
@@ -71,6 +73,7 @@ const App = () => {
     <Route path="/room-booking" element={<Room_Book />} />
     <Route path="/pool-booking" element={<Pool_Book />} />
     <Route path="/event-booking" element={<ClientBooking />} />
+    <Route path="/menu" element={<MenuPage />} />
     <Route path="/profile" element={<Profile />} />
     <Route
       path="/event-booking"

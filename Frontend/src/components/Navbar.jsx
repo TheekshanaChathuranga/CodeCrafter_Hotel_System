@@ -163,8 +163,13 @@ const Navbar = () => {
             <NavLink to="/pool-booking" hoverStyle={linkHover}>
               Pool Booking
             </NavLink>
+            
             <NavLink to="/event-booking" hoverStyle={linkHover}>
               Event Booking
+            </NavLink>
+
+            <NavLink to="/menu" hoverStyle={linkHover}>
+              Menu
             </NavLink>
             {/* Replace About NavLink with anchor link to #about */}
             <a
@@ -244,6 +249,9 @@ const Navbar = () => {
             </MobileLink>
             <MobileLink to="/pool-booking" onClick={toggleMenu}>
               Pool Booking
+            </MobileLink>
+            <MobileLink to="/menu" onClick={toggleMenu}>
+              Menu
             </MobileLink>
             <MobileLink to="/event-booking" onClick={toggleMenu}>
               Event Booking
