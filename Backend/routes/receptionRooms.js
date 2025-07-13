@@ -1,5 +1,6 @@
 import express from "express";
 import Booking from "../models/Booking.js";
+import ReceptionBooking from "../models/ReceptionBooking.js";
 
 const router = express.Router();
 
@@ -37,8 +38,9 @@ router.get("/available", async (req, res) => {
       });
     }
 
-    // Find rooms that are booked during the requested period and not cancelled or checked-out
-    const bookedRooms = await Booking.find({
+    // Find rooms that are booked during the requested period from both collections
+    // Check online bookings (not cancelled or checked-out)
+    const onlineBookedRooms = await Booking.find({
       status: { $nin: ["cancelled", "checked-out"] },
       $or: [
         {
@@ -48,7 +50,25 @@ router.get("/available", async (req, res) => {
       ],
     }).distinct("roomNumber");
 
-    console.log("Booked rooms:", bookedRooms);
+    // Check reception bookings (not cancelled or checked-out)
+    const receptionBookedRooms = await ReceptionBooking.find({
+      status: { $nin: ["cancelled", "checked-out"] },
+      $or: [
+        {
+          "bookingDetails.checkIn": { $lt: checkOutDate },
+          "bookingDetails.checkOut": { $gt: checkInDate },
+        },
+      ],
+    }).distinct("bookingDetails.roomNumber");
+
+    // Combine both arrays and remove duplicates
+    const allBookedRooms = [
+      ...new Set([...onlineBookedRooms, ...receptionBookedRooms]),
+    ];
+
+    console.log("Online booked rooms:", onlineBookedRooms);
+    console.log("Reception booked rooms:", receptionBookedRooms);
+    console.log("All booked rooms:", allBookedRooms);
 
     // All rooms in the hotel
     const allRooms = [
@@ -65,7 +85,7 @@ router.get("/available", async (req, res) => {
 
     // Filter available rooms
     const availableRooms = allRooms.filter(
-      (room) => !bookedRooms.includes(room.id)
+      (room) => !allBookedRooms.includes(room.id)
     );
 
     console.log("Available rooms:", availableRooms.length);

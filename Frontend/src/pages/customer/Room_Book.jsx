@@ -29,6 +29,8 @@ const Room_Book = () => {
   // Form data state for controlled inputs
   const [formInputs, setFormInputs] = useState({
     fullName: "",
+    acType: "", // Add AC type state
+    bookingType: "", // Add booking type state
   });
 
   // Calendar state - Show calendars by default
@@ -145,6 +147,8 @@ const Room_Book = () => {
         setFormInputs((prev) => ({
           ...prev,
           fullName: userFullName,
+          acType: "", // Reset AC type when user changes
+          bookingType: "", // Reset booking type when user changes
         }));
       }
     }
@@ -428,6 +432,12 @@ const Room_Book = () => {
 
   const handleBookNow = (room) => {
     setSelectedRoom(room);
+    // Reset AC preference when selecting a new room
+    setFormInputs((prev) => ({
+      ...prev,
+      acType: "",
+      bookingType: "", // Reset booking type when selecting new room
+    }));
     setShowBookingForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -482,9 +492,48 @@ const Room_Book = () => {
         throw new Error("Please select number of adults");
       }
 
+      // Validate AC preference for Flexible rooms
+      if (selectedRoom.acOption === "Flexible") {
+        const acType = formInputs.acType || e.target.elements.acType?.value;
+        if (!acType) {
+          throw new Error("Please select AC type for this flexible room");
+        }
+      }
+
+      // Validate booking type
+      const bookingType =
+        formInputs.bookingType || e.target.elements.bookingType?.value;
+      if (!bookingType) {
+        throw new Error("Please select booking type (Day or Night)");
+      }
+
       // Append all form fields
       formData.append("roomNumber", selectedRoom.roomNumber);
       formData.append("roomType", selectedRoom.type);
+      formData.append("roomAcOption", selectedRoom.acOption); // Add AC preference if the room is Flexible
+      if (selectedRoom.acOption === "Flexible") {
+        const acType = formInputs.acType || e.target.elements.acType?.value;
+        formData.append("acType", acType);
+      }
+
+      // Add booking type and calculate price
+      formData.append("bookingType", bookingType);
+
+      // Calculate price based on booking type
+      const pricePerUnit =
+        bookingType === "Night"
+          ? selectedRoom.pricePerNight
+          : selectedRoom.pricePerDay;
+
+      // Calculate total nights/days
+      const timeDiff =
+        new Date(bookingDates.checkOut) - new Date(bookingDates.checkIn);
+      const numberOfUnits = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Number of days
+      const totalPrice = pricePerUnit * numberOfUnits;
+
+      formData.append("pricePerUnit", pricePerUnit);
+      formData.append("totalPrice", totalPrice);
+
       formData.append("checkIn", bookingDates.checkIn.toISOString());
       formData.append("checkOut", bookingDates.checkOut.toISOString());
       formData.append(
@@ -559,6 +608,8 @@ const Room_Book = () => {
       // Reset controlled form inputs
       setFormInputs({
         fullName: user?.fullName || user?.username || "", // Keep user name for next booking
+        acType: "", // Reset AC type
+        bookingType: "", // Reset booking type
       });
 
       e.target.reset(); // Reset form fields including file input
@@ -930,6 +981,100 @@ const Room_Book = () => {
               </div>
             </div>
 
+            {/* AC/Non-AC Preference - Only show for Flexible rooms */}
+            {selectedRoom && selectedRoom.acOption === "Flexible" && (
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  AC Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="acType"
+                  value={formInputs.acType}
+                  onChange={handleFormChange}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select AC option</option>
+                  <option value="AC">AC</option>
+                  <option value="Non-AC">Non-AC</option>
+                </select>
+                <p className="text-sm text-gray-500 mt-1">
+                  This room offers flexible AC options. Please select your
+                  preference.
+                </p>
+              </div>
+            )}
+
+            {/* Booking Type - Day or Night */}
+            <div>
+              <label className="block text-gray-700 mb-2">
+                Booking Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="bookingType"
+                value={formInputs.bookingType}
+                onChange={handleFormChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select booking type</option>
+                <option value="Day">
+                  Day (LKR {selectedRoom?.pricePerDay}/day)
+                </option>
+                <option value="Night">
+                  Night (LKR {selectedRoom?.pricePerNight}/night)
+                </option>
+              </select>
+              <p className="text-sm text-gray-500 mt-1">
+                Choose between day rate or night rate for your stay.
+              </p>
+            </div>
+
+            {/* Price Summary */}
+            {formInputs.bookingType &&
+              bookingDates.checkIn &&
+              bookingDates.checkOut && (
+                <div className="bg-blue-50 p-4 rounded-lg border">
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    Price Summary
+                  </h4>
+                  {(() => {
+                    const pricePerUnit =
+                      formInputs.bookingType === "Night"
+                        ? selectedRoom?.pricePerNight
+                        : selectedRoom?.pricePerDay;
+                    const timeDiff =
+                      new Date(bookingDates.checkOut) -
+                      new Date(bookingDates.checkIn);
+                    const numberOfUnits = Math.ceil(
+                      timeDiff / (1000 * 60 * 60 * 24)
+                    );
+                    const totalPrice = pricePerUnit * numberOfUnits;
+
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span>
+                            Rate per {formInputs.bookingType.toLowerCase()}:
+                          </span>
+                          <span>LKR {pricePerUnit}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>
+                            Number of {formInputs.bookingType.toLowerCase()}s:
+                          </span>
+                          <span>{numberOfUnits}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-lg border-t pt-2">
+                          <span>Total Amount:</span>
+                          <span>LKR {totalPrice}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
             <div>
               <label className="block text-gray-700 mb-2">
                 Special Requests
@@ -1156,6 +1301,7 @@ const Room_Book = () => {
                 <option value="all">All Options</option>
                 <option value="AC">AC</option>
                 <option value="Non-AC">Non-AC</option>
+                <option value="Flexible">Flexible</option>
               </select>
             </div>
 
