@@ -5,6 +5,9 @@
       "label": "Start Frontend Dev Server",
       "type": "shell",
       "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/Frontend"
+      },
       "group": "build",
       "isBackground": true,
       "problemMatcher": []

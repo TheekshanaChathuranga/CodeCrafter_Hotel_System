@@ -139,9 +139,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ""
   },
+  employeeId: {
+    type: String,
+    required: [true, 'Employee ID is required'],
+    unique: true,
+    trim: true
+  },
   phone: {
     type: String,
-    default: ""
+    required: [true, 'Phone is required'],
+    match: [/^\d{10}$/, 'Phone must be exactly 10 digits']
   },
   role: { 
     type: String, 

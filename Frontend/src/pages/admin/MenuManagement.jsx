@@ -1,16 +1,19 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../../components/ui/table";
 import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/700.css";
 import { useEffect } from "react";
-import foodService from "../services/foodService";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/ui/dialog";
-import { Input } from "../components/ui/input";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../components/ui/select";
-import { Label } from "../components/ui/label";
+import foodService from "../../services/foodService";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../../components/ui/select";
+import { Label } from "../../components/ui/label";
 import { Trash2 } from 'lucide-react';
+import ImageUploader from "../../components/admin/ImageUploader";
+
+const IMAGE_BASE_URL = "http://localhost:5000/uploads/";
 
 const categories = [
   "Appetizers",
@@ -25,11 +28,15 @@ export default function MenuManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editItem, setEditItem] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", unitType: "", unitPrice: "", category: categories[0] });
+  const [editForm, setEditForm] = useState({ name: "", unitType: "", unitPrice: "", category: categories[0], image: null });
   const [saving, setSaving] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', unitType: '', unitPrice: '', category: categories[0] });
+  const [addForm, setAddForm] = useState({ name: '', unitType: '', unitPrice: '', category: categories[0], image: null });
   const [addSaving, setAddSaving] = useState(false);
+  const [addImage, setAddImage] = useState(null);
+  const [addPreview, setAddPreview] = useState([]);
+  const [editImage, setEditImage] = useState(null);
+  const [editPreview, setEditPreview] = useState([]);
 
   const openEdit = (item) => {
     setEditItem(item);
@@ -38,12 +45,17 @@ export default function MenuManagement() {
       unitType: item.unitType,
       unitPrice: item.unitPrice,
       category: item.category || categories[0],
+      image: item.image || null,
     });
+    setEditPreview(item.image ? [IMAGE_BASE_URL + item.image] : []);
+    setEditImage(null);
   };
 
   const closeEdit = () => {
     setEditItem(null);
-    setEditForm({ name: "", unitType: "", unitPrice: "", category: categories[0] });
+    setEditForm({ name: "", unitType: "", unitPrice: "", category: categories[0], image: null });
+    setEditPreview([]);
+    setEditImage(null);
   };
 
   const handleEditChange = (field, value) => {
@@ -53,14 +65,18 @@ export default function MenuManagement() {
   const saveEdit = async () => {
     setSaving(true);
     try {
+      let imageFilename = editForm.image;
+      if (editImage) {
+        imageFilename = await uploadImage(editImage);
+      }
       const response = await fetch(`/api/fooditems/${editItem._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify({ ...editForm, image: imageFilename }),
       });
       if (!response.ok) throw new Error("Failed to update item");
       // Update local state
-      setItems((prev) => prev.map((item) => item._id === editItem._id ? { ...item, ...editForm } : item));
+      setItems((prev) => prev.map((item) => item._id === editItem._id ? { ...item, ...editForm, image: imageFilename } : item));
       closeEdit();
     } catch (err) {
       alert(err.message);
@@ -70,23 +86,56 @@ export default function MenuManagement() {
   };
 
   const openAdd = () => {
-    setAddForm({ name: '', unitType: '', unitPrice: '', category: categories[0] });
+    setAddForm({ name: '', unitType: '', unitPrice: '', category: categories[0], image: null });
+    setAddPreview([]);
+    setAddImage(null);
     setAddOpen(true);
   };
   const closeAdd = () => {
     setAddOpen(false);
-    setAddForm({ name: '', unitType: '', unitPrice: '', category: categories[0] });
+    setAddForm({ name: '', unitType: '', unitPrice: '', category: categories[0], image: null });
+    setAddPreview([]);
+    setAddImage(null);
   };
   const handleAddChange = (field, value) => {
     setAddForm((prev) => ({ ...prev, [field]: value }));
   };
+  const handleAddImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAddImage(file);
+      setAddPreview([URL.createObjectURL(file)]);
+    }
+  };
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setEditImage(file);
+      setEditPreview([URL.createObjectURL(file)]);
+    }
+  };
+  const handleAddRemoveImage = () => {
+    setAddImage(null);
+    setAddPreview([]);
+    setAddForm((prev) => ({ ...prev, image: null }));
+  };
+  const handleEditRemoveImage = () => {
+    setEditImage(null);
+    setEditPreview([]);
+    setEditForm((prev) => ({ ...prev, image: null }));
+  };
+
   const saveAdd = async () => {
     setAddSaving(true);
     try {
+      let imageFilename = addForm.image;
+      if (addImage) {
+        imageFilename = await uploadImage(addImage);
+      }
       const response = await fetch('/api/fooditems', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(addForm),
+        body: JSON.stringify({ ...addForm, image: imageFilename }),
       });
       if (!response.ok) throw new Error('Failed to add item');
       const newItem = await response.json();
@@ -109,6 +158,15 @@ export default function MenuManagement() {
       alert(err.message);
     }
   };
+
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Image upload failed');
+    const data = await res.json();
+    return data.filename;
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -169,15 +227,23 @@ export default function MenuManagement() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-1/2 text-[#141414] font-medium text-[14px]">Item</TableHead>
-                    <TableHead className="w-1/4 text-[#141414] font-medium text-[14px]">Unit Type</TableHead>
-                    <TableHead className="w-1/4 text-[#141414] font-medium text-[14px]">Price</TableHead>
+                    <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Photo</TableHead>
+                    <TableHead className="w-1/3 text-[#141414] font-medium text-[14px]">Item</TableHead>
+                    <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Unit Type</TableHead>
+                    <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Price</TableHead>
                     <TableHead className="w-1/4 text-[#737373] font-medium text-[14px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredItems.map((item) => (
                     <TableRow key={item._id} className="border-b border-[#E5E8EB] last:border-0">
+                      <TableCell>
+                        {item.image ? (
+                          <img src={IMAGE_BASE_URL + item.image} alt="food" className="h-16 w-16 object-cover rounded" />
+                        ) : (
+                          <div className="h-16 w-16 bg-gray-200 flex items-center justify-center rounded text-gray-400">No Photo</div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-[#141414] font-normal text-[14px]">{item.name}</TableCell>
                       <TableCell className="text-[#737373] font-normal text-[14px]">{item.unitType}</TableCell>
                       <TableCell className="text-[#737373] font-normal text-[14px]">LKR {item.unitPrice}</TableCell>
@@ -191,6 +257,7 @@ export default function MenuManagement() {
                             <DialogContent>
                               <DialogHeader>
                                 <DialogTitle>Edit Menu Item</DialogTitle>
+                                <DialogDescription>Edit the details and save to update this menu item.</DialogDescription>
                               </DialogHeader>
                               <div className="flex flex-col gap-4 py-2">
                                 <div>
@@ -217,6 +284,17 @@ export default function MenuManagement() {
                                       ))}
                                     </SelectContent>
                                   </Select>
+                                </div>
+                                <div>
+                                  <Label>Photo</Label>
+                                  <ImageUploader
+                                    previewImages={editPreview}
+                                    onImageChange={handleEditImageChange}
+                                    onRemoveImage={handleEditRemoveImage}
+                                  />
+                                  {editPreview.length > 0 && (
+                                    <Button variant="outline" size="sm" onClick={handleEditRemoveImage} className="mt-2">Remove Photo</Button>
+                                  )}
                                 </div>
                               </div>
                               <DialogFooter>
@@ -277,6 +355,17 @@ export default function MenuManagement() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <Label>Photo</Label>
+                  <ImageUploader
+                    previewImages={addPreview}
+                    onImageChange={handleAddImageChange}
+                    onRemoveImage={handleAddRemoveImage}
+                  />
+                  {addPreview.length > 0 && (
+                    <Button variant="outline" size="sm" onClick={handleAddRemoveImage} className="mt-2">Remove Photo</Button>
+                  )}
                 </div>
               </div>
               <DialogFooter>

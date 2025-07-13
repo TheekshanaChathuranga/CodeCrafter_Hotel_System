@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../components/ui/select";
-import { Button } from "../components/ui/button";
-import coverCustomerMenu from "../assets/cover-customer-menu.avif";
+import { useNavigate } from "react-router-dom";
+import { Card, CardHeader, CardContent } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../../components/ui/select";
+import { Button } from "../../components/ui/button";
+import coverCustomerMenu from "../../assets/cover-customer-menu.avif";
 
 const eventTypes = [
   "Wedding",
@@ -24,17 +25,22 @@ const initialForm = {
 };
 
 export default function ClientBooking() {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
+
   const handleSelect = (value) => {
     setForm((prev) => ({ ...prev, eventType: value }));
     setErrors((prev) => ({ ...prev, eventType: "" }));
   };
+
   const validate = () => {
     const newErrors = {};
     if (!form.contactName) newErrors.contactName = "Contact Name is required";
@@ -44,18 +50,43 @@ export default function ClientBooking() {
     else if (!/^\d{10,15}$/.test(form.phone)) newErrors.phone = "Invalid phone number";
     if (!form.eventType) newErrors.eventType = "Event Type is required";
     if (!form.eventDate) newErrors.eventDate = "Event Date is required";
+    else {
+      const selectedDate = new Date(form.eventDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) newErrors.eventDate = "Event date cannot be in the past";
+    }
     if (!form.eventTime) newErrors.eventTime = "Event Time is required";
     if (!form.attendees) newErrors.attendees = "Number of Attendees is required";
     else if (isNaN(form.attendees) || Number(form.attendees) < 1) newErrors.attendees = "Must be at least 1";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    // Submit logic here
-    alert("Booking submitted! (Demo)");
-    setForm(initialForm);
+    
+    setIsSubmitting(true);
+    try {
+      // Here you would typically make an API call to submit the booking
+      // For now, we'll simulate a successful submission
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      
+      alert("Event booking submitted successfully! You will receive a confirmation email shortly.");
+      setForm(initialForm);
+      
+      // Navigate to a confirmation page or back to home
+      navigate("/mybookings");
+    } catch (error) {
+      alert("Failed to submit booking. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoBack = () => {
+    navigate(-1); // Go back to previous page
   };
   return (
     <div className="min-h-screen bg-[#F7FAFC] flex items-center justify-center p-4">
@@ -63,7 +94,17 @@ export default function ClientBooking() {
         {/* Left: Form */}
         <div className="flex-1 flex flex-col justify-center p-6 md:p-10">
           <CardHeader className="p-0 mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#0D141C] mb-2">Client Event Booking</h1>
+            <div className="flex items-center justify-between mb-4">
+              <Button 
+                variant="outline" 
+                onClick={handleGoBack}
+                className="px-4 py-2"
+              >
+                ← Back
+              </Button>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#0D141C] mb-2">Event Booking</h1>
+            <p className="text-gray-600">Book your special event with us</p>
           </CardHeader>
           <CardContent className="p-0">
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -76,6 +117,7 @@ export default function ClientBooking() {
                   onChange={handleChange}
                   aria-invalid={!!errors.contactName}
                   className={errors.contactName ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 {errors.contactName && <p className="text-red-500 text-xs mt-1">{errors.contactName}</p>}
               </div>
@@ -89,6 +131,7 @@ export default function ClientBooking() {
                   onChange={handleChange}
                   aria-invalid={!!errors.email}
                   className={errors.email ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
@@ -102,12 +145,13 @@ export default function ClientBooking() {
                   onChange={handleChange}
                   aria-invalid={!!errors.phone}
                   className={errors.phone ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="eventType" className="mb-2">Event Type</Label>
-                <Select value={form.eventType} onValueChange={handleSelect}>
+                <Select value={form.eventType} onValueChange={handleSelect} disabled={isSubmitting}>
                   <SelectTrigger className={"w-full " + (errors.eventType ? "border-red-500" : "") }>
                     <SelectValue placeholder="Select Event Type" />
                   </SelectTrigger>
@@ -130,6 +174,8 @@ export default function ClientBooking() {
                     onChange={handleChange}
                     aria-invalid={!!errors.eventDate}
                     className={errors.eventDate ? "border-red-500" : ""}
+                    disabled={isSubmitting}
+                    min={new Date().toISOString().split('T')[0]} // Prevent past dates
                   />
                   {errors.eventDate && <p className="text-red-500 text-xs mt-1">{errors.eventDate}</p>}
                 </div>
@@ -143,6 +189,7 @@ export default function ClientBooking() {
                     onChange={handleChange}
                     aria-invalid={!!errors.eventTime}
                     className={errors.eventTime ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   {errors.eventTime && <p className="text-red-500 text-xs mt-1">{errors.eventTime}</p>}
                 </div>
@@ -158,10 +205,28 @@ export default function ClientBooking() {
                   onChange={handleChange}
                   aria-invalid={!!errors.attendees}
                   className={errors.attendees ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 {errors.attendees && <p className="text-red-500 text-xs mt-1">{errors.attendees}</p>}
               </div>
-              <Button type="submit" className="w-full mt-2 h-12 text-base font-bold bg-[#0A80ED] hover:bg-[#0866c6]">Submit Booking</Button>
+              <div className="flex gap-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleGoBack}
+                  className="flex-1"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="flex-1 h-12 text-base font-bold bg-[#0A80ED] hover:bg-[#0866c6]"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Booking"}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </div>
@@ -169,7 +234,7 @@ export default function ClientBooking() {
         <div className="hidden md:flex flex-1 items-center justify-center bg-[#F7FAFC] p-6">
           <img
             src={coverCustomerMenu}
-            alt="Booking Illustration"
+            alt="Event Booking Illustration"
             className="max-w-full h-auto rounded-xl shadow-md"
             style={{ width: 360, height: 480, objectFit: "cover" }}
           />
@@ -178,7 +243,7 @@ export default function ClientBooking() {
         <div className="md:hidden flex justify-center mb-6">
           <img
             src={coverCustomerMenu}
-            alt="Booking Illustration"
+            alt="Event Booking Illustration"
             className="max-w-xs w-full h-auto rounded-xl shadow-md"
             style={{ maxHeight: 240, objectFit: "cover" }}
           />

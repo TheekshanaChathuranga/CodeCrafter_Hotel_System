@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Popup from "./Popup";
-import eventService from '../services/eventService';
+import eventService from '../../services/eventService';
 
 const EventList = () => {
   const navigate = useNavigate();
