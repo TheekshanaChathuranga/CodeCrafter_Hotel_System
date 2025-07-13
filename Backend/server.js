@@ -1,14 +1,3 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import authRoutes from './routes/auth.js';
-import eventRoutes from './routes/events.js';
-import foodItemsRoutes from './routes/fooditems.js';
-import validateEvent from './middleware/validateEvent.js';
-import errorHandler from './middleware/errorHandler.js';
-
-
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -17,9 +6,12 @@ import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import fs from "fs";
 
 // Route Imports
 import authRoutes from "./routes/auth.js";
+import eventRoutes from "./routes/events.js";
+import foodItemsRoutes from "./routes/fooditems.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import bookingRoutes from "./routes/booking.js";
 import poolRoutes from "./routes/managePool.js";
@@ -32,6 +24,10 @@ import profileRoutes from "./routes/profileRoutes.js";
 import receptionBookingsRoutes from "./routes/receptionBookings.js";
 import receptionRoomsRoutes from "./routes/receptionRooms.js";
 import dashboardRoutes from "./routes/dashboard.js";
+
+// Middleware Imports
+import validateEvent from "./middleware/validateEvent.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -75,7 +71,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Ensure uploads directory exists
-import fs from "fs";
 const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
@@ -92,6 +87,8 @@ mongoose
 
 // API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
+app.use("/api/fooditems", foodItemsRoutes);
 app.use("/api/rooms", roomRoutes); // Room availability routes
 app.use("/api/bookings", bookingRoutes); // Changed from booking to bookings to match frontend
 app.use("/api/pools", poolRoutes);
@@ -117,21 +114,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/fooditems', foodItemsRoutes);
-
 // Error handling middleware
 app.use(errorHandler);
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    error: "Internal Server Error",
-    message: err.message,
-  });
-});
 
 // Start Server
 server.listen(PORT, () => {

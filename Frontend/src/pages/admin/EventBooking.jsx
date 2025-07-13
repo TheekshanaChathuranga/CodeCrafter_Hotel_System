@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Card, CardHeader, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Dialog, DialogTrigger, DialogContent } from "../components/ui/dialog";
-import { Table, TableHeader, TableRow as ShadTableRow, TableHead, TableBody, TableCell } from "../components/ui/table";
-import BookingForm from "../components/forms/BookingForm";
-import TableRow from "../components/events/TableRow";
-import ExtraRow from "../components/events/ExtraRow";
-import SummarySection from "../components/events/SummarySection";
-import eventService from "../services/eventService";
-import foodService from "../services/foodService";
+import { Card, CardHeader, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Dialog, DialogTrigger, DialogContent } from "../../components/ui/dialog";
+import { Table, TableHeader, TableRow as ShadTableRow, TableHead, TableBody, TableCell } from "../../components/ui/table";
+import BookingForm from "../../components/forms/BookingForm";
+import TableRow from "../../components/events/TableRow";
+import ExtraRow from "../../components/events/ExtraRow";
+import SummarySection from "../../components/events/SummarySection";
+import eventService from "../../services/eventService";
+import foodService from "../../services/foodService";
 
 const EventBooking = () => {
   const navigate = useNavigate();

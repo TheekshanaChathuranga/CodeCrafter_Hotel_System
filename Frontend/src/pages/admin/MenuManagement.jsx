@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../components/ui/table";
+import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "../../components/ui/table";
 import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/700.css";
 import { useEffect } from "react";
-import foodService from "../services/foodService";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../components/ui/dialog";
-import { Input } from "../components/ui/input";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../components/ui/select";
-import { Label } from "../components/ui/label";
+import foodService from "../../services/foodService";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "../../components/ui/select";
+import { Label } from "../../components/ui/label";
 import { Trash2 } from 'lucide-react';
 
 const categories = [

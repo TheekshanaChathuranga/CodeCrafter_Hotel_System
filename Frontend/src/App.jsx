@@ -6,10 +6,9 @@ import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import EventBooking from "./pages/EventBooking";
-import EventList from "./pages/EventList";
-import MenuManagement from "./pages/MenuManagement";
-import ClientBooking from "./pages/ClientBooking";
+import EventBooking from "./pages/admin/EventBooking";
+import MenuManagement from "./pages/admin/MenuManagement";
+import ClientBooking from "./pages/customer/ClientBooking";
 import DashboardLayout from "./layout/dashboardLayout";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
@@ -66,6 +65,7 @@ const App = () => {
 
     <Route path="/room-booking" element={<Room_Book />} />
     <Route path="/pool-booking" element={<Pool_Book />} />
+    <Route path="/event-booking" element={<ClientBooking />} />
     <Route path="/profile" element={<Profile />} />
     <Route
       path="/mybookings"
