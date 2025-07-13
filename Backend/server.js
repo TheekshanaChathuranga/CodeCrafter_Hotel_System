@@ -24,6 +24,7 @@ import profileRoutes from "./routes/profileRoutes.js";
 import receptionBookingsRoutes from "./routes/receptionBookings.js";
 import receptionRoomsRoutes from "./routes/receptionRooms.js";
 import dashboardRoutes from "./routes/dashboard.js";
+import uploadRoutes from "./routes/upload.js";
 
 // Middleware Imports
 import validateEvent from "./middleware/validateEvent.js";
@@ -102,6 +103,7 @@ app.use("/api/profile", profileRoutes); // Add profile routes
 app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception bookings route
 app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/dashboard", dashboardRoutes); // Add dashboard routes
+app.use("/api/upload", uploadRoutes);
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

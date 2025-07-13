@@ -112,6 +112,7 @@ const App = () => {
         path="bookingNotifications/:id"
         element={<BookingConfirmationDetails />}
       />
+      <Route path="menu-management" element={<MenuManagement />} />
     </Route>
 
     {/* receptionist routes */}

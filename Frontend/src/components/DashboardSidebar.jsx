@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Clock,
+  Utensils,
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
 
@@ -70,6 +71,12 @@ const DashboardSidebar = () => {
       title: "Notifications",
       url: { admin: "/admin/bookingNotifications" },
       icon: <Bell size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Menu Management",
+      url: { admin: "/admin/menu-management" },
+      icon: <Utensils size={18} />,
       roles: ["admin"],
     },
     // Reception and shared routes

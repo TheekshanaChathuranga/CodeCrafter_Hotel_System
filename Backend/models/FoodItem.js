@@ -5,6 +5,7 @@ const foodItemSchema = new mongoose.Schema({
   unitType: { type: String, required: true },
   unitPrice: { type: Number, required: true, min: 0 },
   category: { type: String, required: false },
+  image: { type: String, required: false }, // stores filename or URL
 });
 
 const FoodItem = mongoose.model("FoodItem", foodItemSchema);
