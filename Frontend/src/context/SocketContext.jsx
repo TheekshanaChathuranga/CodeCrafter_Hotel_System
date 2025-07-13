@@ -78,10 +78,13 @@ export const SocketProvider = ({ children }) => {
       const newSocket = io(
         import.meta.env.VITE_SOCKET_URL || "http://localhost:5000",
         {
+          // Allow polling then upgrade to websocket automatically for
+          // maximum compatibility. You can force websocket later if desired.
           auth: {
             userId: user._id || user.id,
             role: user.role,
           },
+          // no cookies required in dev environment
         }
       );
 

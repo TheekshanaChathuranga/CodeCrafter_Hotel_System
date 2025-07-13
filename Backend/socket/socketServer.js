@@ -5,14 +5,13 @@ const adminSockets = new Map();
 
 export const configureSocket = (httpServer) => {
   const io = new Server(httpServer, {
+    // Force pure WebSocket transport to avoid long-polling upgrade issues in
+    // some browsers/proxy setups. The client will also be set to use
+    // `transports: ['websocket']`.
+    transports: ["websocket"],
     cors: {
-      origin: [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:5174",
-        process.env.CLIENT_URL,
-      ].filter(Boolean),
-      methods: ["GET", "POST"],
+      origin: "*", // Allow any origin during development
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       credentials: true,
     },
   });

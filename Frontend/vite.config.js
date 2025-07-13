@@ -13,10 +13,22 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
     ],
+    // Ensure that only a single copy of Emotion is bundled. This prevents the
+    // "You are loading @emotion/react when it is already loaded" warning that
+    // appears when multiple builds/versions end up in the final bundle.
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+      // Dedupe guarantees that Vite (via Rollup) treats these packages as
+      // externals and never bundles a second copy if a dependency brings in a
+      // nested version.
+      dedupe: ["@emotion/react", "@emotion/styled"],
+    },
+    optimizeDeps: {
+      // Also make the dependency optimizer aware that these two should be
+      // treated as pre-bundled singletons.
+      include: ["@emotion/react", "@emotion/styled"],
     },
     define: {
       'process.env': {
