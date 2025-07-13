@@ -16,9 +16,11 @@ import {
   Clock,
 } from "lucide-react";
 import { useAuth } from "../context/UserAuthContext";
+import { useSocket } from "../context/SocketContext";
 
 const DashboardSidebar = () => {
   const { user, logout } = useAuth();
+  const { unreadBookings, markBookingsAsRead } = useSocket();
   const [isOpen, setIsOpen] = useState(true);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -108,8 +110,10 @@ const DashboardSidebar = () => {
   );
 
   const handleLinkClick = () => {
-    if (onClose) {
-      onClose(); // Close mobile sidebar
+    console.log("handleLinkClick called");
+    // Close mobile sidebar if onClose prop is provided
+    if (typeof onClose === "function") {
+      onClose();
     }
   };
 
@@ -152,12 +156,41 @@ const DashboardSidebar = () => {
             <li key={item.title}>
               <Link
                 to={item.url[user.role]}
+                onClick={(e) => {
+                  console.log("=== LINK CLICKED ===");
+                  console.log("Item title:", item.title);
+                  console.log("User role:", user.role);
+
+                  handleLinkClick();
+                  // Mark notifications as read when clicking on Notifications menu
+                  if (item.title === "Notifications" && user.role === "admin") {
+                    console.log("=== Notification button clicked ===");
+                    console.log("Calling markBookingsAsRead function...");
+                    console.log(
+                      "markBookingsAsRead function:",
+                      markBookingsAsRead
+                    );
+                    markBookingsAsRead();
+                  }
+                }}
                 className={`flex items-center gap-3 p-2 rounded hover:bg-[#34495E] ${
                   !isOpen ? "justify-center" : ""
-                }`}
+                } relative`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
                 {isOpen && <span>{item.title}</span>}
+                {/* Show notification badge for admin notifications */}
+                {item.title === "Notifications" &&
+                  user.role === "admin" &&
+                  unreadBookings > 0 && (
+                    <span
+                      className={`absolute ${
+                        isOpen ? "top-0 right-0" : "top-0 right-0"
+                      } bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center min-w-[24px] text-[10px] font-bold border-2 border-white shadow-lg transform translate-x-2 -translate-y-2`}
+                    >
+                      {unreadBookings > 99 ? "99+" : unreadBookings}
+                    </span>
+                  )}
               </Link>
             </li>
           ))}

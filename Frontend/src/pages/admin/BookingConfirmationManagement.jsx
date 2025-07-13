@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw, Search } from "lucide-react";
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from "notistack";
 
 const BookingList = () => {
   const [bookings, setBookings] = useState([]);
@@ -10,20 +10,22 @@ const BookingList = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_BASE_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/admin/bookings/pending`, {
-        headers: { 
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      // Since API_BASE_URL already includes /api, use it directly
+      const res = await fetch(`${API_BASE_URL}/admin/bookings/pending`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       const data = await res.json();
       setBookings(Array.isArray(data) ? data : []);
     } catch (err) {
-      enqueueSnackbar('Failed to fetch bookings', { variant: 'error' });
+      enqueueSnackbar("Failed to fetch bookings", { variant: "error" });
       setBookings([]);
     } finally {
       setLoading(false);
@@ -34,12 +36,12 @@ const BookingList = () => {
     fetchBookings();
   }, []);
 
-  const filteredBookings = bookings.filter(booking => {
+  const filteredBookings = bookings.filter((booking) => {
     const searchTerm = search.toLowerCase();
     return (
-      (booking.roomNumber?.toLowerCase().includes(searchTerm)) ||
-      (booking.fullName?.toLowerCase().includes(searchTerm)) ||
-      (booking.phoneNumber?.toLowerCase().includes(searchTerm))
+      booking.roomNumber?.toLowerCase().includes(searchTerm) ||
+      booking.fullName?.toLowerCase().includes(searchTerm) ||
+      booking.phoneNumber?.toLowerCase().includes(searchTerm)
     );
   });
 
@@ -79,9 +81,11 @@ const BookingList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredBookings.map((booking, index) => (
-            <div 
-              key={`admin-booking-${booking._id}-${index}`} 
-              onClick={() => navigate(`/admin/bookingNotifications/${booking._id}`)}
+            <div
+              key={`admin-booking-${booking._id}-${index}`}
+              onClick={() =>
+                navigate(`/admin/bookingNotifications/${booking._id}`)
+              }
               className="p-4 border rounded-lg cursor-pointer hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
@@ -92,7 +96,9 @@ const BookingList = () => {
                   <p className="font-medium">{booking.fullName}</p>
                   <p className="text-sm text-gray-600">{booking.phoneNumber}</p>
                   <p className="text-sm mt-2">
-                    <span className="font-semibold">Dates:</span> {new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}
+                    <span className="font-semibold">Dates:</span>{" "}
+                    {new Date(booking.checkIn).toLocaleDateString()} -{" "}
+                    {new Date(booking.checkOut).toLocaleDateString()}
                   </p>
                 </div>
                 <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
