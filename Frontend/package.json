@@ -10,16 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/public-sans": "^5.2.6",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/vite": "^4.0.17",
-    "@fontsource/public-sans": "^5.2.6",
     "axios": "^1.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
+    "package_name": "^1.0.2",
     "pnpm": "^10.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
