@@ -73,35 +73,104 @@ const poolSchema = new mongoose.Schema({
         type: String,
         enum: ['Available', 'Not Available'],
         required: true,
+        default: 'Available'
     },
     openingTime: {
         type: String,
         required: true
-      },
-      closingTime: {
+    },
+    closingTime: {
         type: String,
         required: true
-      },
-      images: [String],
-      createdAt: {
-        type: Date,
-        default: Date.now
-      },
-      pricePerPersonHour: {
+    },
+    images: {
+        type: [String],
+        validate: {
+            validator: function(v) {
+                return v.length <= 5;
+            },
+            message: 'Maximum 5 images allowed'
+        }
+    },
+    pricePerPersonHour: {
         type: Number,
         required: true,
         min: 0
-      },
-      unavailablePeriod: {
+    },
+    pricePerPersonDay: {
+        type: Number,
+        required: true,
+        min: 0
+    },
+    unavailablePeriod: {
         start: {
-          type: Date,
-          required: function() { return this.poolStatus === 'Not Available'; }
+            type: Date,
+            required: function() { return this.poolStatus === 'Not Available'; }
         },
         end: {
-          type: Date,
-          required: function() { return this.poolStatus === 'Not Available'; }
+            type: Date,
+            required: function() { return this.poolStatus === 'Not Available'; },
+            validate: {
+                validator: function(endDate) {
+                    return endDate >= this.unavailablePeriod.start;
+                },
+                message: 'End date must be after or equal to start date'
+            }
         }
-      }
-    }, { timestamps: true });
+    },
+    facilities: {
+        type: [String],
+        default: []
+    },
+    maxBookingHours: {
+        type: Number,
+        default: 8,
+        min: 1
+    }
+}, { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
+
+// Add virtual for checking current availability
+poolSchema.virtual('isCurrentlyAvailable').get(function() {
+    if (this.poolStatus === 'Not Available') {
+        const now = new Date();
+        if (this.unavailablePeriod.start && this.unavailablePeriod.end) {
+            return now < this.unavailablePeriod.start || now > this.unavailablePeriod.end;
+        }
+        return false;
+    }
+    return true;
+});
+
+// Static method to check pool availability for a given time period
+poolSchema.statics.checkAvailability = async function(poolId, startTime, endTime, excludeBookingId = null) {
+    const PoolBooking = mongoose.model('PoolBooking');
     
-    export default mongoose.model('Pool', poolSchema);
+    const query = {
+        poolId: poolId,
+        status: { $in: ['pending', 'confirmed', 'approved'] },
+        $or: [
+            {
+                checkIn: { $lt: endTime },
+                checkOut: { $gt: startTime }
+            }
+        ]
+    };
+    
+    if (excludeBookingId) {
+        query._id = { $ne: excludeBookingId };
+    }
+    
+    const conflictingBookings = await PoolBooking.find(query);
+    return conflictingBookings.length === 0;
+};
+
+// Add index for better performance
+poolSchema.index({ name: 1 });
+poolSchema.index({ poolStatus: 1 });
+
+const Pool = mongoose.model('Pool', poolSchema);
+export default Pool;

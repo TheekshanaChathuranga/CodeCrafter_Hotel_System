@@ -574,15 +574,15 @@ const BookingsList = () => {
                               <div className="text-sm font-medium text-gray-900 mb-1">
                                 Total: <span className="text-green-600">Rs.{getTotalAmount(booking)}</span>
                               </div>
-                              <div className="text-xs text-blue-700 font-medium mb-1">
+                              {/* <div className="text-xs text-blue-700 font-medium mb-1">
                                 💳 Online Booking (Calculated)
-                              </div>
+                              </div> */}
                               <div className="text-xs text-blue-600">
                                 {getGuestCount(booking)} person(s) × Rs.500 (2hrs)
                               </div>
-                              <div className="text-xs text-blue-600">
+                              {/* <div className="text-xs text-blue-600">
                                 Payment at check-in
-                              </div>
+                              </div> */}
                             </div>
                           ) : (
                             <div className="space-y-1">
@@ -592,17 +592,17 @@ const BookingsList = () => {
                               <div className="text-xs text-gray-600">
                                 Advance: <span className="font-medium text-blue-600">Rs.{getAdvanceAmount(booking)}</span>
                               </div>
-                              <div className="text-xs text-gray-600">
+                              {/* <div className="text-xs text-gray-600">
                                 Remaining: <span className="font-medium text-orange-600">Rs.{getTotalAmount(booking) - getAdvanceAmount(booking)}</span>
-                              </div>
-                              {getTotalAmount(booking) > 0 && (
+                              </div> */}
+                              {/* {getTotalAmount(booking) > 0 && (
                                 <div className="w-full bg-gray-200 rounded-full h-1.5">
                                   <div 
                                     className="bg-green-500 h-1.5 rounded-full" 
                                     style={{ width: `${Math.max(((getAdvanceAmount(booking)) / getTotalAmount(booking)) * 100, 5)}%` }}
                                   ></div>
                                 </div>
-                              )}
+                              )} */}
                             </div>
                           )}
                         </td>
