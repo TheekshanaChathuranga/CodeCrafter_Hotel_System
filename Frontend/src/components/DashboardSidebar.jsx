@@ -50,7 +50,7 @@ const DashboardSidebar = () => {
     },
     {
       title: "Event Booking",
-      url: { admin: "/event-booking" },
+      url: { admin: "/admin/event-booking" },
       icon: <CalendarCheck size={18} />,
       roles: ["admin"],
     },

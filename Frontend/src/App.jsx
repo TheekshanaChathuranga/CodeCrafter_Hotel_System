@@ -44,10 +44,13 @@ const App = () => {
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isreceptionistRoute = location.pathname.startsWith("/receptionist");
   const isReceptionRoute = location.pathname.startsWith("/reception");
+  // Hide the public Navbar on the standalone Event Booking page as requested
+  const isEventBookingRoute = location.pathname.startsWith("/event-booking");
 
   return (
 <div>
-  {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && <Navbar />}
+  {/* Render the public Navbar on all public routes except the standalone Event Booking page */}
+  {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && !isEventBookingRoute && <Navbar />}
 
   <Routes>
     <Route path="/" element={<Home />} />
@@ -67,7 +70,7 @@ const App = () => {
 
     <Route path="/room-booking" element={<Room_Book />} />
     <Route path="/pool-booking" element={<Pool_Book />} />
-    <Route path="/event-booking" element={<EventBooking />} />
+    <Route path="/event-booking" element={<ClientBooking />} />
     <Route path="/profile" element={<Profile />} />
     <Route
       path="/event-booking"
