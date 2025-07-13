@@ -72,12 +72,12 @@ const DashboardSidebar = () => {
       icon: <CalendarCheck size={18} />,
       roles: ["admin"],
     },
-    {
-      title: "Event List",
-      url: { admin: "/admin/event-list" },
-      icon: <Menu size={18} />,
-      roles: ["admin"],
-    },
+    // {
+    //   title: "Event List",
+    //   url: { admin: "/admin/event-list" },
+    //   icon: <Menu size={18} />,
+    //   roles: ["admin"],
+    // },
     {
       title: "Settings",
       url: { admin: "/admin/settings" },

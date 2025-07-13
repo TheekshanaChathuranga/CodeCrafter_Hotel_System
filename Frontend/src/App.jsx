@@ -9,7 +9,7 @@ import Signup from "./pages/Signup";
 import MenuManagement from "./pages/admin/MenuManagement";
 import ClientBooking from "./pages/customer/ClientBooking";
 import DashboardLayout from "./layout/dashboardLayout";
-import EventList from "./pages/admin/EventList";
+//import EventList from "./pages/admin/EventList";
 import ManagePools from "./pages/admin/PoolManagement";
 import ManageRooms from "./pages/admin/RoomManagement";
 import ManageUsers from "./pages/admin/UserManagement";
@@ -106,7 +106,7 @@ const App = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="menu-management" element={<MenuManagement />} />
           <Route path="event-booking" element={<EventBooking />} />
-          <Route path="event-list" element={<EventList />} />
+          {/* <Route path="event-list" element={<EventList />} /> */}
           <Route
             path="bookingNotifications"
             element={<BookingConfirmation />}
