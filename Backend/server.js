@@ -29,6 +29,8 @@ import uploadRoutes from "./routes/upload.js";
 // Middleware Imports
 import validateEvent from "./middleware/validateEvent.js";
 import errorHandler from "./middleware/errorHandler.js";
+import notificationRoutes from "./routes/notifications.js";
+
 
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
@@ -61,7 +63,12 @@ const MONGODB_URI =
 // Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      process.env.CLIENT_URL,
+    ].filter(Boolean),
     credentials: true,
   })
 );
@@ -104,6 +111,7 @@ app.use("/api/receptionBookings", receptionBookingsRoutes); // Add reception boo
 app.use("/api/receptionRooms", receptionRoomsRoutes); // Add reception rooms route
 app.use("/api/dashboard", dashboardRoutes); // Add dashboard routes
 app.use("/api/upload", uploadRoutes);
+app.use("/api/notifications", notificationRoutes); // Add notification routes
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

@@ -7,9 +7,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Button
+  Button,
 } from "@mui/material";
-import { useSnackbar } from 'notistack';
+import { useSnackbar } from "notistack";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -19,7 +21,7 @@ const UserManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(9); // Should match your default backend limit
@@ -29,22 +31,22 @@ const UserManagement = () => {
   const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:5000/api/users`, {
+      const res = await axios.get(`${API_URL}/manage/users`, {
         params: {
           page,
           limit: usersPerPage,
           search,
-          role: roleFilter || undefined // Only send role if it's set
-        }
+          role: roleFilter || undefined, // Only send role if it's set
+        },
       });
-      
+
       setUsers(res.data.users || []);
       setTotalUsers(res.data.total || 0);
       setTotalPages(res.data.totalPages || 1);
       setCurrentPage(page);
     } catch (err) {
       console.error("Error fetching users:", err);
-      enqueueSnackbar('Failed to fetch users', { variant: 'error' });
+      enqueueSnackbar("Failed to fetch users", { variant: "error" });
       setUsers([]);
       setTotalUsers(0);
       setTotalPages(1);
@@ -60,25 +62,24 @@ const UserManagement = () => {
 
   const deleteUser = async () => {
     if (!userToDelete) return;
-    
+
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/users/${userToDelete._id}`);
-      
+      await axios.delete(`${API_URL}/manage/users/${userToDelete._id}`);
+
       // If we're on the last page with only one user, go to previous page
       if (users.length === 1 && currentPage > 1) {
         fetchUsers(currentPage - 1);
       } else {
         fetchUsers(currentPage);
       }
-      
-      enqueueSnackbar('User deleted successfully', { variant: 'success' });
+
+      enqueueSnackbar("User deleted successfully", { variant: "success" });
     } catch (err) {
       console.error("Delete error details:", err);
-      const errorMessage = err.response?.data?.message || 
-                         err.message || 
-                         "Failed to delete user";
-      enqueueSnackbar(errorMessage, { variant: 'error' });
+      const errorMessage =
+        err.response?.data?.message || err.message || "Failed to delete user";
+      enqueueSnackbar(errorMessage, { variant: "error" });
     } finally {
       setLoading(false);
       setDeleteDialogOpen(false);
@@ -102,7 +103,7 @@ const UserManagement = () => {
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -111,22 +112,22 @@ const UserManagement = () => {
       const half = Math.floor(maxVisiblePages / 2);
       let start = currentPage - half;
       let end = currentPage + half;
-      
+
       if (start < 1) {
         start = 1;
         end = maxVisiblePages;
       }
-      
+
       if (end > totalPages) {
         end = totalPages;
         start = totalPages - maxVisiblePages + 1;
       }
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
   };
 
@@ -172,7 +173,9 @@ const UserManagement = () => {
         </div>
       ) : users.length === 0 ? (
         <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg">
-          {search || roleFilter ? "No matching users found" : "No users available"}
+          {search || roleFilter
+            ? "No matching users found"
+            : "No users available"}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -182,9 +185,12 @@ const UserManagement = () => {
             <div className="col-span-2 md:col-span-3">Role</div>
             <div className="col-span-1 md:col-span-2 text-right">Actions</div>
           </div>
-          
-          {users.map(user => (
-            <div key={user._id} className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center">
+
+          {users.map((user) => (
+            <div
+              key={user._id}
+              className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center"
+            >
               <div className="col-span-4 md:col-span-3 font-medium text-gray-800 truncate">
                 {user.username}
               </div>
@@ -192,13 +198,15 @@ const UserManagement = () => {
                 {user.email}
               </div>
               <div className="col-span-2 md:col-span-3">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  user.role === 'admin' 
-                    ? 'bg-purple-100 text-purple-800' 
-                    : user.role === 'editor'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-blue-100 text-blue-800'
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    user.role === "admin"
+                      ? "bg-purple-100 text-purple-800"
+                      : user.role === "editor"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
                   {user.role}
                 </span>
               </div>
@@ -237,22 +245,22 @@ const UserManagement = () => {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            
+
             {getPageNumbers().map((number) => (
               <button
                 key={number}
                 onClick={() => fetchUsers(number)}
                 disabled={loading}
                 className={`px-3 py-1 border rounded-md ${
-                  currentPage === number 
-                    ? 'bg-[#16A085] text-white border-[#16A085]' 
-                    : 'hover:bg-gray-50'
+                  currentPage === number
+                    ? "bg-[#16A085] text-white border-[#16A085]"
+                    : "hover:bg-gray-50"
                 }`}
               >
                 {number}
               </button>
             ))}
-            
+
             <button
               onClick={() => fetchUsers(currentPage + 1)}
               disabled={currentPage === totalPages || loading}
@@ -279,16 +287,15 @@ const UserManagement = () => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          Confirm Deletion
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">Confirm Deletion</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete {userToDelete?.username}'s account? This action cannot be undone.
+            Are you sure you want to delete {userToDelete?.username}'s account?
+            This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button 
+          <Button
             onClick={() => setDeleteDialogOpen(false)}
             color="primary"
             disabled={loading}

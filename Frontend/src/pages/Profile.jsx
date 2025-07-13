@@ -3,6 +3,8 @@ import { useAuth } from "../context/UserAuthContext";
 import { toast } from "react-toastify";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
@@ -62,7 +64,7 @@ const Profile = () => {
         const imageForm = new FormData();
         imageForm.append("profileImage", profileImage);
         const uploadRes = await axios.post(
-          "/api/profile/upload-profile-image",
+          `${API_URL}/profile/upload-profile-image`,
           imageForm,
           {
             headers: {
@@ -81,7 +83,9 @@ const Profile = () => {
 
       const userAfterUpdate = await updateUser(updatedUser);
       setPreviewImage(
-        getProfileImage(userAfterUpdate.profilePicture || "/img/default-profile.png")
+        getProfileImage(
+          userAfterUpdate.profilePicture || "/img/default-profile.png"
+        )
       );
       toast.success("Profile updated successfully!");
       setIsEditing(false);
