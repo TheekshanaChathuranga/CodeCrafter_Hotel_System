@@ -7,6 +7,7 @@ import { dirname } from "path";
 
 import Pool from "../models/Pool.js";
 import PoolBooking from "../models/PoolBooking.js";
+import Notification from "../models/Notification.js";
 
 const router = express.Router();
 
@@ -190,6 +191,50 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     });
 
     await newBooking.save();
+
+    // Create persistent notification for all admins
+    const notification = new Notification({
+      type: "pool-booking",
+      title: "New Pool Booking",
+      message: `${newBooking.fullName} booked pool for ${newBooking.guestCount} guests`,
+      bookingId: newBooking._id,
+      adminId: null, // null means for all admins
+      isRead: false,
+    });
+
+    await notification.save();
+    console.log("Pool booking notification saved to database:", notification._id);
+
+    // Emit real-time notification to online admins
+    const io = req.app.get("io");
+    const adminSockets = req.app.get("adminSockets");
+
+    // Emit both individual notifications and booking-created event
+    if (io) {
+      // Emit to all connected clients (for real-time updates)
+      io.emit("pool-booking-created", {
+        bookingId: newBooking._id,
+        fullName: newBooking.fullName,
+        guestCount: newBooking.guestCount,
+        date: newBooking.date,
+        status: newBooking.status,
+        createdAt: newBooking.createdAt,
+        notificationId: notification._id,
+      });
+
+      // Emit targeted notifications to admin sockets
+      if (adminSockets && adminSockets.size > 0) {
+        adminSockets.forEach((socketId, adminId) => {
+          io.to(socketId).emit("bookingNotification", {
+            type: "pool",
+            title: "New Pool Booking",
+            message: `${newBooking.fullName} booked pool for ${newBooking.guestCount} guests`,
+            time: new Date().toISOString(),
+            notificationId: notification._id,
+          });
+        });
+      }
+    }
 
     res.status(201).json({
       ...newBooking._doc,

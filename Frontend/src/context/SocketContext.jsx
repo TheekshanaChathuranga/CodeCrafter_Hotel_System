@@ -94,10 +94,20 @@ export const SocketProvider = ({ children }) => {
 
       // Listen for new booking notifications
       newSocket.on("booking-created", (data) => {
-        console.log("New booking notification received:", data);
+        console.log("New room booking notification received:", data);
         setUnreadBookings((prev) => {
           const newCount = prev + 1;
           console.log("Updated unread count:", newCount);
+          return newCount;
+        });
+      });
+
+      // Listen for new pool booking notifications
+      newSocket.on("pool-booking-created", (data) => {
+        console.log("New pool booking notification received:", data);
+        setUnreadBookings((prev) => {
+          const newCount = prev + 1;
+          console.log("Updated unread count for pool booking:", newCount);
           return newCount;
         });
       });
