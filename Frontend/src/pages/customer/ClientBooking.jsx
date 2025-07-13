@@ -89,20 +89,108 @@ export default function ClientBooking() {
     navigate(-1); // Go back to previous page
   };
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl flex flex-col md:flex-row shadow-lg overflow-hidden">
+    <>
+      {/* Top Navigation Bar */}
+      <nav
+        className="shadow-lg"
+        style={{ backgroundColor: "rgb(44, 62, 80)", color: "rgb(255, 255, 255)" }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex-shrink-0 flex items-center">
+              <img alt="Logo" className="h-8 w-8 rounded-full" src="/img/logo.jpg" />
+              <a
+                className="ml-2 text-xl font-bold"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/"
+              >
+                The Lake Resort
+              </a>
+            </div>
+            <div className="hidden md:flex items-center space-x-6">
+              <a
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#34495E] transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/"
+              >
+                Home
+              </a>
+              <a
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#34495E] transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/room-booking"
+              >
+                Room Booking
+              </a>
+              <a
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#34495E] transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/pool-booking"
+              >
+                Pool Booking
+              </a>
+              <a
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#34495E] transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/event-booking"
+              >
+                Event Booking
+              </a>
+              <a
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-[#34495E] transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+                href="/menu"
+              >
+                Menu
+              </a>
+              <a
+                href="/#about"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+              >
+                About
+              </a>
+              <a
+                href="/#contact"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors"
+                style={{ color: "rgb(255, 255, 255)" }}
+              >
+                Contact
+              </a>
+            </div>
+            <div className="flex items-center space-x-4">
+              <a
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors hover:opacity-90"
+                style={{ backgroundColor: "rgb(52, 152, 219)", color: "rgb(255, 255, 255)" }}
+                href="/login"
+              >
+                Login
+              </a>
+              <a
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors hover:opacity-90"
+                style={{ backgroundColor: "rgb(39, 174, 96)", color: "rgb(255, 255, 255)" }}
+                href="/signup"
+              >
+                Sign Up
+              </a>
+            </div>
+            <div className="md:hidden">
+              <button className="p-2 rounded-md hover:bg-gray-700 transition-colors" aria-label="Toggle menu">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="min-h-screen bg-[#F7FAFC] py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="bg-card text-card-foreground gap-6 rounded-xl border py-6 w-full flex flex-col md:flex-row shadow-lg overflow-hidden">
         {/* Left: Form */}
         <div className="flex-1 flex flex-col justify-center p-6 md:p-10">
           <CardHeader className="p-0 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <Button 
-                variant="outline" 
-                onClick={handleGoBack}
-                className="px-4 py-2"
-              >
-                ← Back
-              </Button>
-            </div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#0D141C] mb-2">Event Booking</h1>
             <p className="text-gray-600">Book your special event with us</p>
           </CardHeader>
@@ -248,7 +336,16 @@ export default function ClientBooking() {
             style={{ maxHeight: 240, objectFit: "cover" }}
           />
         </div>
-      </Card>
-    </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p>© 2025 The Lake Hotel & Resort. All rights reserved.</p>
+        </div>
+      </footer>
+    </>
   );
 } 
