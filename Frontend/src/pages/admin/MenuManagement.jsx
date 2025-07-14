@@ -22,16 +22,19 @@ const categories = [
   "Beverages",
 ];
 
+// Unit type options
+const unitTypes = ["Plate", "Glass", "KG", "Set", "Unit"];
+
 export default function MenuManagement() {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editItem, setEditItem] = useState(null);
-  const [editForm, setEditForm] = useState({ name: "", unitType: "", unitPrice: "", category: categories[0], image: null });
+  const [editForm, setEditForm] = useState({ name: "", unitType: unitTypes[0], unitPrice: "", category: categories[0], image: null });
   const [saving, setSaving] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', unitType: '', unitPrice: '', category: categories[0], image: null });
+  const [addForm, setAddForm] = useState({ name: '', unitType: unitTypes[0], unitPrice: '', category: categories[0], image: null });
   const [addSaving, setAddSaving] = useState(false);
   const [addImage, setAddImage] = useState(null);
   const [addPreview, setAddPreview] = useState([]);
@@ -200,8 +203,8 @@ export default function MenuManagement() {
               key={cat}
               className={`px-7 py-2 rounded-lg font-bold text-[14px] transition-colors border-b-4 focus:outline-none ${
                 selectedCategory === cat
-                  ? "border-[#141414] text-[#141414] bg-[#F5F5F5]"
-                  : "border-transparent text-[#737373] hover:text-[#141414] hover:bg-[#F5F5F5]"
+                  ? "border-[#0A80ED] text-[#0A80ED] bg-[#F5F5F5]"
+                  : "border-transparent text-[#0A80ED] hover:text-[#0A80ED] hover:bg-[#F5F5F5]"
               }`}
               style={{ fontFamily: 'Public Sans, sans-serif' }}
               onClick={() => setSelectedCategory(cat)}
@@ -230,7 +233,7 @@ export default function MenuManagement() {
                     <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Photo</TableHead>
                     <TableHead className="w-1/3 text-[#141414] font-medium text-[14px]">Item</TableHead>
                     <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Unit Type</TableHead>
-                    <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Price</TableHead>
+                    <TableHead className="w-1/6 text-[#141414] font-medium text-[14px]">Price(Rs)</TableHead>
                     <TableHead className="w-1/4 text-[#737373] font-medium text-[14px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -246,7 +249,7 @@ export default function MenuManagement() {
                       </TableCell>
                       <TableCell className="text-[#141414] font-normal text-[14px]">{item.name}</TableCell>
                       <TableCell className="text-[#737373] font-normal text-[14px]">{item.unitType}</TableCell>
-                      <TableCell className="text-[#737373] font-normal text-[14px]">LKR {item.unitPrice}</TableCell>
+                      <TableCell className="text-[#737373] font-normal text-[14px]">Rs {item.unitPrice}</TableCell>
                       <TableCell>
                         <div className="flex gap-2 items-center">
                           {/* Edit Dialog */}
@@ -266,7 +269,16 @@ export default function MenuManagement() {
                                 </div>
                                 <div>
                                   <Label>Unit Type</Label>
-                                  <Input value={editForm.unitType} onChange={e => handleEditChange("unitType", e.target.value)} />
+                                  <Select value={editForm.unitType} onValueChange={val => handleEditChange("unitType", val)}>
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="Select unit type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {unitTypes.map(u => (
+                                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                                 <div>
                                   <Label>Unit Price</Label>
@@ -298,7 +310,7 @@ export default function MenuManagement() {
                                 </div>
                               </div>
                               <DialogFooter>
-                                <Button onClick={saveEdit} disabled={saving} className="bg-[#000] text-[#FAFAFA] px-6 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#222] transition-colors">
+                                <Button onClick={saveEdit} disabled={saving} className="bg-[#0A80ED] text-[#FAFAFA] px-6 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#086CD8] transition-colors">
                                   {saving ? "Saving..." : "Save"}
                                 </Button>
                                 <Button variant="outline" onClick={closeEdit} disabled={saving}>Cancel</Button>
@@ -323,7 +335,7 @@ export default function MenuManagement() {
         <div className="flex justify-end">
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-[#000] text-[#FAFAFA] px-8 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#222] transition-colors" onClick={openAdd}>Add New Item</Button>
+              <Button className="bg-[#0A80ED] text-[#FAFAFA] px-8 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#086CD8] transition-colors" onClick={openAdd}>Add New Item</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -337,7 +349,16 @@ export default function MenuManagement() {
                 </div>
                 <div>
                   <Label>Unit Type</Label>
-                  <Input value={addForm.unitType} onChange={e => handleAddChange('unitType', e.target.value)} />
+                  <Select value={addForm.unitType} onValueChange={val => handleAddChange('unitType', val)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select unit type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {unitTypes.map(u => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label>Unit Price</Label>
@@ -369,7 +390,7 @@ export default function MenuManagement() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={saveAdd} disabled={addSaving} className="bg-[#000] text-[#FAFAFA] px-6 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#222] transition-colors">
+                <Button onClick={saveAdd} disabled={addSaving} className="bg-[#0A80ED] text-[#FAFAFA] px-6 py-2 rounded-lg font-bold text-[14px] shadow-md hover:bg-[#086CD8] transition-colors">
                   {addSaving ? 'Saving...' : 'Save'}
                 </Button>
                 <Button variant="outline" onClick={closeAdd} disabled={addSaving}>Cancel</Button>
