@@ -64,6 +64,43 @@ router.get("/pool/:id", async (req, res) => {
   }
 });
 
+// GET pool bookings for a specific user
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    console.log(`Fetching pool bookings for user: ${userId}`);
+
+    // Find all pool bookings for the specific user
+    const bookings = await PoolBooking.find({
+      $or: [{ userId: userId }, { user: userId }, { customerId: userId }],
+    })
+      .populate("poolId", "name location") // Populate pool details
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    console.log(`Found ${bookings.length} pool bookings for user ${userId}`);
+    console.log(
+      "Bookings found:",
+      bookings.map((b) => ({
+        id: b._id,
+        userId: b.userId,
+        user: b.user,
+        customerId: b.customerId,
+        fullName: b.fullName,
+        date: b.date,
+      }))
+    );
+
+    res.json(bookings);
+  } catch (error) {
+    console.error("Error fetching user pool bookings:", error);
+    res.status(500).json({
+      message: "Failed to fetch user pool bookings",
+      error: error.message,
+    });
+  }
+});
+
 // GET total guests booked for a specific pool on a specific date
 // This route must come after the /pool/:id route to avoid conflicts
 router.get("/:poolId/:date", async (req, res) => {
@@ -141,6 +178,7 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
       status, // allow status from frontend
       paymentProof, // for online bookings
       poolId,
+      userId, // Add userId extraction
     } = req.body;
 
     // Normalize field names - prefer the frontend field names
@@ -228,6 +266,10 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
         paymentType: paymentType || "notPaid",
         advanceAmount: Number(advanceAmount) || 0,
         totalAmount: Number(totalAmount) || 0,
+        // Add user identification fields
+        userId: userId || null,
+        user: userId || null,
+        customerId: userId || null,
       });
     } else {
       // Handle online booking (from customer forms)
@@ -326,6 +368,10 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
         email: email || "",
         paymentProof: proofPath,
         status: "pending",
+        // Add user identification fields
+        userId: userId || null,
+        user: userId || null,
+        customerId: userId || null,
       });
     }
 
@@ -343,14 +389,19 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
       const notification = new Notification({
         type: "pool-booking",
         title: "New Pool Booking",
-        message: `${newBooking.fullName || newBooking.name} booked pool for ${newBooking.guestCount || newBooking.peopleCount} guests`,
+        message: `${newBooking.fullName || newBooking.name} booked pool for ${
+          newBooking.guestCount || newBooking.peopleCount
+        } guests`,
         bookingId: newBooking._id,
         adminId: null, // null means for all admins
         isRead: false,
       });
 
       await notification.save();
-      console.log("Pool booking notification saved to database:", notification._id);
+      console.log(
+        "Pool booking notification saved to database:",
+        notification._id
+      );
 
       // Emit real-time notification to online admins
       const io = req.app.get("io");
@@ -378,11 +429,17 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
         if (adminSockets && adminSockets.size > 0) {
           console.log("Emitting targeted notifications to admin sockets");
           adminSockets.forEach((socketId, adminId) => {
-            console.log(`Sending notification to admin ${adminId} with socket ${socketId}`);
+            console.log(
+              `Sending notification to admin ${adminId} with socket ${socketId}`
+            );
             io.to(socketId).emit("bookingNotification", {
               type: "pool",
               title: "New Pool Booking",
-              message: `${newBooking.fullName || newBooking.name} booked pool for ${newBooking.guestCount || newBooking.peopleCount} guests`,
+              message: `${
+                newBooking.fullName || newBooking.name
+              } booked pool for ${
+                newBooking.guestCount || newBooking.peopleCount
+              } guests`,
               time: new Date().toISOString(),
               notificationId: notification._id,
             });

@@ -1256,14 +1256,14 @@ const Room_Book = () => {
                     day: "numeric",
                   })}
                 </p>
-                <p className="text-blue-600 font-semibold mt-1">
+                {/* <p className="text-blue-600 font-semibold mt-1">
                   Duration:{" "}
                   {Math.ceil(
                     (bookingDates.checkOut - bookingDates.checkIn) /
                       (1000 * 60 * 60 * 24)
                   )}{" "}
                   night(s)
-                </p>
+                </p> */}
               </div>
             </div>
           )}

@@ -60,6 +60,7 @@ const Profile = () => {
     try {
       let imageUrl = user.profilePicture || "";
 
+      // Upload image first if there's a new one
       if (profileImage) {
         const imageForm = new FormData();
         imageForm.append("profileImage", profileImage);
@@ -76,22 +77,40 @@ const Profile = () => {
         imageUrl = uploadRes.data.profilePicture;
       }
 
-      const updatedUser = {
-        ...formData,
-        profilePicture: imageUrl,
-      };
+      // Prepare update data with only non-empty fields
+      const updateData = {};
+      if (formData.fullName && formData.fullName.trim()) {
+        updateData.fullName = formData.fullName.trim();
+      }
+      if (formData.bio !== undefined) {
+        updateData.bio = formData.bio;
+      }
+      if (formData.location !== undefined) {
+        updateData.location = formData.location;
+      }
+      if (formData.phone !== undefined) {
+        updateData.phone = formData.phone;
+      }
+      if (imageUrl) {
+        updateData.profilePicture = imageUrl;
+      }
 
-      const userAfterUpdate = await updateUser(updatedUser);
+      console.log("Sending update data:", updateData);
+
+      const userAfterUpdate = await updateUser(updateData);
+      console.log("Update successful:", userAfterUpdate);
+
       setPreviewImage(
         getProfileImage(
           userAfterUpdate.profilePicture || "/img/default-profile.png"
         )
       );
+      setProfileImage(null); // Clear the file input
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       console.error("Update failed:", error);
-      toast.error("Failed to update profile. Try again.");
+      toast.error(error.message || "Failed to update profile. Try again.");
     }
   };
 

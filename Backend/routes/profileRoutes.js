@@ -5,29 +5,66 @@ import { upload, handleUploadErrors } from "../middleware/upload.js";
 
 const router = express.Router();
 
+// Get current user profile
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      user: user,
+    });
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching user profile",
+      error: error.message,
+    });
+  }
+});
+
 // Update profile route
 router.put("/update-profile", verifyToken, async (req, res) => {
   try {
     const { fullName, bio, location, phone, profilePicture } = req.body;
 
-    if (!fullName || fullName.trim().length < 3) {
+    // Validate fullName only if it's provided and not empty
+    if (fullName && fullName.trim().length < 3) {
       return res.status(400).json({
         success: false,
-        message: "Full name is required and must be at least 3 characters.",
+        message: "Full name must be at least 3 characters.",
       });
     }
 
+    // Prepare update object with only provided fields
+    const updateFields = {};
+    if (fullName !== undefined) updateFields.fullName = fullName;
+    if (bio !== undefined) updateFields.bio = bio;
+    if (location !== undefined) updateFields.location = location;
+    if (phone !== undefined) updateFields.phone = phone;
+    if (profilePicture !== undefined)
+      updateFields.profilePicture = profilePicture;
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user.userId,
-      {
-        fullName,
-        bio,
-        location,
-        phone,
-        profilePicture,
-      },
+      updateFields,
       { new: true, runValidators: true }
     ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
     res.json({
       success: true,

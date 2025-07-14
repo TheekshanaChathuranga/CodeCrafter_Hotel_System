@@ -74,6 +74,13 @@ const UserDropdown = ({ user, logout, colors }) => {
           >
             View My Room Reservations
           </Link>
+          <Link
+            to="/mypoolbookings"
+            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            View My Pool Reservations
+          </Link>
           <button
             onClick={() => {
               logout();
@@ -163,7 +170,7 @@ const Navbar = () => {
             <NavLink to="/pool-booking" hoverStyle={linkHover}>
               Pool Booking
             </NavLink>
-            
+
             <NavLink to="/event-booking" hoverStyle={linkHover}>
               Event Booking
             </NavLink>
@@ -274,6 +281,9 @@ const Navbar = () => {
                 </MobileLink>
                 <MobileLink to="/mybookings" onClick={toggleMenu}>
                   View My Room Reservations
+                </MobileLink>
+                <MobileLink to="/mypoolbookings" onClick={toggleMenu}>
+                  View My Pool Reservations
                 </MobileLink>
               </>
             )}

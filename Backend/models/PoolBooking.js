@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const poolBookingSchema = new mongoose.Schema(
   {
+    // User identification
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
     // Legacy fields (for backward compatibility)
     poolId: { type: mongoose.Schema.Types.ObjectId, ref: "Pool" },
     fullName: { type: String },
