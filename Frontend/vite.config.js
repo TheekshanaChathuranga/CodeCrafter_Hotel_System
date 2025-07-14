@@ -40,6 +40,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api': 'http://localhost:5000',
+        // Proxy uploads so that images are served from backend during dev
+        '/uploads': 'http://localhost:5000',
       },
     },
   };

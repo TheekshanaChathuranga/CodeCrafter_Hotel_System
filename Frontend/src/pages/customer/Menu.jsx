@@ -7,7 +7,7 @@ import {
 } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import foodService from "../../services/foodService";
-import coverMenu from "../../assets/cover-customer-menu.avif";
+import coverMenu from "../../assets/menu-hero.jpg";
 
 const categoriesFallback = [
   "Appetizers",
@@ -47,6 +47,20 @@ export default function MenuPage() {
       isMounted = false;
     };
   }, []);
+
+  // Helper to resolve correct image URL from backend
+  const getImageUrl = (imgPath) => {
+    if (!imgPath) return "";
+    // If already an absolute URL, return as is
+    if (/^https?:\/\//i.test(imgPath)) return imgPath;
+
+    // If path already contains "/uploads" prefix, return it directly (dev server proxies it).
+    if (imgPath.startsWith("/uploads")) return imgPath;
+
+    // Ensure there are no leading slashes before we prepend
+    const cleaned = imgPath.replace(/^\/+/, "");
+    return `/uploads/${cleaned}`;
+  };
 
   // Build categories list with fallback order first, then any additional ones from data
   const extraCats = items
@@ -116,7 +130,7 @@ export default function MenuPage() {
                     {item.image && (
                       <CardHeader className="p-0">
                         <img
-                          src={item.image}
+                          src={getImageUrl(item.image)}
                           alt={item.name}
                           className="w-full h-56 object-cover rounded-t-xl"
                         />
@@ -135,6 +149,13 @@ export default function MenuPage() {
           </>
         )}
       </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8 mt-auto">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p>© 2025 The Lake Hotel & Resort. All rights reserved.</p>
+        </div>
+      </footer>
     </div>
   );
 } 
