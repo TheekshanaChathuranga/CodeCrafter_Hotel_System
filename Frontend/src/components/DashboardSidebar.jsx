@@ -45,7 +45,7 @@ const DashboardSidebar = () => {
     {
       title: "Dashboard",
       url: {
-        admin: "/admin",
+        admin: "/receptionist",
         receptionist: "/receptionist",
         reception: "/receptionist",
       },
@@ -57,6 +57,12 @@ const DashboardSidebar = () => {
       title: "Rooms",
       url: { admin: "/admin/rooms", reception: "" },
       icon: <Hotel size={18} />,
+      roles: ["admin"],
+    },
+    {
+      title: "Pools",
+      url: { admin: "/admin/pools" },
+      icon: <LifeBuoy size={18} />,
       roles: ["admin"],
     },
     {

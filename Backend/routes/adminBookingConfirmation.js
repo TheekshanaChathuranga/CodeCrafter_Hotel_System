@@ -1,5 +1,6 @@
 import express from 'express';
 import OnlineBooking from '../models/Booking.js';
+import PoolBooking from '../models/PoolBooking.js';
 import mongoose from 'mongoose';
 
 const router = express.Router();
@@ -98,6 +99,79 @@ router.patch('/:id/reject', async (req, res) => {
     res.json(booking);
   } catch (error) {
     console.error('Error rejecting booking:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all pending pool bookings
+router.get('/pool/pending', async (req, res) => {
+  try {
+    const bookings = await PoolBooking.find({ status: 'pending' })
+      .select('-__v')
+      .lean();
+    
+    res.json(bookings);
+  } catch (error) {
+    console.error('Error fetching pending pool bookings:', error);
+    res.status(500).json({ error: 'Failed to fetch pending pool bookings' });
+  }
+});
+
+// Get single pool booking details
+router.get('/pool/pending/:id', async (req, res) => {
+  try {
+    const booking = await PoolBooking.findById(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Pool booking not found' });
+    }
+    res.json(booking);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Approve pool booking
+router.patch('/pool/:id/approve', async (req, res) => {
+  try {
+    const booking = await PoolBooking.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'confirmed',
+        processedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Pool booking not found' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    console.error('Error approving pool booking:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Reject pool booking
+router.patch('/pool/:id/reject', async (req, res) => {
+  try {
+    const booking = await PoolBooking.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'rejected',
+        processedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Pool booking not found' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    console.error('Error rejecting pool booking:', error);
     res.status(400).json({ error: error.message });
   }
 });

@@ -33,6 +33,7 @@ import customerEventRoutes from "./routes/customerEvents.js";
 import validateEvent from "./middleware/validateEvent.js";
 import errorHandler from "./middleware/errorHandler.js";
 import notificationRoutes from "./routes/notifications.js";
+import passwordResetRoutes from "./routes/passwordReset.js";
 
 
 // Socket.io Configuration
@@ -119,6 +120,7 @@ app.use("/api/notifications", notificationRoutes); // Add notification routes
 // Event booking management
 app.use("/api", manageEventRoutes);
 app.use("/api/customer-events", customerEventRoutes);
+app.use("/api/auth", passwordResetRoutes); // Add password reset routes
 
 // Health Check Endpoint
 app.get("/api/health", (req, res) => {

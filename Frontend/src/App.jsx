@@ -8,6 +8,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import MenuManagement from "./pages/admin/MenuManagement";
 import ClientBooking from "./pages/customer/ClientBooking";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./layout/dashboardLayout";
 //import EventList from "./pages/admin/EventList";
 import ManagePools from "./pages/admin/PoolManagement";
@@ -56,21 +58,23 @@ const App = () => {
   {/* Render the public Navbar on all public routes except the standalone Event Booking page */}
   {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && !isEventBookingRoute && <Navbar />}
 
-  <Routes>
-    <Route path="/" element={<Home />} />
-    <Route path="/home" element={<Home />} />
-    {/* <Route path="/about" element={<About />} /> */}
-    {/* <Route path="/contact" element={<Contact />} /> */}
-    <Route path="/login" element={<Login />} />
-    <Route path="/signup" element={<Signup />} />
-    <Route
-      path="/unauthorized"
-      element={
-        <div className="flex items-center justify-center min-h-screen">
-          <h1 className="text-2xl text-red-500">Unauthorized Access</h1>
-        </div>
-      }
-    />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
+        {/* <Route path="/about" element={<About />} /> */}
+        {/* <Route path="/contact" element={<Contact />} /> */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route
+          path="/unauthorized"
+          element={
+            <div className="flex items-center justify-center min-h-screen">
+              <h1 className="text-2xl text-red-500">Unauthorized Access</h1>
+            </div>
+          }
+        />
 
     <Route path="/room-booking" element={<Room_Book />} />
     <Route path="/pool-booking" element={<Pool_Book />} />

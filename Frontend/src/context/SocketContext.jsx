@@ -90,14 +90,42 @@ export const SocketProvider = ({ children }) => {
 
       newSocket.on("connect", () => {
         console.log("Socket connected successfully:", newSocket.id);
+        console.log("Socket transport:", newSocket.io.engine.transport.name);
+        // Manually identify as admin
+        newSocket.emit("admin-connect", user._id || user.id);
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+      });
+
+      newSocket.on("disconnect", (reason) => {
+        console.log("Socket disconnected:", reason);
       });
 
       // Listen for new booking notifications
       newSocket.on("booking-created", (data) => {
-        console.log("New booking notification received:", data);
+        console.log("New room booking notification received:", data);
         setUnreadBookings((prev) => {
           const newCount = prev + 1;
           console.log("Updated unread count:", newCount);
+          return newCount;
+        });
+      });
+
+      // Listen for new pool booking notifications
+      newSocket.on("pool-booking-created", (data) => {
+        console.log("New pool booking notification received:", data);
+        console.log("Current user role:", user.role);
+        console.log("Notification data details:", {
+          bookingId: data.bookingId,
+          fullName: data.fullName,
+          guestCount: data.guestCount,
+          status: data.status
+        });
+        setUnreadBookings((prev) => {
+          const newCount = prev + 1;
+          console.log("Updated unread count for pool booking from", prev, "to", newCount);
           return newCount;
         });
       });
