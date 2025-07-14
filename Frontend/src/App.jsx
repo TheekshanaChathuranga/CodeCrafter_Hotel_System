@@ -132,9 +132,9 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<EnhancedReceptionHome />} />
-          <Route path="home" element={<EnhancedReceptionHome />} />
-          <Route path="home-legacy" element={<ReceptionHome />} />
+          <Route index element={<ReceptionHome />} />
+          <Route path="home" element={<ReceptionHome />} />
+          <Route path="home-legacy" element={<EnhancedReceptionHome />} />
           <Route path="rooms" element={<ReceptionRoomBooking />} />
           <Route path="roomBooking" element={<ReceptionRoomBooking />} />
           <Route path="room-booking" element={<ReceptionRoomBooking />} />
@@ -166,9 +166,9 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<EnhancedReceptionHome />} />
-          <Route path="home" element={<EnhancedReceptionHome />} />
-          <Route path="home-legacy" element={<ReceptionHome />} />
+          <Route index element={<ReceptionHome />} />
+          <Route path="home" element={<ReceptionHome />} />
+          <Route path="home-legacy" element={<EnhancedReceptionHome />} />
           <Route path="rooms" element={<ReceptionRoomBooking />} />
           <Route path="roomBooking" element={<ReceptionRoomBooking />} />
           <Route path="room-booking" element={<ReceptionRoomBooking />} />
