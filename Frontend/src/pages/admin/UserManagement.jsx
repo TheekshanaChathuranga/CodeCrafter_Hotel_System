@@ -29,7 +29,7 @@ const UserManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user", status: "active" });
+  const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user", status: "active", notice: "" });
   const [editingUser, setEditingUser] = useState(null);
 
   const handleSaveUser = async () => {
@@ -42,6 +42,7 @@ const UserManagement = () => {
       if (editingUser) {
         const payload = { ...newUser };
         if (!payload.password) delete payload.password;
+        // Include notice in payload
         await axios.put(`${API_URL}/manage/users/${editingUser._id}`, payload);
         enqueueSnackbar("User updated successfully", { variant: "success" });
       } else {
@@ -49,7 +50,7 @@ const UserManagement = () => {
         enqueueSnackbar("User created successfully", { variant: "success" });
       }
       setAddDialogOpen(false);
-      setNewUser({ username: "", email: "", password: "", role: "user", status: "active" });
+      setNewUser({ username: "", email: "", password: "", role: "user", status: "active", notice: "" });
       setEditingUser(null);
       fetchUsers(currentPage);
     } catch (err) {
@@ -69,6 +70,7 @@ const UserManagement = () => {
       password: "", // don't prefill password
       role: user.role || "user",
       status: user.status || "active",
+      notice: user.notice || "",
     });
     setAddDialogOpen(true);
   };
@@ -233,9 +235,10 @@ const UserManagement = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="grid grid-cols-12 bg-gray-100 p-4 font-semibold text-gray-700">
             <div className="col-span-3 md:col-span-3">Username</div>
-            <div className="col-span-4 md:col-span-4">Email</div>
-            <div className="col-span-2 md:col-span-2">Role</div>
+            <div className="col-span-3 md:col-span-3">Email</div>
+            <div className="col-span-1 md:col-span-1">Role</div>
             <div className="col-span-2 md:col-span-2">Status</div>
+            <div className="col-span-2 md:col-span-2">Notice</div>
             <div className="col-span-1 md:col-span-1 text-right">Actions</div>
           </div>
 
@@ -247,10 +250,10 @@ const UserManagement = () => {
               <div className="col-span-3 md:col-span-3 font-medium text-gray-800 truncate">
                 {user.username}
               </div>
-              <div className="col-span-4 md:col-span-4 text-gray-600 truncate">
+              <div className="col-span-3 md:col-span-3 text-gray-600 truncate">
                 {user.email}
               </div>
-              <div className="col-span-2 md:col-span-2">
+              <div className="col-span-1 md:col-span-1">
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
                     user.role === "admin"
@@ -265,6 +268,9 @@ const UserManagement = () => {
               </div>
               <div className="col-span-2 md:col-span-2">
                 <span className={`px-2 py-1 text-xs rounded-full ${user.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>{user.status}</span>
+              </div>
+              <div className="col-span-2 md:col-span-2 text-gray-600 truncate">
+                {user.notice || "—"}
               </div>
               <div className="col-span-1 md:col-span-1 flex justify-end gap-2">
                 <button
@@ -435,6 +441,20 @@ const UserManagement = () => {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
+
+            {/* Optional notice field, shown when status is inactive */}
+            {newUser.status === "inactive" && (
+              <input
+                type="text"
+                placeholder="Inactive notice (optional)"
+                autoComplete="off"
+                value={newUser.notice}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, notice: e.target.value })
+                }
+                className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+              />
+            )}
           </div>
         </DialogContent>
         <DialogActions>

@@ -37,6 +37,12 @@ const userSchema = new mongoose.Schema(
       default: "active",
       required: true,
     },
+    // Optional notice describing why the account is inactive
+    notice: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     fullName: {
       type: String,
       trim: true,
