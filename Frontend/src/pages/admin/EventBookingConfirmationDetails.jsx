@@ -4,9 +4,11 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
-  FileText,
-  Download,
+  Calendar,
+  Users,
+  MapPin,
   Clock,
+  DollarSign,
 } from "lucide-react";
 import { useSnackbar } from "notistack";
 import {
@@ -20,8 +22,8 @@ import {
   Chip,
 } from "@mui/material";
 
-const BookingDetail = () => {
-  const [booking, setBooking] = useState(null);
+const EventBookingDetail = () => {
+  const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
@@ -34,21 +36,21 @@ const BookingDetail = () => {
   const API_BASE_URL =
     import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-  const fetchBooking = async () => {
+  const fetchEvent = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/admin/bookings/pending/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/bookings/events/pending/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch booking details");
+        throw new Error("Failed to fetch event details");
       }
 
       const data = await res.json();
-      setBooking(data);
+      setEvent(data);
     } catch (err) {
       console.error("Fetch error:", err);
       enqueueSnackbar(err.message, { variant: "error" });
@@ -58,10 +60,10 @@ const BookingDetail = () => {
     }
   };
 
-  const handleBookingAction = async () => {
+  const handleEventAction = async () => {
     try {
       setActionLoading(true);
-      const url = `${API_BASE_URL}/admin/bookings/${id}/${actionType}`;
+      const url = `${API_BASE_URL}/admin/bookings/events/${id}/${actionType}`;
 
       const options = {
         method: "PATCH",
@@ -80,13 +82,13 @@ const BookingDetail = () => {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || `Failed to ${actionType} booking`);
+        throw new Error(errorData.error || `Failed to ${actionType} event`);
       }
 
       const data = await res.json();
       const emailMessage = actionType === "approve" 
-        ? "Booking approved successfully! Customer has been notified via email (check spam folder if not received)." 
-        : "Booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
+        ? "Event approved successfully! Customer has been notified via email (check spam folder if not received)." 
+        : "Event rejected successfully! Customer has been notified via email (check spam folder if not received).";
       
       enqueueSnackbar(emailMessage, {
         variant: "success",
@@ -101,58 +103,24 @@ const BookingDetail = () => {
     }
   };
 
-  const viewDocument = () => {
-    if (!booking?.documentPath) {
-      enqueueSnackbar("No document available", { variant: "warning" });
-      return;
-    }
-    // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
-      : booking.documentPath;
-    window.open(`${API_BASE_URL}/${cleanPath}`, "_blank");
-  };
-
-  const downloadDocument = () => {
-    if (!booking?.documentPath) {
-      enqueueSnackbar("No document available", { variant: "warning" });
-      return;
-    }
-    // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
-      : booking.documentPath;
-    const link = document.createElement("a");
-    link.href = `${API_BASE_URL}/${cleanPath}`;
-    link.setAttribute(
-      "download",
-      `room-document-${booking._id}${
-        booking.documentPath.includes(".pdf") ? ".pdf" : ".jpg"
-      }`
-    );
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   useEffect(() => {
-    fetchBooking();
+    fetchEvent();
   }, [id]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <CircularProgress size={60} />
-        <p className="text-gray-600">Loading booking details...</p>
+        <p className="text-gray-600">Loading event details...</p>
       </div>
     );
   }
 
-  if (!booking) {
+  if (!event) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <XCircle className="w-16 h-16 text-red-500" />
-        <p className="text-xl text-gray-700">Booking not found</p>
+        <p className="text-xl text-gray-700">Event not found</p>
         <button
           onClick={() => navigate("/admin/bookingNotifications")}
           className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
@@ -194,24 +162,24 @@ const BookingDetail = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Booking #{booking._id.substring(18, 24).toUpperCase()}
+                {event.eventId || `Event #${event._id.substring(18, 24).toUpperCase()}`}
               </h1>
               <div className="flex items-center mt-2 gap-2">
                 <Chip
-                  label={booking.status}
-                  icon={statusConfig[booking.status]?.icon}
+                  label={event.status || 'pending'}
+                  icon={statusConfig[event.status || 'pending']?.icon}
                   className={`${
-                    statusConfig[booking.status]?.color
+                    statusConfig[event.status || 'pending']?.color
                   } capitalize`}
                   size="small"
                 />
                 <span className="text-sm text-gray-500">
-                  Created: {new Date(booking.createdAt).toLocaleString()}
+                  Created: {new Date(event.createdAt).toLocaleString()}
                 </span>
               </div>
             </div>
 
-            {booking.status === "pending" && (
+            {(!event.status || event.status === "pending") && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
@@ -242,70 +210,59 @@ const BookingDetail = () => {
 
         {/* Main Content */}
         <div className="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Guest Information */}
+          {/* Contact Information */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
-              Guest Information
+              Contact Information
             </h2>
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Full Name</p>
-                <p className="text-lg font-semibold">{booking.fullName}</p>
+                <p className="text-sm font-medium text-gray-500">Contact Name</p>
+                <p className="text-lg font-semibold">{event.name || "N/A"}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">
-                    Phone Number
+                    Primary Phone
                   </p>
-                  <p className="text-lg">{booking.phoneNumber}</p>
+                  <p className="text-lg">{event.phone1 || "N/A"}</p>
                 </div>
-                {booking.whatsappNumber && (
+                {event.phone2 && (
                   <div>
                     <p className="text-sm font-medium text-gray-500">
-                      WhatsApp
+                      Secondary Phone
                     </p>
-                    <p className="text-lg">{booking.whatsappNumber}</p>
+                    <p className="text-lg">{event.phone2}</p>
                   </div>
                 )}
               </div>
 
-              {booking.nicNumber && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    NIC Number
-                  </p>
-                  <p className="text-lg">{booking.nicNumber}</p>
-                </div>
-              )}
-
-              {booking.email && (
+              {event.email && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg">{booking.email}</p>
+                  <p className="text-lg">{event.email}</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Booking Details */}
+          {/* Event Details */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
-              Booking Details
+              Event Details
             </h2>
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Room Number
-                  </p>
-                  <p className="text-lg font-semibold">{booking.roomNumber}</p>
+                  <p className="text-sm font-medium text-gray-500">Event Type</p>
+                  <p className="text-lg font-semibold">{event.eventType || "N/A"}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Room Type</p>
-                  <p className="text-lg capitalize">{booking.roomType}</p>
+                  <p className="text-sm font-medium text-gray-500">Hall</p>
+                  <p className="text-lg">{event.hall || "N/A"}</p>
                 </div>
               </div>
 
@@ -313,35 +270,29 @@ const BookingDetail = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Check-In</p>
                   <p className="text-lg">
-                    {new Date(booking.checkIn).toLocaleDateString()}
+                    {event.checkIn ? new Date(event.checkIn).toLocaleDateString() : "N/A"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Check-Out</p>
                   <p className="text-lg">
-                    {new Date(booking.checkOut).toLocaleDateString()}
+                    {event.checkOut ? new Date(event.checkOut).toLocaleDateString() : "N/A"}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Adults</p>
-                  <p className="text-lg">{booking.adults}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Children</p>
-                  <p className="text-lg">{booking.children || 0}</p>
-                </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Number of Guests</p>
+                <p className="text-lg">{event.noOfGuests || 0}</p>
               </div>
 
-              {booking.specialRequests && (
+              {event.notes && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">
-                    Special Requests
+                    Special Notes
                   </p>
                   <p className="text-lg italic text-gray-700">
-                    "{booking.specialRequests}"
+                    "{event.notes}"
                   </p>
                 </div>
               )}
@@ -349,27 +300,72 @@ const BookingDetail = () => {
           </div>
         </div>
 
-        {/* Payment Proof Section */}
-        {booking.documentPath && (
+        {/* Financial Details */}
+        {(event.totalAmount || event.grandTotal) && (
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Payment Proof & Guest Document
+              Financial Details
             </h2>
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={viewDocument}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <FileText className="w-5 h-5" />
-                <span>View Document</span>
-              </button>
-              <button
-                onClick={downloadDocument}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <Download className="w-5 h-5" />
-                <span>Download</span>
-              </button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {event.totalAmount && (
+                <div className="bg-white p-4 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                  <p className="text-xl font-bold text-gray-800">
+                    LKR {event.totalAmount.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              {event.serviceCharge && (
+                <div className="bg-white p-4 rounded-lg">
+                  <p className="text-sm font-medium text-gray-500">Service Charge</p>
+                  <p className="text-xl font-bold text-gray-800">
+                    LKR {event.serviceCharge.toFixed(2)}
+                  </p>
+                </div>
+              )}
+              {event.grandTotal && (
+                <div className="bg-white p-4 rounded-lg border-2 border-green-200">
+                  <p className="text-sm font-medium text-gray-500">Grand Total</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    LKR {event.grandTotal.toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Table Data */}
+        {event.tableData && event.tableData.length > 0 && (
+          <div className="p-6 border-t border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Event Items
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Description</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Unit</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">Quantity</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">Rate</th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {event.tableData.map((item, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-4 py-2">{item.category || "-"}</td>
+                      <td className="border border-gray-300 px-4 py-2">{item.description || "-"}</td>
+                      <td className="border border-gray-300 px-4 py-2">{item.unit || "-"}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">{item.quantity || 0}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">LKR {(item.rate || 0).toFixed(2)}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">LKR {(item.amount || 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
@@ -388,12 +384,12 @@ const BookingDetail = () => {
         <DialogContent className="py-4">
           <DialogContentText>
             {actionType === "approve" ? (
-              `Are you sure you want to approve this booking for ${booking.fullName}?`
+              `Are you sure you want to approve this event for ${event.name}?`
             ) : (
               <div className="space-y-4">
                 <p>
-                  Are you sure you want to reject this booking for{" "}
-                  {booking.fullName}?
+                  Are you sure you want to reject this event for{" "}
+                  {event.name}?
                 </p>
                 <div>
                   <label
@@ -424,7 +420,7 @@ const BookingDetail = () => {
             Cancel
           </Button>
           <Button
-            onClick={handleBookingAction}
+            onClick={handleEventAction}
             color={actionType === "approve" ? "success" : "error"}
             disabled={actionLoading}
             variant="contained"
@@ -442,4 +438,4 @@ const BookingDetail = () => {
   );
 };
 
-export default BookingDetail;
+export default EventBookingDetail;

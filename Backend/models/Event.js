@@ -37,6 +37,24 @@ const eventSchema = new mongoose.Schema({
   excelFile: { type: mongoose.Schema.Types.Mixed, default: null },
   // Auto-generated human-readable event reference like "#E0001"
   eventId: { type: String, unique: true },
+  status: { 
+    type: String, 
+    enum: ['pending', 'confirmed', 'rejected'], 
+    default: 'pending' 
+  },
+  processedBy: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'User', 
+    default: null 
+  },
+  processedAt: { 
+    type: Date, 
+    default: null 
+  },
+  rejectionReason: { 
+    type: String, 
+    default: '' 
+  }
 }, { timestamps: true });
 
 export default mongoose.model('Event', eventSchema); 

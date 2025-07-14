@@ -99,8 +99,11 @@ const poolSchema = new mongoose.Schema({
     },
     pricePerPersonDay: {
         type: Number,
-        required: true,
-        min: 0
+        min: 0,
+        default: function() {
+            // Calculate default day price as 8 times hourly rate
+            return this.pricePerPersonHour ? this.pricePerPersonHour * 8 : 0;
+        }
     },
     unavailablePeriod: {
         start: {

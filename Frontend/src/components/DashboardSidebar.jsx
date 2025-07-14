@@ -45,7 +45,7 @@ const DashboardSidebar = () => {
     {
       title: "Dashboard",
       url: {
-        admin: "/receptionist",
+        admin: "/admin/dashboard",
         receptionist: "/receptionist",
         reception: "/receptionist",
       },
@@ -145,8 +145,6 @@ const DashboardSidebar = () => {
   );
 
   const handleLinkClick = () => {
-
-    console.log("handleLinkClick called");
     // Close mobile sidebar if onClose prop is provided
     if (typeof onClose === "function") {
       onClose();

@@ -19,6 +19,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
+import EventBookingConfirmationDetails from "./pages/admin/EventBookingConfirmationDetails";
+import PoolBookingConfirmationDetails from "./pages/admin/PoolBookingConfirmationDetails";
 import MyBookings from "./pages/customer/MyBookings";
 import MyPoolBookings from "./pages/customer/MyPoolBookings";
 
@@ -28,6 +30,7 @@ import Room_Book from "./pages/customer/Room_Book";
 import Pool_Book from "./pages/customer/Pool_Book";
 
 import EventBooking from "./pages/admin/EventBooking";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // Receptionist/Reception imports
 import ReceptionHome from "./pages/Receptionist/ReceptionHome";
@@ -112,7 +115,8 @@ const App = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<ManageRooms />} />
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="rooms" element={<ManageRooms />} />
           <Route path="pools" element={<ManagePools />} />
           <Route path="reservations" element={<ReservationCalendar />} />
@@ -129,6 +133,14 @@ const App = () => {
           <Route
             path="bookingNotifications/:id"
             element={<BookingConfirmationDetails />}
+          />
+          <Route
+            path="eventBookingNotifications/:id"
+            element={<EventBookingConfirmationDetails />}
+          />
+          <Route
+            path="poolBookingNotifications/:id"
+            element={<PoolBookingConfirmationDetails />}
           />
         </Route>
 

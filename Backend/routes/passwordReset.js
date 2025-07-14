@@ -1,5 +1,4 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import { sendPasswordResetEmail } from '../config/emailConfig.js';
@@ -31,10 +30,11 @@ router.post('/forgot-password', async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 
-    // Save reset token to user
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = resetTokenExpiry;
-    await user.save();
+    // Update reset token fields directly to avoid validation issues
+    await User.findByIdAndUpdate(user._id, {
+      resetPasswordToken: resetToken,
+      resetPasswordExpires: resetTokenExpiry
+    });
 
     // Send reset email
     const emailResult = await sendPasswordResetEmail(
@@ -102,15 +102,12 @@ router.post('/reset-password/:token', async (req, res) => {
       });
     }
 
-    // Hash new password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Update user password and clear reset token
-    user.password = hashedPassword;
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
-    await user.save();
+    // Update user password and clear reset token (let the model middleware handle password hashing)
+    await User.findByIdAndUpdate(user._id, {
+      password: password, // Don't hash here - let the model middleware do it
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    });
 
     res.json({
       success: true,

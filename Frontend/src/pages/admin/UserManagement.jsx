@@ -24,7 +24,7 @@ const UserManagement = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(9); // Should match your default backend limit
+  const [usersPerPage, setUsersPerPage] = useState(9); // Make this configurable
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -140,49 +140,129 @@ const UserManagement = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, roleFilter]); // Refetch when search or role filter changes
+  }, [search, roleFilter, usersPerPage]); // Add usersPerPage to dependencies
 
   const handleRoleFilterChange = (e) => {
     setRoleFilter(e.target.value);
   };
 
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchUsers(page);
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pageNumbers = [];
     const maxVisiblePages = 5;
-
-    if (totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      const half = Math.floor(maxVisiblePages / 2);
-      let start = currentPage - half;
-      let end = currentPage + half;
-
-      if (start < 1) {
-        start = 1;
-        end = maxVisiblePages;
-      }
-
-      if (end > totalPages) {
-        end = totalPages;
-        start = totalPages - maxVisiblePages + 1;
-      }
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    return pages;
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    const startIndex = (currentPage - 1) * usersPerPage;
+    const endIndex = Math.min(startIndex + usersPerPage, totalUsers);
+
+    return (
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
+        <div className="flex items-center text-sm text-gray-500">
+          Showing {startIndex + 1} to {endIndex} of {totalUsers} results
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || loading}
+            className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                disabled={loading}
+              >
+                1
+              </button>
+              {startPage > 2 && <span className="text-gray-400">...</span>}
+            </>
+          )}
+          
+          {pageNumbers.map(number => (
+            <button
+              key={number}
+              onClick={() => handlePageChange(number)}
+              disabled={loading}
+              className={`px-3 py-2 text-sm font-medium ${
+                currentPage === number
+                  ? 'bg-[#16A085] text-white'
+                  : 'text-gray-700 hover:text-gray-900'
+              }`}
+            >
+              {number}
+            </button>
+          ))}
+          
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && <span className="text-gray-400">...</span>}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                disabled={loading}
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
+          
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || loading}
+            className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
   };
+
+  // Generate page numbers for pagination - REMOVED, now using renderPagination function
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <label htmlFor="usersPerPage" className="text-sm text-gray-600 whitespace-nowrap">
+              Show:
+            </label>
+            <select
+              id="usersPerPage"
+              value={usersPerPage}
+              onChange={(e) => setUsersPerPage(Number(e.target.value))}
+              className="px-2 py-1 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#16A085]"
+            >
+              <option value={5}>5</option>
+              <option value={9}>9</option>
+              <option value={15}>15</option>
+              <option value={30}>30</option>
+            </select>
+            <span className="text-sm text-gray-600">per page</span>
+          </div>
           <div className="flex gap-4">
             <input
               type="text"
@@ -295,60 +375,7 @@ const UserManagement = () => {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-8">
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={() => fetchUsers(1)}
-              disabled={currentPage === 1 || loading}
-              className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
-              title="First Page"
-            >
-              «
-            </button>
-            <button
-              onClick={() => fetchUsers(currentPage - 1)}
-              disabled={currentPage === 1 || loading}
-              className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
-              title="Previous Page"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            {getPageNumbers().map((number) => (
-              <button
-                key={number}
-                onClick={() => fetchUsers(number)}
-                disabled={loading}
-                className={`px-3 py-1 border rounded-md ${
-                  currentPage === number
-                    ? "bg-[#16A085] text-white border-[#16A085]"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                {number}
-              </button>
-            ))}
-
-            <button
-              onClick={() => fetchUsers(currentPage + 1)}
-              disabled={currentPage === totalPages || loading}
-              className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
-              title="Next Page"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => fetchUsers(totalPages)}
-              disabled={currentPage === totalPages || loading}
-              className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
-              title="Last Page"
-            >
-              »
-            </button>
-          </nav>
-        </div>
-      )}
+      {renderPagination()}
 
       <Dialog
         open={deleteDialogOpen}

@@ -214,7 +214,6 @@ const PoolManagement = () => {
 
   const handleDeleteConfirmed = async () => {
     try {
-      console.log("handleDeleteConfirmed : ",selectedPool._id);
       setLoading(true);
       await axios.delete(`http://localhost:5000/api/pools/delete/${selectedPool._id}`);
       enqueueSnackbar("Pool deleted successfully", { variant: 'success' });

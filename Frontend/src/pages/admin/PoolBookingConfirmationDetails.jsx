@@ -4,9 +4,11 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
+  Calendar,
+  Users,
+  Clock,
   FileText,
   Download,
-  Clock,
 } from "lucide-react";
 import { useSnackbar } from "notistack";
 import {
@@ -20,7 +22,7 @@ import {
   Chip,
 } from "@mui/material";
 
-const BookingDetail = () => {
+const PoolBookingDetail = () => {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -37,14 +39,14 @@ const BookingDetail = () => {
   const fetchBooking = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/admin/bookings/pending/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/bookings/pool/pending/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch booking details");
+        throw new Error("Failed to fetch pool booking details");
       }
 
       const data = await res.json();
@@ -61,7 +63,7 @@ const BookingDetail = () => {
   const handleBookingAction = async () => {
     try {
       setActionLoading(true);
-      const url = `${API_BASE_URL}/admin/bookings/${id}/${actionType}`;
+      const url = `${API_BASE_URL}/admin/bookings/pool/${id}/${actionType}`;
 
       const options = {
         method: "PATCH",
@@ -80,13 +82,13 @@ const BookingDetail = () => {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || `Failed to ${actionType} booking`);
+        throw new Error(errorData.error || `Failed to ${actionType} pool booking`);
       }
 
       const data = await res.json();
       const emailMessage = actionType === "approve" 
-        ? "Booking approved successfully! Customer has been notified via email (check spam folder if not received)." 
-        : "Booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
+        ? "Pool booking approved successfully! Customer has been notified via email (check spam folder if not received)." 
+        : "Pool booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
       
       enqueueSnackbar(emailMessage, {
         variant: "success",
@@ -101,33 +103,33 @@ const BookingDetail = () => {
     }
   };
 
-  const viewDocument = () => {
-    if (!booking?.documentPath) {
-      enqueueSnackbar("No document available", { variant: "warning" });
+  const viewReceipt = () => {
+    if (!booking?.paymentProof) {
+      enqueueSnackbar("No payment proof available", { variant: "warning" });
       return;
     }
-    // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
-      : booking.documentPath;
+    // Remove leading slash from paymentProof if it exists to avoid double slashes
+    const cleanPath = booking.paymentProof.startsWith('/') 
+      ? booking.paymentProof.substring(1) 
+      : booking.paymentProof;
     window.open(`${API_BASE_URL}/${cleanPath}`, "_blank");
   };
 
-  const downloadDocument = () => {
-    if (!booking?.documentPath) {
-      enqueueSnackbar("No document available", { variant: "warning" });
+  const downloadReceipt = () => {
+    if (!booking?.paymentProof) {
+      enqueueSnackbar("No payment proof available", { variant: "warning" });
       return;
     }
-    // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
-      : booking.documentPath;
+    // Remove leading slash from paymentProof if it exists to avoid double slashes
+    const cleanPath = booking.paymentProof.startsWith('/') 
+      ? booking.paymentProof.substring(1) 
+      : booking.paymentProof;
     const link = document.createElement("a");
     link.href = `${API_BASE_URL}/${cleanPath}`;
     link.setAttribute(
       "download",
-      `room-document-${booking._id}${
-        booking.documentPath.includes(".pdf") ? ".pdf" : ".jpg"
+      `pool-payment-proof-${booking._id}${
+        booking.paymentProof.includes(".pdf") ? ".pdf" : ".jpg"
       }`
     );
     document.body.appendChild(link);
@@ -143,7 +145,7 @@ const BookingDetail = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <CircularProgress size={60} />
-        <p className="text-gray-600">Loading booking details...</p>
+        <p className="text-gray-600">Loading pool booking details...</p>
       </div>
     );
   }
@@ -152,7 +154,7 @@ const BookingDetail = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <XCircle className="w-16 h-16 text-red-500" />
-        <p className="text-xl text-gray-700">Booking not found</p>
+        <p className="text-xl text-gray-700">Pool booking not found</p>
         <button
           onClick={() => navigate("/admin/bookingNotifications")}
           className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700"
@@ -178,8 +180,14 @@ const BookingDetail = () => {
     },
   };
 
+  const guestName = booking.fullName || booking.name || "N/A";
+  const phone = booking.phoneNumber || booking.phone || "N/A";
+  const email = booking.email || "N/A";
+  const bookingDate = booking.date || booking.checkIn;
+  const guestCount = booking.guestCount || booking.peopleCount || 0;
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
       <button
         onClick={() => navigate("/admin/bookingNotifications")}
         className="flex items-center gap-2 mb-6 text-blue-600 hover:text-blue-800 transition-colors"
@@ -194,14 +202,14 @@ const BookingDetail = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Booking #{booking._id.substring(18, 24).toUpperCase()}
+                Pool Booking #{booking._id.substring(18, 24).toUpperCase()}
               </h1>
               <div className="flex items-center mt-2 gap-2">
                 <Chip
-                  label={booking.status}
-                  icon={statusConfig[booking.status]?.icon}
+                  label={booking.status || 'pending'}
+                  icon={statusConfig[booking.status || 'pending']?.icon}
                   className={`${
-                    statusConfig[booking.status]?.color
+                    statusConfig[booking.status || 'pending']?.color
                   } capitalize`}
                   size="small"
                 />
@@ -211,7 +219,7 @@ const BookingDetail = () => {
               </div>
             </div>
 
-            {booking.status === "pending" && (
+            {(!booking.status || booking.status === "pending") && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => {
@@ -250,40 +258,19 @@ const BookingDetail = () => {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Full Name</p>
-                <p className="text-lg font-semibold">{booking.fullName}</p>
+                <p className="text-sm font-medium text-gray-500">Guest Name</p>
+                <p className="text-lg font-semibold">{guestName}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Phone Number
-                  </p>
-                  <p className="text-lg">{booking.phoneNumber}</p>
-                </div>
-                {booking.whatsappNumber && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">
-                      WhatsApp
-                    </p>
-                    <p className="text-lg">{booking.whatsappNumber}</p>
-                  </div>
-                )}
+              <div>
+                <p className="text-sm font-medium text-gray-500">Phone Number</p>
+                <p className="text-lg">{phone}</p>
               </div>
 
-              {booking.nicNumber && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    NIC Number
-                  </p>
-                  <p className="text-lg">{booking.nicNumber}</p>
-                </div>
-              )}
-
-              {booking.email && (
+              {email !== "N/A" && (
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="text-lg">{booking.email}</p>
+                  <p className="text-lg">{email}</p>
                 </div>
               )}
             </div>
@@ -292,48 +279,44 @@ const BookingDetail = () => {
           {/* Booking Details */}
           <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-800 border-b pb-2">
-              Booking Details
+              Pool Booking Details
             </h2>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">
-                    Room Number
-                  </p>
-                  <p className="text-lg font-semibold">{booking.roomNumber}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Room Type</p>
-                  <p className="text-lg capitalize">{booking.roomType}</p>
-                </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Booking Date</p>
+                <p className="text-lg font-semibold">
+                  {bookingDate ? new Date(bookingDate).toLocaleDateString() : "N/A"}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Check-In</p>
-                  <p className="text-lg">
-                    {new Date(booking.checkIn).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Check-Out</p>
-                  <p className="text-lg">
-                    {new Date(booking.checkOut).toLocaleDateString()}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Number of Guests</p>
+                <p className="text-lg">{guestCount}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {booking.startTime && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Adults</p>
-                  <p className="text-lg">{booking.adults}</p>
+                  <p className="text-sm font-medium text-gray-500">Start Time</p>
+                  <p className="text-lg">{booking.startTime}</p>
                 </div>
+              )}
+
+              {booking.endTime && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Children</p>
-                  <p className="text-lg">{booking.children || 0}</p>
+                  <p className="text-sm font-medium text-gray-500">End Time</p>
+                  <p className="text-lg">{booking.endTime}</p>
                 </div>
-              </div>
+              )}
+
+              {booking.totalAmount && (
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                  <p className="text-xl font-bold text-green-600">
+                    LKR {booking.totalAmount.toFixed(2)}
+                  </p>
+                </div>
+              )}
 
               {booking.specialRequests && (
                 <div>
@@ -350,21 +333,21 @@ const BookingDetail = () => {
         </div>
 
         {/* Payment Proof Section */}
-        {booking.documentPath && (
+        {booking.paymentProof && (
           <div className="p-6 border-t border-gray-200 bg-gray-50">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Payment Proof & Guest Document
+              Payment Proof
             </h2>
             <div className="flex flex-wrap gap-4">
               <button
-                onClick={viewDocument}
+                onClick={viewReceipt}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <FileText className="w-5 h-5" />
-                <span>View Document</span>
+                <span>View Payment Proof</span>
               </button>
               <button
-                onClick={downloadDocument}
+                onClick={downloadReceipt}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
               >
                 <Download className="w-5 h-5" />
@@ -388,12 +371,12 @@ const BookingDetail = () => {
         <DialogContent className="py-4">
           <DialogContentText>
             {actionType === "approve" ? (
-              `Are you sure you want to approve this booking for ${booking.fullName}?`
+              `Are you sure you want to approve this pool booking for ${guestName}?`
             ) : (
               <div className="space-y-4">
                 <p>
-                  Are you sure you want to reject this booking for{" "}
-                  {booking.fullName}?
+                  Are you sure you want to reject this pool booking for{" "}
+                  {guestName}?
                 </p>
                 <div>
                   <label
@@ -442,4 +425,4 @@ const BookingDetail = () => {
   );
 };
 
-export default BookingDetail;
+export default PoolBookingDetail;
