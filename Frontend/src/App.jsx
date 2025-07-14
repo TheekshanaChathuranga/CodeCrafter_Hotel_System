@@ -153,7 +153,7 @@ const App = () => {
           <Route path="pools" element={<ManagePools />} />
           <Route
             path="profile"
-            element={<div>Profile Page - Coming Soon</div>}
+            element={<Profile />}
           />
         </Route>
 
@@ -187,7 +187,7 @@ const App = () => {
           <Route path="pools" element={<ManagePools />} />
           <Route
             path="profile"
-            element={<div>Profile Page - Coming Soon</div>}
+            element={<Profile />}
           />
         </Route>
       </Routes>
