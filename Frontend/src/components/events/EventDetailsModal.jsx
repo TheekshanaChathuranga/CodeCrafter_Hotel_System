@@ -1,6 +1,7 @@
 import React from "react";
+import { FiEdit, FiTrash } from "react-icons/fi";
 
-const EventDetailsModal = ({ event, onClose }) => {
+const EventDetailsModal = ({ event, onClose, onEdit, onDelete }) => {
   if (!event) return null;
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString();
@@ -12,26 +13,55 @@ const EventDetailsModal = ({ event, onClose }) => {
           {/* Header */}
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold text-gray-800">
-              Event Details - {event.name}
+              Event Details - {event.eventId ? `${event.eventId} - ` : ""}{event.name}
             </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            <div className="flex items-center space-x-2">
+              {/* Edit Button */}
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(event)}
+                  title="Edit"
+                  className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100"
+                >
+                  <FiEdit className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Delete Button */}
+              {onDelete && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to delete this event?")) {
+                      onDelete(event._id);
+                    }
+                  }}
+                  title="Delete"
+                  className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100"
+                >
+                  <FiTrash className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Body */}
@@ -118,7 +148,7 @@ const EventDetailsModal = ({ event, onClose }) => {
                         <th className="px-4 py-2 text-left">Description</th>
                         <th className="px-4 py-2 text-left">Unit</th>
                         <th className="px-4 py-2 text-right">Quantity</th>
-                        <th className="px-4 py-2 text-right">Rate</th>
+                        <th className="px-4 py-2 text-right">Price(Rs)</th>
                         <th className="px-4 py-2 text-right">Amount</th>
                       </tr>
                     </thead>
@@ -153,7 +183,7 @@ const EventDetailsModal = ({ event, onClose }) => {
                       <thead>
                         <tr className="bg-gray-100">
                           <th className="px-4 py-2 text-left">Description</th>
-                          <th className="px-4 py-2 text-right">Rate</th>
+                          <th className="px-4 py-2 text-right">Price(Rs)</th>
                         </tr>
                       </thead>
                       <tbody>

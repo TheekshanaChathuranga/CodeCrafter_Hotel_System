@@ -5,6 +5,8 @@ import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
 import { FiCalendar, FiClock, FiUser, FiX, FiEdit, FiPlus } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import eventService from '../../services/eventService';
 import { useSnackbar } from 'notistack';
 import ErrorDisplay from '../../components/ErrorDisplay';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -31,6 +33,7 @@ const ReservationManagement = () => {
   const { enqueueSnackbar } = useSnackbar();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState('month');
+  const navigate = useNavigate();
 
 
   useEffect(() => {
@@ -56,7 +59,7 @@ const ReservationManagement = () => {
       const eventRes = await axios.get('http://localhost:5000/api/events');
       const eventEvents = eventRes.data.map(event => ({
         id: event._id,
-        title: `${event.name} - ${event.eventType} (Event)`,
+        title: `${event.eventId ? event.eventId + ' - ' : ''}${event.name} - ${event.eventType} (Event)`,
         start: new Date(event.checkIn),
         end: new Date(event.checkOut),
         allDay: false,
@@ -105,6 +108,25 @@ const ReservationManagement = () => {
       setShowModal(false);
     } catch (error) {
       handleError(error, 'Failed to delete reservation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditEvent = (eventData) => {
+    // Navigate to EventBooking page with event data for editing
+    navigate('/admin/event-booking', { state: { event: eventData } });
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      setLoading(true);
+      await eventService.deleteEvent(eventId);
+      enqueueSnackbar('Event deleted successfully', { variant: 'success' });
+      fetchAllEvents();
+      setShowModal(false);
+    } catch (error) {
+      handleError(error, 'Failed to delete event');
     } finally {
       setLoading(false);
     }
@@ -199,6 +221,8 @@ const ReservationManagement = () => {
           <EventDetailsModal
             event={selectedReservation}
             onClose={() => setShowModal(false)}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteEvent}
           />
         ) : (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

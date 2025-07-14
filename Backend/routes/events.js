@@ -7,7 +7,13 @@ const router = express.Router();
 // Create Event (No auth)
 router.post("/", validateEvent, async (req, res) => {
   try {
-    const eventData = { ...req.body }; // No userId since no auth
+    // Generate a sequential eventId in the format #E0001
+    const count = await Event.countDocuments();
+    const nextNumber = count + 1;
+    const eventId = `#E${String(nextNumber).padStart(4, "0")}`;
+
+    const eventData = { ...req.body, eventId }; // No userId since no auth
+
     const event = new Event(eventData);
     const savedEvent = await event.save();
     res.status(201).json(savedEvent);

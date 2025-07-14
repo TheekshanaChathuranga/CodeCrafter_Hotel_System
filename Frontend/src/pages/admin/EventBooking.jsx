@@ -359,9 +359,9 @@ const EventBooking = () => {
                     <ShadTableRow>
                       <TableHead>No</TableHead>
                       <TableHead>Category</TableHead>
-                      <TableHead>Description</TableHead>
+                      <TableHead>Food item</TableHead>
                       <TableHead>Quantity</TableHead>
-                      <TableHead>Rate</TableHead>
+                      <TableHead>Price(Rs)</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Action</TableHead>
                     </ShadTableRow>
@@ -397,7 +397,7 @@ const EventBooking = () => {
                     <ShadTableRow>
                       <TableHead>Select</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Rate</TableHead>
+                      <TableHead>Price(Rs)</TableHead>
                       <TableHead>Amount</TableHead>
                     </ShadTableRow>
                   </TableHeader>

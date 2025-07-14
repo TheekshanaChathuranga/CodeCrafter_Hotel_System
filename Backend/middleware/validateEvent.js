@@ -53,9 +53,9 @@ const validateEvent = (req, res, next) => {
         errors.push(`Food item ${index + 1}: Quantity must be non-negative`);
       }
       if (item.rate === undefined || item.rate === null) {
-        errors.push(`Food item ${index + 1}: Rate is required`);
+        errors.push(`Food item ${index + 1}: Price is required`);
       } else if (item.rate < 0) {
-        errors.push(`Food item ${index + 1}: Rate must be non-negative`);
+        errors.push(`Food item ${index + 1}: Price must be non-negative`);
       }
     });
   }
@@ -65,9 +65,9 @@ const validateEvent = (req, res, next) => {
     extraFields.forEach((item, index) => {
       if (item.description) {
         if (item.rate === undefined || item.rate === null) {
-          errors.push(`Extra item ${index + 1}: Rate is required`);
+          errors.push(`Extra item ${index + 1}: Price is required`);
         } else if (item.rate < 0) {
-          errors.push(`Extra item ${index + 1}: Rate must be non-negative`);
+          errors.push(`Extra item ${index + 1}: Price must be non-negative`);
         }
       }
     });

@@ -35,6 +35,8 @@ const eventSchema = new mongoose.Schema({
   extraAmount: Number,
   hall: String,
   excelFile: { type: mongoose.Schema.Types.Mixed, default: null },
+  // Auto-generated human-readable event reference like "#E0001"
+  eventId: { type: String, unique: true },
 }, { timestamps: true });
 
 export default mongoose.model('Event', eventSchema); 
