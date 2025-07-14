@@ -20,6 +20,7 @@ import ReservationCalendar from "./pages/admin/AdminReservationCalendar";
 import BookingConfirmation from "./pages/admin/BookingConfirmationManagement";
 import BookingConfirmationDetails from "./pages/admin/BookingConfirmationDetails";
 import MyBookings from "./pages/customer/MyBookings";
+import MyPoolBookings from "./pages/customer/MyPoolBookings";
 
 import Profile from "./pages/Profile";
 
@@ -54,9 +55,12 @@ const App = () => {
   const isEventBookingRoute = location.pathname.startsWith("/event-booking");
 
   return (
-<div>
-  {/* Render the public Navbar on all public routes except the standalone Event Booking page */}
-  {!isAdminRoute && !isreceptionistRoute && !isReceptionRoute && !isEventBookingRoute && <Navbar />}
+    <div>
+      {/* Render the public Navbar on all public routes except the standalone Event Booking page */}
+      {!isAdminRoute &&
+        !isreceptionistRoute &&
+        !isReceptionRoute &&
+        !isEventBookingRoute && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -76,23 +80,28 @@ const App = () => {
           }
         />
 
-    <Route path="/room-booking" element={<Room_Book />} />
-    <Route path="/pool-booking" element={<Pool_Book />} />
-    <Route path="/event-booking" element={<ClientBooking />} />
-    <Route path="/menu" element={<MenuPage />} />
-    <Route path="/profile" element={<Profile />} />
-    <Route
-      path="/event-booking"
-      element={<EventBooking />}
-    />
-    <Route
-      path="/mybookings"
-      element={
-        <ProtectedRoute allowedRoles={["user"]}>
-          <MyBookings />
-        </ProtectedRoute>
-      }
-    />
+        <Route path="/room-booking" element={<Room_Book />} />
+        <Route path="/pool-booking" element={<Pool_Book />} />
+        <Route path="/event-booking" element={<ClientBooking />} />
+        <Route path="/menu" element={<MenuPage />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/event-booking" element={<EventBooking />} />
+        <Route
+          path="/mybookings"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mypoolbookings"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <MyPoolBookings />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin routes */}
         <Route
@@ -127,7 +136,9 @@ const App = () => {
         <Route
           path="/receptionist"
           element={
-            <ProtectedRoute allowedRoles={["receptionist", "reception", "admin"]}>
+            <ProtectedRoute
+              allowedRoles={["receptionist", "reception", "admin"]}
+            >
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -192,7 +203,6 @@ const App = () => {
         </Route>
       </Routes>
     </div>
-
   );
 };
 

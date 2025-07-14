@@ -37,6 +37,28 @@ const userSchema = new mongoose.Schema(
       default: "active",
       required: true,
     },
+    fullName: {
+      type: String,
+      trim: true,
+      minlength: 3,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    location: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    profilePicture: {
+      type: String,
+      default: "/img/default-profile.png",
+    },
   },
   {
     timestamps: true,

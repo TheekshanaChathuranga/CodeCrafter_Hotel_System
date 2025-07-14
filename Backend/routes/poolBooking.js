@@ -140,6 +140,7 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     checkOutTime,
     phoneNumber,
     whatsappNumber,
+    userId, // Add userId extraction
   } = req.body;
 
   // Validate required fields
@@ -188,6 +189,10 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
       whatsappNumber: whatsappNumber || "",
       paymentProof: proofPath,
       status: "pending",
+      // Add user identification fields
+      userId: userId || null,
+      user: userId || null,
+      customerId: userId || null,
     });
 
     await newBooking.save();
@@ -203,7 +208,10 @@ router.post("/", upload.single("paymentProof"), async (req, res) => {
     });
 
     await notification.save();
-    console.log("Pool booking notification saved to database:", notification._id);
+    console.log(
+      "Pool booking notification saved to database:",
+      notification._id
+    );
 
     // Emit real-time notification to online admins
     const io = req.app.get("io");

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
-import Navbar from "../../components/Navbar";
 
 const MyPoolBookings = () => {
   const navigate = useNavigate();
@@ -46,6 +45,9 @@ const MyPoolBookings = () => {
         const userId =
           decoded.userId || decoded.id || decoded._id || decoded.sub;
 
+        console.log("Decoded token:", decoded);
+        console.log("Extracted userId:", userId);
+
         if (!userId) {
           throw new Error(
             "Unable to identify user. Please try logging in again."
@@ -56,13 +58,34 @@ const MyPoolBookings = () => {
         const response = await axios.get(
           `http://localhost:5000/api/pool-booking/user/${userId}`
         );
+        console.log(
+          "API URL called:",
+          `http://localhost:5000/api/pool-booking/user/${userId}`
+        );
         console.log("Received pool bookings:", response.data);
 
         // Ensure we have valid data before setting state
         if (Array.isArray(response.data)) {
           const validBookings = response.data
-            .filter((booking) => booking && booking.date)
+            .filter((booking) => booking && (booking.date || booking.checkIn))
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+          console.log(
+            `Found ${validBookings.length} valid pool bookings for user`
+          );
+
+          if (validBookings.length === 0) {
+            console.log(
+              "No pool bookings found for this user. This could mean:"
+            );
+            console.log("1. User has not made any pool bookings yet");
+            console.log(
+              "2. User's pool bookings were made before the user linking system was implemented"
+            );
+            console.log(
+              "3. User ID in token doesn't match any bookings in database"
+            );
+          }
 
           setPoolBookings(validBookings);
         } else {
@@ -109,13 +132,12 @@ const MyPoolBookings = () => {
 
   if (loading) {
     return (
-      <div>
-        <Navbar />
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-lg text-gray-600">Loading your pool bookings...</p>
-          </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">
+            Loading your pool bookings...
+          </p>
         </div>
       </div>
     );
@@ -123,20 +145,17 @@ const MyPoolBookings = () => {
 
   if (error) {
     return (
-      <div>
-        <Navbar />
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
-              <h3 className="font-bold">Error</h3>
-              <p>{error}</p>
-              <button
-                onClick={() => navigate("/")}
-                className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                Return Home
-              </button>
-            </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
+            <h3 className="font-bold">Error</h3>
+            <p>{error}</p>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Return Home
+            </button>
           </div>
         </div>
       </div>
@@ -145,7 +164,6 @@ const MyPoolBookings = () => {
 
   return (
     <div>
-      <Navbar />
       <div className="min-h-screen bg-gray-100 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-lg shadow-lg p-6">
@@ -155,7 +173,7 @@ const MyPoolBookings = () => {
               </h1>
               <button
                 onClick={() => navigate("/pool-booking")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Book New Pool
               </button>
@@ -181,8 +199,13 @@ const MyPoolBookings = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No pool reservations found
                 </h3>
+                <p className="text-gray-500 mb-2">
+                  You haven't made any pool bookings yet, or your previous
+                  bookings were made before our user linking system was
+                  implemented.
+                </p>
                 <p className="text-gray-500 mb-6">
-                  You haven't made any pool bookings yet.
+                  Make a new pool booking to see it appear here!
                 </p>
                 <button
                   onClick={() => navigate("/pool-booking")}
@@ -217,19 +240,20 @@ const MyPoolBookings = () => {
                         <div className="flex justify-between">
                           <span>Date:</span>
                           <span className="font-medium">
-                            {formatDate(booking.date)}
+                            {formatDate(booking.date || booking.checkIn)}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Time:</span>
                           <span className="font-medium">
-                            {formatTime(booking.checkInTime)} - {formatTime(booking.checkOutTime)}
+                            {formatTime(booking.checkInTime)} -{" "}
+                            {formatTime(booking.checkOutTime)}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Guests:</span>
                           <span className="font-medium">
-                            {booking.guestCount}
+                            {booking.guestCount || booking.peopleCount}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -272,38 +296,72 @@ const MyPoolBookings = () => {
                     onClick={closeBookingDetails}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Booking Information</h3>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Booking Information
+                    </h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Pool Name</label>
-                        <p className="text-gray-900">{selectedBooking.poolId?.name || "N/A"}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Pool Name
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.poolId?.name || "N/A"}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Booking Date</label>
-                        <p className="text-gray-900">{formatDate(selectedBooking.date)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Booking Date
+                        </label>
+                        <p className="text-gray-900">
+                          {formatDate(selectedBooking.date)}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Check-in Time</label>
-                        <p className="text-gray-900">{formatTime(selectedBooking.checkInTime)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Check-in Time
+                        </label>
+                        <p className="text-gray-900">
+                          {formatTime(selectedBooking.checkInTime)}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Check-out Time</label>
-                        <p className="text-gray-900">{formatTime(selectedBooking.checkOutTime)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Check-out Time
+                        </label>
+                        <p className="text-gray-900">
+                          {formatTime(selectedBooking.checkOutTime)}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Number of Guests</label>
-                        <p className="text-gray-900">{selectedBooking.guestCount}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Number of Guests
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.guestCount}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Status</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Status
+                        </label>
                         <span
                           className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                             selectedBooking.status
@@ -316,32 +374,54 @@ const MyPoolBookings = () => {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold mb-3">Contact Information</h3>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Contact Information
+                    </h3>
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                        <p className="text-gray-900">{selectedBooking.fullName}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Full Name
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.fullName}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <p className="text-gray-900">{selectedBooking.phoneNumber}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Phone Number
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.phoneNumber}
+                        </p>
                       </div>
                       {selectedBooking.whatsappNumber && (
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">WhatsApp Number</label>
-                          <p className="text-gray-900">{selectedBooking.whatsappNumber}</p>
+                          <label className="block text-sm font-medium text-gray-700">
+                            WhatsApp Number
+                          </label>
+                          <p className="text-gray-900">
+                            {selectedBooking.whatsappNumber}
+                          </p>
                         </div>
                       )}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Booking Date</label>
-                        <p className="text-gray-900">{formatDate(selectedBooking.createdAt)}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Booking Date
+                        </label>
+                        <p className="text-gray-900">
+                          {formatDate(selectedBooking.createdAt)}
+                        </p>
                       </div>
                     </div>
 
                     {selectedBooking.request && (
                       <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700">Special Requests</label>
-                        <p className="text-gray-900 mt-1">{selectedBooking.request}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Special Requests
+                        </label>
+                        <p className="text-gray-900 mt-1">
+                          {selectedBooking.request}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -349,25 +429,42 @@ const MyPoolBookings = () => {
 
                 {selectedBooking.poolId && (
                   <div className="mt-6">
-                    <h3 className="text-lg font-semibold mb-3">Pool Information</h3>
+                    <h3 className="text-lg font-semibold mb-3">
+                      Pool Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Pool Description</label>
-                        <p className="text-gray-900">{selectedBooking.poolId.description || "N/A"}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Capacity</label>
-                        <p className="text-gray-900">{selectedBooking.poolId.capacity || "N/A"}</p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700">Opening Hours</label>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Pool Description
+                        </label>
                         <p className="text-gray-900">
-                          {selectedBooking.poolId.openingTime} - {selectedBooking.poolId.closingTime}
+                          {selectedBooking.poolId.description || "N/A"}
                         </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Status</label>
-                        <p className="text-gray-900">{selectedBooking.poolId.poolStatus || "N/A"}</p>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Capacity
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.poolId.capacity || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Opening Hours
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.poolId.openingTime} -{" "}
+                          {selectedBooking.poolId.closingTime}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Status
+                        </label>
+                        <p className="text-gray-900">
+                          {selectedBooking.poolId.poolStatus || "N/A"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -393,6 +490,7 @@ const MyPoolBookings = () => {
         )}
       </div>
 
+      {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p>© 2025 The Lake Hotel & Resort. All rights reserved.</p>

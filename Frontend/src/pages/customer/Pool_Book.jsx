@@ -297,6 +297,16 @@ const Pool_Book = () => {
         bookingForm.append("whatsappNumber", data.whatsappNumber);
       }
 
+      // Add user ID for linking the booking to the user
+      if (user) {
+        const userId = user.id || user._id || user.userId;
+        console.log("User object:", user);
+        console.log("Extracted user ID:", userId);
+        if (userId) {
+          bookingForm.append("userId", userId);
+        }
+      }
+
       // Debug: Log the form data
       console.log("Sending booking data:", {
         fullName: data.fullName,
