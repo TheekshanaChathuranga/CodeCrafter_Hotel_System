@@ -70,6 +70,8 @@ const EventBooking = () => {
     if (location.state?.event) {
       const event = location.state.event;
       setEditingEvent(event);
+
+      // ----- populate form data -----
       setFormData({
         name: event.name || "",
         phone1: event.phone1 || "",
@@ -84,8 +86,33 @@ const EventBooking = () => {
         email: event.email || "",
         notes: event.notes || "",
       });
-      setTableData(event.tableData || [{ no: 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }]);
-      setExtraFields(event.extraFields || [{ description: "Pool Side reservation", rate: 5000, selected: false }, { description: "Boat ride", rate: 5000, selected: false }]);
+
+      // ----- populate table data with serial numbers -----
+      const tableDataWithNo = Array.isArray(event.tableData) && event.tableData.length > 0
+        ? event.tableData.map((row, idx) => ({ no: idx + 1, ...row }))
+        : [{ no: 1, category: "", description: "", unit: "", quantity: 0, rate: 0, amount: 0 }];
+      setTableData(tableDataWithNo);
+
+      // ----- merge default extras and mark selected ones -----
+      const defaultExtras = [
+        { description: "Pool Side reservation", rate: 5000 },
+        { description: "Boat ride", rate: 5000 },
+      ];
+
+      const eventExtras = Array.isArray(event.extraFields) ? event.extraFields : [];
+
+      // Mark defaults as selected if present in eventExtras
+      const mergedDefaults = defaultExtras.map((def) => {
+        const matched = eventExtras.find((ex) => ex.description === def.description);
+        return { ...def, selected: !!matched };
+      });
+
+      // Include any additional extras that aren't part of defaults
+      const additionalExtras = eventExtras
+        .filter((ex) => !defaultExtras.some((def) => def.description === ex.description))
+        .map((ex) => ({ ...ex, selected: true }));
+
+      setExtraFields([...mergedDefaults, ...additionalExtras]);
     }
   }, [location.state]);
 
@@ -198,7 +225,9 @@ const EventBooking = () => {
       onConfirm: async () => {
         try {
           const totalAmount = tableData.reduce((sum, row) => sum + (row.amount || 0), 0);
-          const extraAmount = extraFields.reduce((sum, row) => sum + (row.selected ? row.rate : 0), 0);
+          // Consider only the extras the user has actually selected
+          const selectedExtras = extraFields.filter((row) => row.selected);
+          const extraAmount = selectedExtras.reduce((sum, row) => sum + row.rate, 0);
           const serviceCharge = totalAmount * 0.1;
           const grandTotal = totalAmount + serviceCharge + extraAmount;
 
@@ -228,10 +257,11 @@ const EventBooking = () => {
               rate: Number(row.rate),
               amount: Number(row.amount)
             })),
-            extraFields: extraFields.map(row => ({
+            // Send only the extras that were chosen
+            extraFields: selectedExtras.map(row => ({
               description: row.description,
               rate: Number(row.rate),
-              selected: row.selected,
+              selected: true,
             })),
             totalAmount,
             serviceCharge,
@@ -246,9 +276,6 @@ const EventBooking = () => {
               await eventService.updateEvent(editingEvent._id, dataToSubmit);
               setEditingEvent(null);
               setPopup({ message: "Event updated successfully!", type: "success", showConfirm: false });
-              setTimeout(() => {
-                navigate("/admin/eventbooking");
-              }, 1000);
             } catch (error) {
               console.error("Error updating event:", error);
               const errorMessage = error.response?.data?.errors?.join('\n') || error.response?.data?.message || "Error updating event. Please try again.";
@@ -263,9 +290,6 @@ const EventBooking = () => {
             try {
               await eventService.createEvent(dataToSubmit);
               setPopup({ message: "Booking submitted successfully!", type: "success", showConfirm: false });
-              setTimeout(() => {
-                navigate("/admin/eventbooking");
-              }, 1000);
             } catch (error) {
               console.error("Error creating event:", error);
               let errorMessage = "Error submitting booking. Please try again.";
