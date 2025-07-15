@@ -110,7 +110,7 @@ const DashboardSidebar = () => {
       roles: ["receptionist", "reception", "admin"],
     },
     {
-      title: "Reservations",
+      title: "Room Reservations",
       url: {
         admin: "/admin/reservations",
         receptionist: "/receptionist/bookings",
