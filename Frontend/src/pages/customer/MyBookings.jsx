@@ -301,14 +301,12 @@ const MyBookings = () => {
               {/* Primary Info */}
               <div className="bg-blue-50 rounded-lg p-3">
                 <div className="grid grid-cols-2 gap-3">
-                  {booking.bookingId && (
-                    <div>
-                      <p className="text-sm text-gray-600">Booking ID</p>
-                      <p className="font-semibold text-gray-800">
-                        {booking.bookingId}
-                      </p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-sm text-gray-600">Booking ID</p>
+                    <p className="font-semibold text-gray-800 font-mono text-lg">
+                      {booking.bookingId || booking._id || "N/A"}
+                    </p>
+                  </div>
                   <div>
                     <p className="text-sm text-gray-600">Room Number</p>
                     <p className="font-semibold text-gray-800">
@@ -422,11 +420,13 @@ const MyBookings = () => {
               )}
 
               {/* Receipt Document */}
-              {booking.document && (
+              {(booking.document || booking.documentPath) && (
                 <div className="bg-gray-50 rounded-lg p-3">
                   <h3 className="font-semibold text-gray-800 mb-2">Receipt</h3>
                   <a
-                    href={`http://localhost:5000${booking.document}`}
+                    href={`http://localhost:5000${
+                      booking.document || booking.documentPath
+                    }`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"

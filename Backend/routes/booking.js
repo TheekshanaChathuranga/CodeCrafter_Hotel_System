@@ -116,8 +116,13 @@ router.post("/", upload.single("document"), async (req, res) => {
       throw new Error("Room is already booked for these dates");
     }
 
+    // Generate custom booking ID
+    const customBookingId = await Booking.generateNextBookingId();
+    console.log("Generated booking ID:", customBookingId);
+
     // Create new booking
     const newBooking = new Booking({
+      bookingId: customBookingId,
       roomNumber: req.body.roomNumber,
       roomType: req.body.roomType,
       roomAcOption: req.body.roomAcOption,
@@ -149,8 +154,8 @@ router.post("/", upload.single("document"), async (req, res) => {
     const notification = new Notification({
       type: "booking",
       title: "New Room Booking",
-      message: `${savedBooking.fullName} booked Room ${savedBooking.roomNumber}`,
-      bookingId: savedBooking._id,
+      message: `${savedBooking.fullName} booked Room ${savedBooking.roomNumber} (${savedBooking.bookingId})`,
+      bookingId: savedBooking._id, // Keep using MongoDB _id for internal notification reference
       adminId: null, // null means for all admins
       isRead: false,
     });
@@ -166,7 +171,7 @@ router.post("/", upload.single("document"), async (req, res) => {
     if (io) {
       // Emit to all connected clients (for real-time updates)
       io.emit("booking-created", {
-        bookingId: savedBooking._id,
+        bookingId: savedBooking.bookingId, // Use custom booking ID
         roomNumber: savedBooking.roomNumber,
         fullName: savedBooking.fullName,
         status: savedBooking.status,
@@ -192,7 +197,7 @@ router.post("/", upload.single("document"), async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
-      bookingId: savedBooking._id,
+      bookingId: savedBooking.bookingId, // Use custom booking ID instead of _id
       details: {
         roomNumber: savedBooking.roomNumber,
         dates: {
@@ -386,9 +391,7 @@ router.get("/by-date-range", async (req, res) => {
       query.status = status;
     }
 
-    const bookings = await Booking.find(query)
-      .sort({ checkIn: 1 })
-      .lean();
+    const bookings = await Booking.find(query).sort({ checkIn: 1 }).lean();
 
     res.status(200).json({
       success: true,
