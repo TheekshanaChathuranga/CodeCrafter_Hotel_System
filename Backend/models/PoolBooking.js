@@ -2,6 +2,16 @@ import mongoose from "mongoose";
 
 const poolBookingSchema = new mongoose.Schema(
   {
+    // Booking ID with format #P001
+    bookingId: {
+      type: String,
+      unique: true,
+      default: function() {
+        // This will be overridden by pre-save middleware
+        return null;
+      }
+    },
+
     // User identification
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -42,5 +52,34 @@ const poolBookingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-save middleware to generate booking ID
+poolBookingSchema.pre('save', async function(next) {
+  if (this.isNew && !this.bookingId) {
+    try {
+      // Find the latest booking to get the next number
+      const latestBooking = await this.constructor.findOne(
+        {}, 
+        {}, 
+        { sort: { 'createdAt': -1 } }
+      );
+      
+      let nextNumber = 1;
+      if (latestBooking && latestBooking.bookingId) {
+        // Extract number from booking ID (e.g., #P0001 -> 0001 -> 1)
+        const match = latestBooking.bookingId.match(/#P(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      // Generate new booking ID with format #P0001
+      this.bookingId = `#P${nextNumber.toString().padStart(3, '0')}`;
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
+});
 
 export default mongoose.model("PoolBooking", poolBookingSchema);

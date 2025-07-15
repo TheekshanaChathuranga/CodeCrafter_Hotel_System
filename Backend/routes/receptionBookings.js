@@ -105,8 +105,12 @@ router.post("/", async (req, res) => {
     });
 
     await booking.save();
-    console.log("Booking created successfully:", booking._id);
-    res.status(201).json({ message: "Booking created successfully", booking });
+    console.log("Booking created successfully:", booking._id, "with ID:", booking.bookingId);
+    res.status(201).json({ 
+      message: "Booking created successfully", 
+      booking,
+      bookingId: booking.bookingId 
+    });
   } catch (error) {
     console.error("Error creating booking:", error);
 
@@ -133,13 +137,40 @@ router.post("/", async (req, res) => {
 // Get all bookings (both reception and online bookings)
 router.get("/", async (req, res) => {
   try {
-    // Get reception bookings
-    const receptionBookings = await ReceptionBooking.find()
+    const { search } = req.query;
+    
+    // Build search query for reception bookings
+    let receptionQuery = {};
+    if (search) {
+      receptionQuery = {
+        $or: [
+          { bookingId: { $regex: search, $options: 'i' } },
+          { 'guestDetails.name': { $regex: search, $options: 'i' } },
+          { 'guestDetails.mobile': { $regex: search, $options: 'i' } },
+          { 'bookingDetails.roomNumber': { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    // Get reception bookings with search
+    const receptionBookings = await ReceptionBooking.find(receptionQuery)
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get online bookings
-    const onlineBookings = await OnlineBooking.find()
+    // Build search query for online bookings
+    let onlineQuery = {};
+    if (search) {
+      onlineQuery = {
+        $or: [
+          { fullName: { $regex: search, $options: 'i' } },
+          { phoneNumber: { $regex: search, $options: 'i' } },
+          { roomNumber: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    // Get online bookings with search
+    const onlineBookings = await OnlineBooking.find(onlineQuery)
       .sort({ createdAt: -1 })
       .lean();
 

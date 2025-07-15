@@ -333,7 +333,7 @@ const ReceptionRoomBookingPage = () => {
         "http://localhost:5000/api/receptionBookings",
         bookingData
       );
-      setBookingId(response.data.booking._id);
+      setBookingId(response.data.bookingId || response.data.booking._id);
       setShowSuccessPopup(true);
       setShowConfirmation(false);
     } catch (error) {

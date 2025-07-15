@@ -16,6 +16,13 @@ const BookingDetailsPage = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [statusModalMessage, setStatusModalMessage] = useState("");
 
+  // Pagination states
+  const [allBookings, setAllBookings] = useState([]);
+  const [currentBookingIndex, setCurrentBookingIndex] = useState(-1);
+  const [paginationLoading, setPaginationLoading] = useState(false);
+  const [showJumpModal, setShowJumpModal] = useState(false);
+  const [jumpToBookingId, setJumpToBookingId] = useState("");
+
   // Edit booking states
   const [editingBooking, setEditingBooking] = useState(null);
   const [adminDetails, setAdminDetails] = useState({
@@ -40,8 +47,19 @@ const BookingDetailsPage = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const fetchBooking = async () => {
+    const fetchBookingAndList = async () => {
       try {
+        // Fetch all bookings for pagination
+        const allBookingsResponse = await axios.get("http://localhost:5000/api/receptionBookings");
+        setAllBookings(allBookingsResponse.data);
+        
+        // Find current booking index
+        const currentIndex = allBookingsResponse.data.findIndex(b => b._id === id);
+        setCurrentBookingIndex(currentIndex);
+
+        // Reset pagination loading
+        setPaginationLoading(false);
+
         // First try to fetch from receptionBookings (for reception-created bookings)
         let response;
         try {
@@ -54,6 +72,18 @@ const BookingDetailsPage = () => {
           response = await axios.get(
             `http://localhost:5000/api/bookings/${id}`
           );
+          
+          // If it's an online booking, we might need to fetch online bookings for pagination too
+          if (allBookingsResponse.data.length === 0) {
+            try {
+              const onlineBookingsResponse = await axios.get("http://localhost:5000/api/bookings");
+              setAllBookings(onlineBookingsResponse.data);
+              const onlineCurrentIndex = onlineBookingsResponse.data.findIndex(b => b._id === id);
+              setCurrentBookingIndex(onlineCurrentIndex);
+            } catch (onlineError) {
+              console.error('Error fetching online bookings for pagination:', onlineError);
+            }
+          }
         }
         
         console.log('Booking data fetched:', response.data);
@@ -64,10 +94,11 @@ const BookingDetailsPage = () => {
         console.error('Error fetching booking:', err);
         setError(err.message || 'Failed to fetch booking details');
         setLoading(false);
+        setPaginationLoading(false);
       }
     };
 
-    fetchBooking();
+    fetchBookingAndList();
   }, [id]);
 
   // Fetch available rooms when checkIn or checkOut changes, or when modal opens
@@ -90,6 +121,55 @@ const BookingDetailsPage = () => {
     setTotalAmount(newTotal);
     setRemainingAmount(newTotal - (Number(advanceAmount) || 0));
   }, [selectedRoomType, acType, packageType, dayNightType, advanceAmount]);
+
+  // Pagination functions and variables
+  const navigateToPreviousBooking = () => {
+    if (currentBookingIndex > 0) {
+      const previousBooking = allBookings[currentBookingIndex - 1];
+      setPaginationLoading(true);
+      navigate(`/receptionist/bookings/${previousBooking._id}`);
+    }
+  };
+
+  const navigateToNextBooking = () => {
+    if (currentBookingIndex < allBookings.length - 1) {
+      const nextBooking = allBookings[currentBookingIndex + 1];
+      setPaginationLoading(true);
+      navigate(`/receptionist/bookings/${nextBooking._id}`);
+    }
+  };
+
+  const canNavigatePrevious = currentBookingIndex > 0;
+  const canNavigateNext = currentBookingIndex < allBookings.length - 1;
+
+  const handleJumpToBooking = () => {
+    const bookingIndex = allBookings.findIndex(b => b._id === jumpToBookingId);
+    if (bookingIndex !== -1) {
+      setPaginationLoading(true);
+      navigate(`/receptionist/bookings/${jumpToBookingId}`);
+      setShowJumpModal(false);
+      setJumpToBookingId("");
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Only handle key presses if no modal is open and we're not editing
+      if (showEditModal || showDeleteModal || showStatusModal || showJumpModal || isEditing) return;
+      
+      if (event.key === 'ArrowLeft' && canNavigatePrevious) {
+        navigateToPreviousBooking();
+      } else if (event.key === 'ArrowRight' && canNavigateNext) {
+        navigateToNextBooking();
+      } else if (event.key === 'j' || event.key === 'J') {
+        setShowJumpModal(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [canNavigatePrevious, canNavigateNext, showEditModal, showDeleteModal, showStatusModal, showJumpModal, isEditing]);
 
   const handleStatusUpdate = async () => {
     try {
@@ -398,6 +478,18 @@ const BookingDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+      {/* Pagination Loading Overlay */}
+      {paginationLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-40">
+          <div className="bg-white rounded-xl p-6 shadow-2xl">
+            <div className="flex items-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>
+              <span className="text-gray-700 font-medium">Loading next booking...</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Delete Confirmation Modal */}
         {showDeleteModal && (
@@ -852,6 +944,142 @@ const BookingDetailsPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Pagination Navigation */}
+        {allBookings.length > 1 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={navigateToPreviousBooking}
+                disabled={!canNavigatePrevious}
+                className={`flex items-center px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                  canNavigatePrevious
+                    ? "bg-blue-500 hover:bg-blue-600 text-white hover:shadow-md"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Previous Booking
+              </button>
+              
+              <div className="flex items-center space-x-4">
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 font-medium">
+                    Booking {currentBookingIndex + 1} of {allBookings.length}
+                  </p>
+                  <div className="mt-2">
+                    <div className="bg-gray-200 rounded-full h-2 w-48">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${((currentBookingIndex + 1) / allBookings.length) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowJumpModal(true)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-all duration-200"
+                  title="Jump to specific booking"
+                >
+                  Jump to...
+                </button>
+              </div>
+              
+              <button
+                onClick={navigateToNextBooking}
+                disabled={!canNavigateNext}
+                className={`flex items-center px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                  canNavigateNext
+                    ? "bg-blue-500 hover:bg-blue-600 text-white hover:shadow-md"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Next Booking
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Quick navigation info */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex justify-between items-center text-sm text-gray-600">
+                <div className="flex items-center">
+                  {canNavigatePrevious && (
+                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+                      Previous: {allBookings[currentBookingIndex - 1]?.guestDetails?.name || 
+                                allBookings[currentBookingIndex - 1]?.fullName || 
+                                `Booking #${allBookings[currentBookingIndex - 1]?._id?.slice(-6)}`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center space-x-4">
+                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    Use ← → arrow keys to navigate • Press J to jump
+                  </span>
+                  {canNavigateNext && (
+                    <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+                      Next: {allBookings[currentBookingIndex + 1]?.guestDetails?.name || 
+                             allBookings[currentBookingIndex + 1]?.fullName || 
+                             `Booking #${allBookings[currentBookingIndex + 1]?._id?.slice(-6)}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Jump to Booking Modal */}
+        {showJumpModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl transform transition-all">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">
+                Jump to Booking
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Booking
+                  </label>
+                  <select
+                    value={jumpToBookingId}
+                    onChange={(e) => setJumpToBookingId(e.target.value)}
+                    className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a booking...</option>
+                    {allBookings.map((booking, index) => (
+                      <option key={booking._id} value={booking._id}>
+                        {index + 1}. {booking.guestDetails?.name || booking.fullName || `Booking #${booking._id?.slice(-6)}`}
+                        {" - "}{booking.status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowJumpModal(false);
+                    setJumpToBookingId("");
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleJumpToBooking}
+                  disabled={!jumpToBookingId}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Jump to Booking
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
