@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
+    bookingId: {
+      type: String,
+      unique: true,
+      required: [true, "Booking ID is required"],
+    },
     roomNumber: {
       type: String,
       required: [true, "Room number is required"],
@@ -132,6 +137,37 @@ bookingSchema.statics.findOverlappingBookings = async function (
     status: { $ne: "cancelled" },
     $or: [{ checkIn: { $lt: checkOut }, checkOut: { $gt: checkIn } }],
   });
+};
+
+// Add static method to generate next booking ID
+bookingSchema.statics.generateNextBookingId = async function () {
+  try {
+    // Find the latest booking with bookingId matching the pattern #RO####
+    const latestBooking = await this.findOne(
+      { bookingId: { $regex: /^#RO\d{4}$/ } },
+      {},
+      { sort: { bookingId: -1 } }
+    );
+
+    let nextNumber = 1;
+
+    if (latestBooking && latestBooking.bookingId) {
+      // Extract the number part from the booking ID (last 4 digits)
+      const currentNumber = parseInt(latestBooking.bookingId.slice(-4));
+      nextNumber = currentNumber + 1;
+    }
+
+    // Format the number as 4-digit string with leading zeros
+    const formattedNumber = nextNumber.toString().padStart(4, "0");
+
+    // Return the complete booking ID
+    return `#RO${formattedNumber}`;
+  } catch (error) {
+    console.error("Error generating booking ID:", error);
+    // Fallback to a random number if there's an error
+    const randomNumber = Math.floor(Math.random() * 9999) + 1;
+    return `#RO${randomNumber.toString().padStart(4, "0")}`;
+  }
 };
 
 const Booking = mongoose.model("Booking", bookingSchema);

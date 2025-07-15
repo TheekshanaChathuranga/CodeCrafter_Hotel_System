@@ -680,11 +680,11 @@ const Room_Book = () => {
 
             {/* Booking Details */}
             <div className="space-y-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4">
+              <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="col-span-2">
                     <p className="text-sm text-gray-600">Booking ID</p>
-                    <p className="font-semibold text-gray-800">
+                    <p className="font-bold text-blue-800 text-xl font-mono">
                       {bookingConfirmation.bookingId}
                     </p>
                   </div>
@@ -692,6 +692,12 @@ const Room_Book = () => {
                     <p className="text-sm text-gray-600">Room Number</p>
                     <p className="font-semibold text-gray-800">
                       {bookingConfirmation.roomNumber}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Status</p>
+                    <p className="font-semibold text-yellow-600">
+                      Pending Confirmation
                     </p>
                   </div>
                   <div className="col-span-2">
