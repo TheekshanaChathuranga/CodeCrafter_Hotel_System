@@ -5,7 +5,7 @@ import { FiLock, FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import { useSnackbar } from "notistack";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -14,7 +14,7 @@ const ResetPassword = () => {
 
   const [formData, setFormData] = useState({
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -31,8 +31,10 @@ const ResetPassword = () => {
   const verifyToken = async () => {
     setIsTokenChecking(true);
     try {
-      const response = await axios.get(`${API_URL}/auth/verify-reset-token/${token}`);
-      
+      const response = await axios.get(
+        `${API_URL}/auth/verify-reset-token/${token}`
+      );
+
       if (response.data.success) {
         setIsTokenValid(true);
       } else {
@@ -74,14 +76,17 @@ const ResetPassword = () => {
     setErrors({});
 
     try {
-      const response = await axios.post(`${API_URL}/auth/reset-password/${token}`, {
-        password: formData.password
-      });
+      const response = await axios.post(
+        `${API_URL}/auth/reset-password/${token}`,
+        {
+          password: formData.password,
+        }
+      );
 
       if (response.data.success) {
         setIsResetSuccessful(true);
-        enqueueSnackbar("Password reset successfully!", { 
-          variant: "success" 
+        enqueueSnackbar("Password reset successfully!", {
+          variant: "success",
         });
       }
     } catch (error) {
@@ -92,13 +97,15 @@ const ResetPassword = () => {
       if (error.response) {
         switch (error.response.status) {
           case 400:
-            errorMessage = error.response.data?.message || "Invalid or expired token";
+            errorMessage =
+              error.response.data?.message || "Invalid or expired token";
             break;
           case 404:
             errorMessage = "Reset token not found or expired";
             break;
           default:
-            errorMessage = error.response.data?.message || "Server error. Please try again.";
+            errorMessage =
+              error.response.data?.message || "Server error. Please try again.";
         }
       }
 
@@ -110,16 +117,16 @@ const ResetPassword = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear errors when user types
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -127,9 +134,15 @@ const ResetPassword = () => {
   // Loading state while checking token
   if (isTokenChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: "#ECF0F1" }}>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: "#ECF0F1" }}
+      >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: "#16A085" }}></div>
+          <div
+            className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4"
+            style={{ borderColor: "#16A085" }}
+          ></div>
           <p className="text-gray-600">Verifying reset token...</p>
         </div>
       </div>
@@ -151,11 +164,16 @@ const ResetPassword = () => {
             whileHover={{ scale: 1.02 }}
             className="bg-white rounded-xl shadow-2xl overflow-hidden"
           >
-            <div className="p-6 text-center" style={{ backgroundColor: "#E74C3C" }}>
+            <div
+              className="p-6 text-center"
+              style={{ backgroundColor: "#E74C3C" }}
+            >
               <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
                 <FiLock className="w-8 h-8" style={{ color: "#E74C3C" }} />
               </div>
-              <h1 className="text-2xl font-bold text-white">Invalid or Expired Link</h1>
+              <h1 className="text-2xl font-bold text-white">
+                Invalid or Expired Link
+              </h1>
               <p className="mt-2 text-white opacity-90">
                 This password reset link is invalid or has expired
               </p>
@@ -165,7 +183,7 @@ const ResetPassword = () => {
               <p className="text-gray-600 mb-6">
                 Password reset links expire after 1 hour for security reasons.
               </p>
-              
+
               <div className="space-y-3">
                 <Link
                   to="/forgot-password"
@@ -174,7 +192,7 @@ const ResetPassword = () => {
                 >
                   Request New Reset Link
                 </Link>
-                
+
                 <Link
                   to="/login"
                   className="block w-full py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
@@ -204,11 +222,19 @@ const ResetPassword = () => {
             whileHover={{ scale: 1.02 }}
             className="bg-white rounded-xl shadow-2xl overflow-hidden"
           >
-            <div className="p-6 text-center" style={{ backgroundColor: "#27AE60" }}>
+            <div
+              className="p-6 text-center"
+              style={{ backgroundColor: "#27AE60" }}
+            >
               <div className="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
-                <FiCheckCircle className="w-8 h-8" style={{ color: "#27AE60" }} />
+                <FiCheckCircle
+                  className="w-8 h-8"
+                  style={{ color: "#27AE60" }}
+                />
               </div>
-              <h1 className="text-2xl font-bold text-white">Password Reset Successful!</h1>
+              <h1 className="text-2xl font-bold text-white">
+                Password Reset Successful!
+              </h1>
               <p className="mt-2 text-white opacity-90">
                 Your password has been updated
               </p>
@@ -218,7 +244,7 @@ const ResetPassword = () => {
               <p className="text-gray-600 mb-6">
                 You can now log in with your new password.
               </p>
-              
+
               <Link
                 to="/login"
                 className="block w-full py-2 px-4 rounded-lg text-white font-medium transition"
@@ -247,7 +273,10 @@ const ResetPassword = () => {
           whileHover={{ scale: 1.02 }}
           className="bg-white rounded-xl shadow-2xl overflow-hidden"
         >
-          <div className="p-6 text-center" style={{ backgroundColor: "#2C3E50" }}>
+          <div
+            className="p-6 text-center"
+            style={{ backgroundColor: "#2C3E50" }}
+          >
             <h1 className="text-3xl font-bold text-white">Reset Password</h1>
             <p className="mt-2" style={{ color: "#ECF0F1" }}>
               Enter your new password
@@ -256,7 +285,10 @@ const ResetPassword = () => {
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: "#333333" }}
+              >
                 New Password
               </label>
               <div className="relative">
@@ -292,7 +324,10 @@ const ResetPassword = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1" style={{ color: "#333333" }}>
+              <label
+                className="block text-sm font-medium mb-1"
+                style={{ color: "#333333" }}
+              >
                 Confirm New Password
               </label>
               <div className="relative">
@@ -305,7 +340,9 @@ const ResetPassword = () => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
-                    errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300"
                   }`}
                   placeholder="Confirm new password"
                   style={{ backgroundColor: "#ECF0F1" }}
@@ -323,7 +360,9 @@ const ResetPassword = () => {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -369,7 +408,10 @@ const ResetPassword = () => {
             </motion.button>
           </form>
 
-          <div className="px-8 py-4 text-center" style={{ backgroundColor: "#ECF0F1" }}>
+          <div
+            className="px-8 py-4 text-center"
+            style={{ backgroundColor: "#ECF0F1" }}
+          >
             <Link
               to="/login"
               className="text-sm font-medium hover:underline"

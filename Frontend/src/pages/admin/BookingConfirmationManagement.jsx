@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { RefreshCw, Search, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  RefreshCw,
+  Search,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useSnackbar } from "notistack";
 
 const BookingList = () => {
@@ -10,11 +16,11 @@ const BookingList = () => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("room"); // "room", "pool", or "events"
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
+
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
@@ -24,7 +30,7 @@ const BookingList = () => {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch room, pool, and event bookings in parallel
       const [roomRes, poolRes, eventRes] = await Promise.all([
         fetch(`${API_BASE_URL}/admin/bookings/pending`, {
@@ -41,13 +47,13 @@ const BookingList = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        })
+        }),
       ]);
 
       const roomData = await roomRes.json();
       const poolData = await poolRes.json();
       const eventData = eventRes.ok ? await eventRes.json() : [];
-      
+
       setRoomBookings(Array.isArray(roomData) ? roomData : []);
       setPoolBookings(Array.isArray(poolData) ? poolData : []);
       setEventBookings(Array.isArray(eventData) ? eventData : []);
@@ -70,12 +76,16 @@ const BookingList = () => {
     fetchBookings();
   }, []);
 
-  const currentBookings = activeTab === "room" ? roomBookings : 
-                        activeTab === "pool" ? poolBookings : eventBookings;
-  
+  const currentBookings =
+    activeTab === "room"
+      ? roomBookings
+      : activeTab === "pool"
+      ? poolBookings
+      : eventBookings;
+
   const filteredBookings = currentBookings.filter((booking) => {
     const searchTerm = search.toLowerCase();
-    
+
     if (activeTab === "room") {
       return (
         booking.roomNumber?.toLowerCase().includes(searchTerm) ||
@@ -87,7 +97,7 @@ const BookingList = () => {
       const name = booking.fullName || booking.name || "";
       const phone = booking.phoneNumber || booking.phone || "";
       const email = booking.email || "";
-      
+
       return (
         name.toLowerCase().includes(searchTerm) ||
         phone.toLowerCase().includes(searchTerm) ||
@@ -100,7 +110,7 @@ const BookingList = () => {
       const phone2 = booking.phone2 || "";
       const email = booking.email || "";
       const eventType = booking.eventType || "";
-      
+
       return (
         name.toLowerCase().includes(searchTerm) ||
         phone1.toLowerCase().includes(searchTerm) ||
@@ -132,10 +142,10 @@ const BookingList = () => {
 
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -147,9 +157,10 @@ const BookingList = () => {
     return (
       <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
         <div className="flex items-center text-sm text-gray-500">
-          Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} results
+          Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of{" "}
+          {totalItems} results
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -158,7 +169,7 @@ const BookingList = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           {startPage > 1 && (
             <>
               <button
@@ -170,24 +181,26 @@ const BookingList = () => {
               {startPage > 2 && <span className="text-gray-400">...</span>}
             </>
           )}
-          
-          {pageNumbers.map(number => (
+
+          {pageNumbers.map((number) => (
             <button
               key={number}
               onClick={() => handlePageChange(number)}
               className={`px-3 py-2 text-sm font-medium ${
                 currentPage === number
-                  ? 'bg-[#16A085] text-white'
-                  : 'text-gray-700 hover:text-gray-900'
+                  ? "bg-[#16A085] text-white"
+                  : "text-gray-700 hover:text-gray-900"
               }`}
             >
               {number}
             </button>
           ))}
-          
+
           {endPage < totalPages && (
             <>
-              {endPage < totalPages - 1 && <span className="text-gray-400">...</span>}
+              {endPage < totalPages - 1 && (
+                <span className="text-gray-400">...</span>
+              )}
               <button
                 onClick={() => handlePageChange(totalPages)}
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -196,7 +209,7 @@ const BookingList = () => {
               </button>
             </>
           )}
-          
+
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
@@ -215,7 +228,10 @@ const BookingList = () => {
         <h1 className="text-2xl font-bold text-gray-800">Pending Bookings</h1>
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <div className="flex items-center gap-2">
-            <label htmlFor="itemsPerPage" className="text-sm text-gray-600 whitespace-nowrap">
+            <label
+              htmlFor="itemsPerPage"
+              className="text-sm text-gray-600 whitespace-nowrap"
+            >
               Show:
             </label>
             <select
@@ -242,7 +258,9 @@ const BookingList = () => {
             />
           </div>
           <button
-            onClick={() => { fetchBookings(); }}
+            onClick={() => {
+              fetchBookings();
+            }}
             disabled={loading}
             className="flex items-center gap-2 px-4 py-2 bg-[#16A085] text-white rounded-md hover:bg-[#138D75] disabled:opacity-50"
           >
@@ -312,7 +330,11 @@ const BookingList = () => {
         </div>
       ) : filteredBookings.length === 0 ? (
         <div className="p-8 text-center text-gray-500 bg-gray-50 rounded-lg">
-          {search ? "No matching bookings found" : `No pending ${activeTab === "events" ? "event" : activeTab} bookings`}
+          {search
+            ? "No matching bookings found"
+            : `No pending ${
+                activeTab === "events" ? "event" : activeTab
+              } bookings`}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -332,20 +354,25 @@ const BookingList = () => {
                 <div
                   key={`room-booking-${booking._id}-${index}`}
                   className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center cursor-pointer"
-                  onClick={() => navigate(`/admin/bookingNotifications/${booking._id}`)}
+                  onClick={() =>
+                    navigate(`/admin/bookingNotifications/${booking._id}`)
+                  }
                   title="Click to view booking details"
                 >
                   <div className="col-span-2 font-medium text-gray-800">
                     <div className="font-bold text-blue-600">
                       {booking.roomNumber}
                     </div>
-                    <div className="text-sm text-gray-600">{booking.roomType}</div>
+                    <div className="text-sm text-gray-600">
+                      {booking.roomType}
+                    </div>
                   </div>
                   <div className="col-span-3 text-gray-800 truncate">
                     <div className="font-medium">{booking.fullName}</div>
                     <div className="text-sm text-gray-600">
                       Adults: {booking.adults}{" "}
-                      {booking.children > 0 && `| Children: ${booking.children}`}
+                      {booking.children > 0 &&
+                        `| Children: ${booking.children}`}
                     </div>
                   </div>
                   <div className="col-span-2 text-gray-600 truncate">
@@ -399,13 +426,16 @@ const BookingList = () => {
                 const phone = booking.phoneNumber || booking.phone || "N/A";
                 const email = booking.email || "N/A";
                 const bookingDate = booking.date || booking.checkIn;
-                const guestCount = booking.guestCount || booking.peopleCount || 0;
-                
+                const guestCount =
+                  booking.guestCount || booking.peopleCount || 0;
+
                 return (
                   <div
                     key={`pool-booking-${booking._id}-${index}`}
                     className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center cursor-pointer"
-                    onClick={() => navigate(`/admin/poolBookingNotifications/${booking._id}`)}
+                    onClick={() =>
+                      navigate(`/admin/poolBookingNotifications/${booking._id}`)
+                    }
                     title="Click to view booking details"
                   >
                     <div className="col-span-3 text-gray-800 truncate">
@@ -418,11 +448,11 @@ const BookingList = () => {
                       {email}
                     </div>
                     <div className="col-span-2 text-sm text-gray-800">
-                      {bookingDate ? new Date(bookingDate).toLocaleDateString() : "N/A"}
+                      {bookingDate
+                        ? new Date(bookingDate).toLocaleDateString()
+                        : "N/A"}
                     </div>
-                    <div className="col-span-1 text-gray-600">
-                      {guestCount}
-                    </div>
+                    <div className="col-span-1 text-gray-600">{guestCount}</div>
                     <div className="col-span-1">
                       <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
                         Pending
@@ -432,7 +462,9 @@ const BookingList = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent row click when clicking button
-                          navigate(`/admin/poolBookingNotifications/${booking._id}`);
+                          navigate(
+                            `/admin/poolBookingNotifications/${booking._id}`
+                          );
                         }}
                         className="p-2 text-blue-600 hover:text-blue-800"
                         title="View details"
@@ -462,27 +494,40 @@ const BookingList = () => {
                   <div
                     key={`event-booking-${booking._id}-${index}`}
                     className="grid grid-cols-12 p-4 border-t hover:bg-gray-50 items-center cursor-pointer"
-                    onClick={() => navigate(`/admin/eventBookingNotifications/${booking._id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/admin/eventBookingNotifications/${booking._id}`
+                      )
+                    }
                     title="Click to view booking details"
                   >
                     <div className="col-span-2 text-gray-800">
                       <div className="font-medium text-blue-600">
-                        {booking.eventId || `#E${booking._id.substring(18, 24).toUpperCase()}`}
+                        {booking.eventId ||
+                          `#E${booking._id.substring(18, 24).toUpperCase()}`}
                       </div>
                     </div>
                     <div className="col-span-3 text-gray-800 truncate">
                       <div className="font-medium">{booking.name || "N/A"}</div>
-                      <div className="text-sm text-gray-600">{booking.email || ""}</div>
+                      <div className="text-sm text-gray-600">
+                        {booking.email || ""}
+                      </div>
                     </div>
                     <div className="col-span-2 text-gray-600 truncate">
                       <div>{booking.phone1 || "N/A"}</div>
                       {booking.phone2 && (
-                        <div className="text-sm text-gray-500">{booking.phone2}</div>
+                        <div className="text-sm text-gray-500">
+                          {booking.phone2}
+                        </div>
                       )}
                     </div>
                     <div className="col-span-2 text-gray-800">
-                      <div className="font-medium">{booking.eventType || "N/A"}</div>
-                      <div className="text-sm text-gray-600">{booking.hall || ""}</div>
+                      <div className="font-medium">
+                        {booking.eventType || "N/A"}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {booking.hall || ""}
+                      </div>
                     </div>
                     <div className="col-span-1 text-gray-600">
                       {booking.noOfGuests || 0}
@@ -496,7 +541,9 @@ const BookingList = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent row click when clicking button
-                          navigate(`/admin/eventBookingNotifications/${booking._id}`);
+                          navigate(
+                            `/admin/eventBookingNotifications/${booking._id}`
+                          );
                         }}
                         className="p-2 text-blue-600 hover:text-blue-800"
                         title="View details"
@@ -509,7 +556,7 @@ const BookingList = () => {
               })}
             </>
           )}
-          
+
           {/* Pagination */}
           {renderPagination()}
         </div>

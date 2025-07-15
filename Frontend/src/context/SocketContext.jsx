@@ -121,11 +121,16 @@ export const SocketProvider = ({ children }) => {
           bookingId: data.bookingId,
           fullName: data.fullName,
           guestCount: data.guestCount,
-          status: data.status
+          status: data.status,
         });
         setUnreadBookings((prev) => {
           const newCount = prev + 1;
-          console.log("Updated unread count for pool booking from", prev, "to", newCount);
+          console.log(
+            "Updated unread count for pool booking from",
+            prev,
+            "to",
+            newCount
+          );
           return newCount;
         });
       });

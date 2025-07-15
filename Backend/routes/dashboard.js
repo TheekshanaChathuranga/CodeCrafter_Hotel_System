@@ -4,6 +4,9 @@ import OnlineBooking from '../models/Booking.js';
 import PoolBooking from '../models/PoolBooking.js';
 import Pool from '../models/Pool.js';
 import Room from '../models/Room.js';
+import User from '../models/User.js';
+import Event from '../models/Event.js';
+import FoodItem from '../models/FoodItem.js';
 
 const router = express.Router();
 
@@ -69,11 +72,14 @@ router.get('/stats', async (req, res) => {
     const pendingPoolBookings = poolBookings.filter(booking => booking.status === 'pending');
 
     // Resource counts
-    const [totalRooms, availableRooms, totalPools, availablePools] = await Promise.all([
+    const [totalRooms, availableRooms, totalPools, availablePools, totalUsers, totalEvents, totalMenuItems] = await Promise.all([
       Room.countDocuments(),
       Room.countDocuments({ roomStatus: 'Available' }),
       Pool.countDocuments(),
-      Pool.countDocuments({ poolStatus: 'Available' })
+      Pool.countDocuments({ poolStatus: 'Available' }),
+      User.countDocuments(), // Get total registered users
+      Event.countDocuments(), // Get total events
+      FoodItem.countDocuments() // Get total menu items
     ]);
 
     // Room availability by type
@@ -167,7 +173,10 @@ router.get('/stats', async (req, res) => {
       overview: {
         totalBookingsToday: todaysRoomCheckIns.length + todaysPoolBookings.length,
         totalPendingBookings: pendingRoomBookings.length + pendingPoolBookings.length,
-        totalActivity: todaysRoomCheckIns.length + todaysRoomCheckOuts.length + todaysPoolBookings.length
+        totalActivity: todaysRoomCheckIns.length + todaysRoomCheckOuts.length + todaysPoolBookings.length,
+        totalUsers,
+        totalEvents,
+        totalMenuItems
       },
       recentActivity: {
         todayRoomCheckIns: todaysRoomCheckIns.slice(0, 5),

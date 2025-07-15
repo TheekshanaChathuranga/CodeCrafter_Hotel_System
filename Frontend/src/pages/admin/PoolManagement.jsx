@@ -7,10 +7,13 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import PoolForm from "../../components/admin/PoolForm";
 import PoolList from "../../components/admin/PoolList";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography
-} from '@mui/material';
-
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+} from "@mui/material";
 
 const PoolManagement = () => {
   const [pools, setPools] = useState([]);
@@ -23,7 +26,7 @@ const PoolManagement = () => {
     closingTime: "20:00",
     pricePerPersonHour: "",
     unavailablePeriod: { start: "", end: "" },
-    images: []
+    images: [],
   });
   const [showForm, setShowForm] = useState(false);
   const [selectedPool, setSelectedPool] = useState(null);
@@ -34,7 +37,6 @@ const PoolManagement = () => {
   const [previewImages, setPreviewImages] = useState([]);
   const { enqueueSnackbar } = useSnackbar();
   const [confirmOpen, setConfirmOpen] = useState(false);
-
 
   useEffect(() => {
     fetchPools();
@@ -54,7 +56,10 @@ const PoolManagement = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "unavailablePeriod.start" || name === "unavailablePeriod.end") {
+    if (
+      name === "unavailablePeriod.start" ||
+      name === "unavailablePeriod.end"
+    ) {
       setForm((prev) => ({
         ...prev,
         unavailablePeriod: {
@@ -74,11 +79,13 @@ const PoolManagement = () => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    
-    const validFiles = files.filter(file => {
-      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    const validFiles = files.filter((file) => {
+      const validTypes = ["image/jpeg", "image/png", "image/webp"];
       if (!validTypes.includes(file.type)) {
-        setError(`Invalid file type: ${file.name}. Only JPG, PNG, and WEBP are allowed.`);
+        setError(
+          `Invalid file type: ${file.name}. Only JPG, PNG, and WEBP are allowed.`
+        );
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
@@ -94,26 +101,29 @@ const PoolManagement = () => {
     }
 
     setForm({ ...form, images: [...form.images, ...validFiles] });
-    
-    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
     setPreviewImages([...previewImages, ...newPreviews]);
   };
 
   const removeImage = (index) => {
     const newImages = [...form.images];
     const newPreviews = [...previewImages];
-    
+
     if (index < previewImages.length - newImages.length) {
-      const imagePath = previewImages[index].replace('http://localhost:5000', '');
+      const imagePath = previewImages[index].replace(
+        "http://localhost:5000",
+        ""
+      );
       setDeletedImages([...deletedImages, imagePath]);
     }
-    
+
     URL.revokeObjectURL(newPreviews[index]);
     newPreviews.splice(index, 1);
     newImages.splice(index, 1);
-    
+
     setPreviewImages(newPreviews);
-    setForm({...form, images: newImages});
+    setForm({ ...form, images: newImages });
   };
 
   const handleSubmit = async (e) => {
@@ -121,14 +131,20 @@ const PoolManagement = () => {
     setError("");
     setLoading(true);
 
-    if (!form.name || !form.description || !form.capacity || !form.openingTime || !form.closingTime) {
+    if (
+      !form.name ||
+      !form.description ||
+      !form.capacity ||
+      !form.openingTime ||
+      !form.closingTime
+    ) {
       setError("All fields are required");
       setLoading(false);
       return;
     }
 
     const numericCapacity = parseInt(form.capacity);
-    
+
     if (isNaN(numericCapacity)) {
       setError("Capacity must be a valid number");
       setLoading(false);
@@ -154,8 +170,7 @@ const PoolManagement = () => {
         );
       }
       formData.append("deletedImages", JSON.stringify(deletedImages));
-    
-      
+
       form.images.forEach((image) => {
         formData.append("images", image);
       });
@@ -166,14 +181,12 @@ const PoolManagement = () => {
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        enqueueSnackbar("Pool updated successfully", { variant: 'success' });
+        enqueueSnackbar("Pool updated successfully", { variant: "success" });
       } else {
-        await axios.post(
-          "http://localhost:5000/api/pools/add",
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-        enqueueSnackbar("Pool added successfully", { variant: 'success' });
+        await axios.post("http://localhost:5000/api/pools/add", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        enqueueSnackbar("Pool added successfully", { variant: "success" });
       }
 
       fetchPools();
@@ -204,10 +217,10 @@ const PoolManagement = () => {
               : "",
           }
         : { start: "", end: "" },
-      images: []
+      images: [],
     });
     setSelectedPool(pool);
-    setPreviewImages(pool.images.map(img => `http://localhost:5000${img}`));
+    setPreviewImages(pool.images.map((img) => `http://localhost:5000${img}`));
     setShowForm(true);
     setIsEditing(true);
   };
@@ -215,8 +228,10 @@ const PoolManagement = () => {
   const handleDeleteConfirmed = async () => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:5000/api/pools/delete/${selectedPool._id}`);
-      enqueueSnackbar("Pool deleted successfully", { variant: 'success' });
+      await axios.delete(
+        `http://localhost:5000/api/pools/delete/${selectedPool._id}`
+      );
+      enqueueSnackbar("Pool deleted successfully", { variant: "success" });
       fetchPools();
       resetForm();
     } catch (error) {
@@ -235,7 +250,7 @@ const PoolManagement = () => {
   const handleError = (error, defaultMessage) => {
     const message = error.response?.data?.error || defaultMessage;
     setError(message);
-    enqueueSnackbar(message, { variant: 'error' });
+    enqueueSnackbar(message, { variant: "error" });
     console.error(message, error);
   };
 
@@ -249,7 +264,7 @@ const PoolManagement = () => {
       closingTime: "20:00",
       pricePerPersonHour: "",
       unavailablePeriod: { start: "", end: "" },
-      images: []
+      images: [],
     });
     setPreviewImages([]);
     setDeletedImages([]);
@@ -275,11 +290,11 @@ const PoolManagement = () => {
       </div>
 
       <ErrorDisplay error={error} />
-      
+
       {loading && !showForm && <LoadingSpinner />}
 
       {showForm && (
-        <PoolForm 
+        <PoolForm
           form={form}
           isEditing={isEditing}
           loading={loading}
@@ -295,7 +310,7 @@ const PoolManagement = () => {
         />
       )}
 
-      <PoolList 
+      <PoolList
         pools={pools}
         loading={loading}
         onEdit={handleEdit}
@@ -306,13 +321,20 @@ const PoolManagement = () => {
         <DialogTitle>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete <strong>{selectedPool?.name}</strong>?
+            Are you sure you want to delete{" "}
+            <strong>{selectedPool?.name}</strong>?
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>Cancel</Button>
-          <Button onClick={handleDeleteConfirmed} color="error" disabled={loading}>
-            {loading ? 'Deleting...' : 'Delete'}
+          <Button onClick={() => setConfirmOpen(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirmed}
+            color="error"
+            disabled={loading}
+          >
+            {loading ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

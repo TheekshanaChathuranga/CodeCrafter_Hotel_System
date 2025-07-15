@@ -53,16 +53,19 @@ FRONTEND_URL=http://localhost:5173
 ### Common Issues:
 
 1. **"Invalid login credentials"**
+
    - Make sure 2FA is enabled on your Gmail account
    - Use app password, not your regular Gmail password
    - Double-check the EMAIL_USER and EMAIL_PASS values
 
 2. **"Connection timeout"**
+
    - Check your internet connection
    - Some corporate networks block SMTP ports
    - Try using a different network
 
 3. **"User not found"**
+
    - Make sure the email exists in your database
    - Check the User collection in MongoDB
 

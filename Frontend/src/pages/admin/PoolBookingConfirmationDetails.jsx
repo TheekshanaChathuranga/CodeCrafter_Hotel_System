@@ -39,11 +39,14 @@ const PoolBookingDetail = () => {
   const fetchBooking = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/admin/bookings/pool/pending/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/admin/bookings/pool/pending/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch pool booking details");
@@ -82,14 +85,17 @@ const PoolBookingDetail = () => {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || `Failed to ${actionType} pool booking`);
+        throw new Error(
+          errorData.error || `Failed to ${actionType} pool booking`
+        );
       }
 
       const data = await res.json();
-      const emailMessage = actionType === "approve" 
-        ? "Pool booking approved successfully! Customer has been notified via email (check spam folder if not received)." 
-        : "Pool booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
-      
+      const emailMessage =
+        actionType === "approve"
+          ? "Pool booking approved successfully! Customer has been notified via email (check spam folder if not received)."
+          : "Pool booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
+
       enqueueSnackbar(emailMessage, {
         variant: "success",
       });
@@ -109,8 +115,8 @@ const PoolBookingDetail = () => {
       return;
     }
     // Remove leading slash from paymentProof if it exists to avoid double slashes
-    const cleanPath = booking.paymentProof.startsWith('/') 
-      ? booking.paymentProof.substring(1) 
+    const cleanPath = booking.paymentProof.startsWith("/")
+      ? booking.paymentProof.substring(1)
       : booking.paymentProof;
     window.open(`${API_BASE_URL}/${cleanPath}`, "_blank");
   };
@@ -121,8 +127,8 @@ const PoolBookingDetail = () => {
       return;
     }
     // Remove leading slash from paymentProof if it exists to avoid double slashes
-    const cleanPath = booking.paymentProof.startsWith('/') 
-      ? booking.paymentProof.substring(1) 
+    const cleanPath = booking.paymentProof.startsWith("/")
+      ? booking.paymentProof.substring(1)
       : booking.paymentProof;
     const link = document.createElement("a");
     link.href = `${API_BASE_URL}/${cleanPath}`;
@@ -206,10 +212,10 @@ const PoolBookingDetail = () => {
               </h1>
               <div className="flex items-center mt-2 gap-2">
                 <Chip
-                  label={booking.status || 'pending'}
-                  icon={statusConfig[booking.status || 'pending']?.icon}
+                  label={booking.status || "pending"}
+                  icon={statusConfig[booking.status || "pending"]?.icon}
                   className={`${
-                    statusConfig[booking.status || 'pending']?.color
+                    statusConfig[booking.status || "pending"]?.color
                   } capitalize`}
                   size="small"
                 />
@@ -263,7 +269,9 @@ const PoolBookingDetail = () => {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500">Phone Number</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Phone Number
+                </p>
                 <p className="text-lg">{phone}</p>
               </div>
 
@@ -284,20 +292,28 @@ const PoolBookingDetail = () => {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Booking Date</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Booking Date
+                </p>
                 <p className="text-lg font-semibold">
-                  {bookingDate ? new Date(bookingDate).toLocaleDateString() : "N/A"}
+                  {bookingDate
+                    ? new Date(bookingDate).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500">Number of Guests</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Number of Guests
+                </p>
                 <p className="text-lg">{guestCount}</p>
               </div>
 
               {booking.startTime && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Start Time</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Start Time
+                  </p>
                   <p className="text-lg">{booking.startTime}</p>
                 </div>
               )}
@@ -311,7 +327,9 @@ const PoolBookingDetail = () => {
 
               {booking.totalAmount && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Amount
+                  </p>
                   <p className="text-xl font-bold text-green-600">
                     LKR {booking.totalAmount.toFixed(2)}
                   </p>

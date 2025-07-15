@@ -1,48 +1,50 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 // Email configuration
 const createTransporter = () => {
   return nodemailer.createTransport({
-    service: 'Gmail',
+    service: "Gmail",
     secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
     tls: {
-      rejectUnauthorized: false
-    }
+      rejectUnauthorized: false,
+    },
   });
 };
 
 // Send password reset email
 export const sendPasswordResetEmail = async (email, resetToken, userName) => {
   try {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
-    
+    const resetUrl = `${
+      process.env.FRONTEND_URL || "http://localhost:5173"
+    }/reset-password/${resetToken}`;
+
     // Skip email sending in development mode
-    if (process.env.NODE_ENV?.toLowerCase() === 'development') {
-      console.log('\n' + '='.repeat(80));
-      console.log('📧 PASSWORD RESET EMAIL (Development Mode)');
-      console.log('='.repeat(80));
+    if (process.env.NODE_ENV?.toLowerCase() === "development") {
+      console.log("\n" + "=".repeat(80));
+      console.log("📧 PASSWORD RESET EMAIL (Development Mode)");
+      console.log("=".repeat(80));
       console.log(`To: ${email}`);
-      console.log(`User: ${userName || 'User'}`);
+      console.log(`User: ${userName || "User"}`);
       console.log(`Reset Link: ${resetUrl}`);
-      console.log('='.repeat(80) + '\n');
-      
+      console.log("=".repeat(80) + "\n");
+
       return { success: true, emailSent: false, development: true };
     }
-    
+
     const transporter = createTransporter();
-    
+
     const mailOptions = {
-    from: {
-      name: 'Hotel Management System',
-      address: process.env.EMAIL_USER
-    },
-    to: email,
-    subject: 'Password Reset Request - Hotel Management System',
-    html: `
+      from: {
+        name: "Hotel Management System",
+        address: process.env.EMAIL_USER,
+      },
+      to: email,
+      subject: "Password Reset Request - Hotel Management System",
+      html: `
       <!DOCTYPE html>
       <html>
       <head>
@@ -88,53 +90,62 @@ export const sendPasswordResetEmail = async (email, resetToken, userName) => {
       </body>
       </html>
     `,
-  };
+    };
 
     try {
       await transporter.sendMail(mailOptions);
       return { success: true, emailSent: true };
     } catch (error) {
-      console.error('Email sending failed:', error.message);
-      
+      console.error("Email sending failed:", error.message);
+
       // Return success anyway since the token is generated and saved
-      return { 
-        success: true, 
-        emailSent: false, 
-        message: 'Password reset token generated but email failed to send.'
+      return {
+        success: true,
+        emailSent: false,
+        message: "Password reset token generated but email failed to send.",
       };
     }
   } catch (connectionError) {
-    console.error('Password reset error:', connectionError);
-    return { 
-      success: false, 
-      error: 'Failed to generate password reset token'
+    console.error("Password reset error:", connectionError);
+    return {
+      success: false,
+      error: "Failed to generate password reset token",
     };
   }
 };
 
 // Send booking approval email
-export const sendBookingApprovalEmail = async (email, userName, bookingDetails) => {
+export const sendBookingApprovalEmail = async (
+  email,
+  userName,
+  bookingDetails
+) => {
   try {
     // Skip email sending in development mode
-    if (process.env.NODE_ENV?.toLowerCase() === 'development' || !process.env.EMAIL_USER) {
-      console.log('⚠️  EMAIL NOT SENT - Development mode or EMAIL_USER not configured');
+    if (
+      process.env.NODE_ENV?.toLowerCase() === "development" ||
+      !process.env.EMAIL_USER
+    ) {
+      console.log(
+        "⚠️  EMAIL NOT SENT - Development mode or EMAIL_USER not configured"
+      );
       return { success: true, emailSent: false, development: true };
     }
-    
+
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: {
-        name: 'Hotel Management System',
-        address: process.env.EMAIL_USER
+        name: "Hotel Management System",
+        address: process.env.EMAIL_USER,
       },
       to: email,
-      subject: '✅ Booking Approved - Hotel Management System',
+      subject: "✅ Booking Approved - Hotel Management System",
       replyTo: process.env.EMAIL_USER,
       headers: {
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-        'Importance': 'high'
+        "X-Priority": "1",
+        "X-MSMail-Priority": "High",
+        Importance: "high",
       },
       html: `
         <!DOCTYPE html>
@@ -171,17 +182,47 @@ export const sendBookingApprovalEmail = async (email, userName, bookingDetails) 
             <div class="content">
               <p>Dear ${userName},</p>
               <div class="success-badge">✅ APPROVED</div>
-              <p>Great news! Your ${bookingDetails.type || 'room'} booking has been approved.</p>
+              <p>Great news! Your ${
+                bookingDetails.type || "room"
+              } booking has been approved.</p>
               
               <div class="booking-details">
                 <h3>Booking Details:</h3>
                 <p><strong>Booking ID:</strong> ${bookingDetails.bookingId}</p>
-                <p><strong>Type:</strong> ${bookingDetails.type || 'Room Booking'}</p>
-                ${bookingDetails.roomNumber ? `<p><strong>Room:</strong> ${bookingDetails.roomNumber}</p>` : ''}
-                ${bookingDetails.checkIn ? `<p><strong>Check-in:</strong> ${new Date(bookingDetails.checkIn).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.checkOut ? `<p><strong>Check-out:</strong> ${new Date(bookingDetails.checkOut).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.date ? `<p><strong>Date:</strong> ${new Date(bookingDetails.date).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.eventType ? `<p><strong>Event Type:</strong> ${bookingDetails.eventType}</p>` : ''}
+                <p><strong>Type:</strong> ${
+                  bookingDetails.type || "Room Booking"
+                }</p>
+                ${
+                  bookingDetails.roomNumber
+                    ? `<p><strong>Room:</strong> ${bookingDetails.roomNumber}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.checkIn
+                    ? `<p><strong>Check-in:</strong> ${new Date(
+                        bookingDetails.checkIn
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.checkOut
+                    ? `<p><strong>Check-out:</strong> ${new Date(
+                        bookingDetails.checkOut
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.date
+                    ? `<p><strong>Date:</strong> ${new Date(
+                        bookingDetails.date
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.eventType
+                    ? `<p><strong>Event Type:</strong> ${bookingDetails.eventType}</p>`
+                    : ""
+                }
               </div>
               
               <p>Please save this email for your records. We look forward to serving you!</p>
@@ -201,45 +242,55 @@ export const sendBookingApprovalEmail = async (email, userName, bookingDetails) 
       await transporter.sendMail(mailOptions);
       return { success: true, emailSent: true };
     } catch (error) {
-      console.error('Approval email sending failed:', error.message);
-      return { 
-        success: true, 
-        emailSent: false, 
-        message: 'Booking approved but email failed to send.'
+      console.error("Approval email sending failed:", error.message);
+      return {
+        success: true,
+        emailSent: false,
+        message: "Booking approved but email failed to send.",
       };
     }
   } catch (error) {
-    console.error('Booking approval email error:', error);
-    return { 
-      success: false, 
-      error: 'Failed to send approval email'
+    console.error("Booking approval email error:", error);
+    return {
+      success: false,
+      error: "Failed to send approval email",
     };
   }
 };
 
 // Send booking rejection email
-export const sendBookingRejectionEmail = async (email, userName, bookingDetails, rejectionReason) => {
+export const sendBookingRejectionEmail = async (
+  email,
+  userName,
+  bookingDetails,
+  rejectionReason
+) => {
   try {
     // Skip email sending in development mode
-    if (process.env.NODE_ENV?.toLowerCase() === 'development' || !process.env.EMAIL_USER) {
-      console.log('⚠️  EMAIL NOT SENT - Development mode or EMAIL_USER not configured');
+    if (
+      process.env.NODE_ENV?.toLowerCase() === "development" ||
+      !process.env.EMAIL_USER
+    ) {
+      console.log(
+        "⚠️  EMAIL NOT SENT - Development mode or EMAIL_USER not configured"
+      );
       return { success: true, emailSent: false, development: true };
     }
-    
+
     const transporter = createTransporter();
-    
+
     const mailOptions = {
       from: {
-        name: 'Hotel Management System',
-        address: process.env.EMAIL_USER
+        name: "Hotel Management System",
+        address: process.env.EMAIL_USER,
       },
       to: email,
-      subject: '❌ Booking Update - Hotel Management System',
+      subject: "❌ Booking Update - Hotel Management System",
       replyTo: process.env.EMAIL_USER,
       headers: {
-        'X-Priority': '1',
-        'X-MSMail-Priority': 'High',
-        'Importance': 'high'
+        "X-Priority": "1",
+        "X-MSMail-Priority": "High",
+        Importance: "high",
       },
       html: `
         <!DOCTYPE html>
@@ -283,25 +334,59 @@ export const sendBookingRejectionEmail = async (email, userName, bookingDetails,
             <div class="content">
               <p>Dear ${userName},</p>
               <div class="rejection-badge">❌ NOT APPROVED</div>
-              <p>We regret to inform you that your ${bookingDetails.type || 'room'} booking could not be approved at this time.</p>
+              <p>We regret to inform you that your ${
+                bookingDetails.type || "room"
+              } booking could not be approved at this time.</p>
               
               <div class="booking-details">
                 <h3>Booking Details:</h3>
                 <p><strong>Booking ID:</strong> ${bookingDetails.bookingId}</p>
-                <p><strong>Type:</strong> ${bookingDetails.type || 'Room Booking'}</p>
-                ${bookingDetails.roomNumber ? `<p><strong>Room:</strong> ${bookingDetails.roomNumber}</p>` : ''}
-                ${bookingDetails.checkIn ? `<p><strong>Check-in:</strong> ${new Date(bookingDetails.checkIn).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.checkOut ? `<p><strong>Check-out:</strong> ${new Date(bookingDetails.checkOut).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.date ? `<p><strong>Date:</strong> ${new Date(bookingDetails.date).toLocaleDateString()}</p>` : ''}
-                ${bookingDetails.eventType ? `<p><strong>Event Type:</strong> ${bookingDetails.eventType}</p>` : ''}
+                <p><strong>Type:</strong> ${
+                  bookingDetails.type || "Room Booking"
+                }</p>
+                ${
+                  bookingDetails.roomNumber
+                    ? `<p><strong>Room:</strong> ${bookingDetails.roomNumber}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.checkIn
+                    ? `<p><strong>Check-in:</strong> ${new Date(
+                        bookingDetails.checkIn
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.checkOut
+                    ? `<p><strong>Check-out:</strong> ${new Date(
+                        bookingDetails.checkOut
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.date
+                    ? `<p><strong>Date:</strong> ${new Date(
+                        bookingDetails.date
+                      ).toLocaleDateString()}</p>`
+                    : ""
+                }
+                ${
+                  bookingDetails.eventType
+                    ? `<p><strong>Event Type:</strong> ${bookingDetails.eventType}</p>`
+                    : ""
+                }
               </div>
               
-              ${rejectionReason ? `
+              ${
+                rejectionReason
+                  ? `
                 <div class="reason-box">
                   <h4>Reason:</h4>
                   <p>${rejectionReason}</p>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
               <p>We apologize for any inconvenience. Please feel free to contact us if you have any questions or would like to make alternative arrangements.</p>
               <p>Thank you for your understanding.</p>
@@ -320,20 +405,24 @@ export const sendBookingRejectionEmail = async (email, userName, bookingDetails,
       await transporter.sendMail(mailOptions);
       return { success: true, emailSent: true };
     } catch (error) {
-      console.error('Rejection email sending failed:', error.message);
-      return { 
-        success: true, 
-        emailSent: false, 
-        message: 'Booking rejected but email failed to send.'
+      console.error("Rejection email sending failed:", error.message);
+      return {
+        success: true,
+        emailSent: false,
+        message: "Booking rejected but email failed to send.",
       };
     }
   } catch (error) {
-    console.error('Booking rejection email error:', error);
-    return { 
-      success: false, 
-      error: 'Failed to send rejection email'
+    console.error("Booking rejection email error:", error);
+    return {
+      success: false,
+      error: "Failed to send rejection email",
     };
   }
 };
 
-export default { sendPasswordResetEmail, sendBookingApprovalEmail, sendBookingRejectionEmail };
+export default {
+  sendPasswordResetEmail,
+  sendBookingApprovalEmail,
+  sendBookingRejectionEmail,
+};

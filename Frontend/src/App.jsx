@@ -174,10 +174,7 @@ const App = () => {
           <Route path="pool-bookings" element={<BookingsList />} />
           <Route path="pool-schedules" element={<BookingsList />} />
           <Route path="pools" element={<ManagePools />} />
-          <Route
-            path="profile"
-            element={<Profile />}
-          />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* reception routes - for backward compatibility */}
@@ -208,10 +205,7 @@ const App = () => {
           <Route path="pool-bookings" element={<BookingsList />} />
           <Route path="pool-schedules" element={<BookingsList />} />
           <Route path="pools" element={<ManagePools />} />
-          <Route
-            path="profile"
-            element={<Profile />}
-          />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </div>
