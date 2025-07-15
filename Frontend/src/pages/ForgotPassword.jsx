@@ -5,7 +5,7 @@ import { FiMail, FiArrowLeft } from "react-icons/fi";
 import { useSnackbar } from "notistack";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -37,13 +37,13 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(`${API_URL}/auth/forgot-password`, {
-        email: email.trim().toLowerCase()
+        email: email.trim().toLowerCase(),
       });
 
       if (response.data.success) {
         setIsEmailSent(true);
-        enqueueSnackbar("Password reset email sent successfully!", { 
-          variant: "success" 
+        enqueueSnackbar("Password reset email sent successfully!", {
+          variant: "success",
         });
       }
     } catch (error) {
@@ -59,11 +59,13 @@ const ForgotPassword = () => {
             fieldErrors = { email: errorMessage };
             break;
           case 400:
-            errorMessage = error.response.data?.message || "Invalid email address";
+            errorMessage =
+              error.response.data?.message || "Invalid email address";
             fieldErrors = { email: errorMessage };
             break;
           default:
-            errorMessage = error.response.data?.message || "Server error. Please try again.";
+            errorMessage =
+              error.response.data?.message || "Server error. Please try again.";
         }
       }
 
@@ -107,10 +109,10 @@ const ForgotPassword = () => {
                 <span className="font-medium">{email}</span>
               </p>
               <p className="text-sm text-gray-500 mb-6">
-                The link will expire in 1 hour. If you don't see the email, 
+                The link will expire in 1 hour. If you don't see the email,
                 check your spam folder.
               </p>
-              
+
               <div className="space-y-3">
                 <button
                   onClick={() => {
@@ -121,7 +123,7 @@ const ForgotPassword = () => {
                 >
                   Send to different email
                 </button>
-                
+
                 <Link
                   to="/login"
                   className="block w-full py-2 px-4 rounded-lg text-white font-medium transition"

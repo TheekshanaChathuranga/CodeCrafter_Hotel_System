@@ -35,7 +35,6 @@ import errorHandler from "./middleware/errorHandler.js";
 import notificationRoutes from "./routes/notifications.js";
 import passwordResetRoutes from "./routes/passwordReset.js";
 
-
 // Socket.io Configuration
 import { configureSocket } from "./socket/socketServer.js";
 

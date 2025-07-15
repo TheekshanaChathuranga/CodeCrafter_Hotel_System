@@ -85,7 +85,6 @@ const DashboardSidebar = () => {
     //   roles: ["admin"],
     // },
 
-
     {
       title: "Notifications",
       url: { admin: "/admin/bookingNotifications" },

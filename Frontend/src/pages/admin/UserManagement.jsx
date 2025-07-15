@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Trash2, RefreshCw, ChevronLeft, ChevronRight, Plus, Pencil } from "lucide-react";
+import {
+  Trash2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Pencil,
+} from "lucide-react";
 import {
   Dialog,
   DialogActions,
@@ -29,12 +36,25 @@ const UserManagement = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ username: "", email: "", password: "", role: "user", status: "active", notice: "" });
+  const [newUser, setNewUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+    role: "user",
+    status: "active",
+    notice: "",
+  });
   const [editingUser, setEditingUser] = useState(null);
 
   const handleSaveUser = async () => {
-    if (!newUser.username || !newUser.email || (!editingUser && !newUser.password)) {
-      enqueueSnackbar("Username, email and password are required", { variant: "warning" });
+    if (
+      !newUser.username ||
+      !newUser.email ||
+      (!editingUser && !newUser.password)
+    ) {
+      enqueueSnackbar("Username, email and password are required", {
+        variant: "warning",
+      });
       return;
     }
     try {
@@ -50,12 +70,20 @@ const UserManagement = () => {
         enqueueSnackbar("User created successfully", { variant: "success" });
       }
       setAddDialogOpen(false);
-      setNewUser({ username: "", email: "", password: "", role: "user", status: "active", notice: "" });
+      setNewUser({
+        username: "",
+        email: "",
+        password: "",
+        role: "user",
+        status: "active",
+        notice: "",
+      });
       setEditingUser(null);
       fetchUsers(currentPage);
     } catch (err) {
       console.error("Save user error:", err);
-      const msg = err.response?.data?.message || err.message || "Failed to save user";
+      const msg =
+        err.response?.data?.message || err.message || "Failed to save user";
       enqueueSnackbar(msg, { variant: "error" });
     } finally {
       setLoading(false);
@@ -156,10 +184,10 @@ const UserManagement = () => {
 
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     if (endPage - startPage < maxVisiblePages - 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
@@ -176,7 +204,7 @@ const UserManagement = () => {
         <div className="flex items-center text-sm text-gray-500">
           Showing {startIndex + 1} to {endIndex} of {totalUsers} results
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <button
             onClick={() => handlePageChange(currentPage - 1)}
@@ -185,7 +213,7 @@ const UserManagement = () => {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           {startPage > 1 && (
             <>
               <button
@@ -198,25 +226,27 @@ const UserManagement = () => {
               {startPage > 2 && <span className="text-gray-400">...</span>}
             </>
           )}
-          
-          {pageNumbers.map(number => (
+
+          {pageNumbers.map((number) => (
             <button
               key={number}
               onClick={() => handlePageChange(number)}
               disabled={loading}
               className={`px-3 py-2 text-sm font-medium ${
                 currentPage === number
-                  ? 'bg-[#16A085] text-white'
-                  : 'text-gray-700 hover:text-gray-900'
+                  ? "bg-[#16A085] text-white"
+                  : "text-gray-700 hover:text-gray-900"
               }`}
             >
               {number}
             </button>
           ))}
-          
+
           {endPage < totalPages && (
             <>
-              {endPage < totalPages - 1 && <span className="text-gray-400">...</span>}
+              {endPage < totalPages - 1 && (
+                <span className="text-gray-400">...</span>
+              )}
               <button
                 onClick={() => handlePageChange(totalPages)}
                 className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
@@ -226,7 +256,7 @@ const UserManagement = () => {
               </button>
             </>
           )}
-          
+
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || loading}
@@ -247,7 +277,10 @@ const UserManagement = () => {
         <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
         <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
           <div className="flex items-center gap-2">
-            <label htmlFor="usersPerPage" className="text-sm text-gray-600 whitespace-nowrap">
+            <label
+              htmlFor="usersPerPage"
+              className="text-sm text-gray-600 whitespace-nowrap"
+            >
               Show:
             </label>
             <select
@@ -347,7 +380,15 @@ const UserManagement = () => {
                 </span>
               </div>
               <div className="col-span-2 md:col-span-2">
-                <span className={`px-2 py-1 text-xs rounded-full ${user.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"}`}>{user.status}</span>
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    user.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-200 text-gray-600"
+                  }`}
+                >
+                  {user.status}
+                </span>
               </div>
               <div className="col-span-2 md:col-span-2 text-gray-600 truncate">
                 {user.notice || "—"}
@@ -450,9 +491,7 @@ const UserManagement = () => {
             />
             <select
               value={newUser.role}
-              onChange={(e) =>
-                setNewUser({ ...newUser, role: e.target.value })
-              }
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
               className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#16A085]"
             >
               <option value="user">User</option>

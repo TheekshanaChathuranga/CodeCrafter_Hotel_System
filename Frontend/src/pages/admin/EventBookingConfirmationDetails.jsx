@@ -39,11 +39,14 @@ const EventBookingDetail = () => {
   const fetchEvent = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/admin/bookings/events/pending/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await fetch(
+        `${API_BASE_URL}/admin/bookings/events/pending/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch event details");
@@ -86,10 +89,11 @@ const EventBookingDetail = () => {
       }
 
       const data = await res.json();
-      const emailMessage = actionType === "approve" 
-        ? "Event approved successfully! Customer has been notified via email (check spam folder if not received)." 
-        : "Event rejected successfully! Customer has been notified via email (check spam folder if not received).";
-      
+      const emailMessage =
+        actionType === "approve"
+          ? "Event approved successfully! Customer has been notified via email (check spam folder if not received)."
+          : "Event rejected successfully! Customer has been notified via email (check spam folder if not received).";
+
       enqueueSnackbar(emailMessage, {
         variant: "success",
       });
@@ -162,14 +166,15 @@ const EventBookingDetail = () => {
           <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                {event.eventId || `Event #${event._id.substring(18, 24).toUpperCase()}`}
+                {event.eventId ||
+                  `Event #${event._id.substring(18, 24).toUpperCase()}`}
               </h1>
               <div className="flex items-center mt-2 gap-2">
                 <Chip
-                  label={event.status || 'pending'}
-                  icon={statusConfig[event.status || 'pending']?.icon}
+                  label={event.status || "pending"}
+                  icon={statusConfig[event.status || "pending"]?.icon}
                   className={`${
-                    statusConfig[event.status || 'pending']?.color
+                    statusConfig[event.status || "pending"]?.color
                   } capitalize`}
                   size="small"
                 />
@@ -218,7 +223,9 @@ const EventBookingDetail = () => {
 
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-gray-500">Contact Name</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Contact Name
+                </p>
                 <p className="text-lg font-semibold">{event.name || "N/A"}</p>
               </div>
 
@@ -257,8 +264,12 @@ const EventBookingDetail = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Event Type</p>
-                  <p className="text-lg font-semibold">{event.eventType || "N/A"}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Event Type
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {event.eventType || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Hall</p>
@@ -270,19 +281,25 @@ const EventBookingDetail = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">Check-In</p>
                   <p className="text-lg">
-                    {event.checkIn ? new Date(event.checkIn).toLocaleDateString() : "N/A"}
+                    {event.checkIn
+                      ? new Date(event.checkIn).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Check-Out</p>
                   <p className="text-lg">
-                    {event.checkOut ? new Date(event.checkOut).toLocaleDateString() : "N/A"}
+                    {event.checkOut
+                      ? new Date(event.checkOut).toLocaleDateString()
+                      : "N/A"}
                   </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm font-medium text-gray-500">Number of Guests</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Number of Guests
+                </p>
                 <p className="text-lg">{event.noOfGuests || 0}</p>
               </div>
 
@@ -309,7 +326,9 @@ const EventBookingDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {event.totalAmount && (
                 <div className="bg-white p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Total Amount</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Amount
+                  </p>
                   <p className="text-xl font-bold text-gray-800">
                     LKR {event.totalAmount.toFixed(2)}
                   </p>
@@ -317,7 +336,9 @@ const EventBookingDetail = () => {
               )}
               {event.serviceCharge && (
                 <div className="bg-white p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-500">Service Charge</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Service Charge
+                  </p>
                   <p className="text-xl font-bold text-gray-800">
                     LKR {event.serviceCharge.toFixed(2)}
                   </p>
@@ -325,7 +346,9 @@ const EventBookingDetail = () => {
               )}
               {event.grandTotal && (
                 <div className="bg-white p-4 rounded-lg border-2 border-green-200">
-                  <p className="text-sm font-medium text-gray-500">Grand Total</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Grand Total
+                  </p>
                   <p className="text-2xl font-bold text-green-600">
                     LKR {event.grandTotal.toFixed(2)}
                   </p>
@@ -345,23 +368,47 @@ const EventBookingDetail = () => {
               <table className="w-full border-collapse border border-gray-300">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-left">Category</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Description</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Unit</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">Quantity</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">Rate</th>
-                    <th className="border border-gray-300 px-4 py-2 text-right">Amount</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Category
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Description
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Unit
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">
+                      Quantity
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">
+                      Rate
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-right">
+                      Amount
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {event.tableData.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2">{item.category || "-"}</td>
-                      <td className="border border-gray-300 px-4 py-2">{item.description || "-"}</td>
-                      <td className="border border-gray-300 px-4 py-2">{item.unit || "-"}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">{item.quantity || 0}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">LKR {(item.rate || 0).toFixed(2)}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-right">LKR {(item.amount || 0).toFixed(2)}</td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {item.category || "-"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {item.description || "-"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {item.unit || "-"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">
+                        {item.quantity || 0}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">
+                        LKR {(item.rate || 0).toFixed(2)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-right">
+                        LKR {(item.amount || 0).toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -388,8 +435,7 @@ const EventBookingDetail = () => {
             ) : (
               <div className="space-y-4">
                 <p>
-                  Are you sure you want to reject this event for{" "}
-                  {event.name}?
+                  Are you sure you want to reject this event for {event.name}?
                 </p>
                 <div>
                   <label

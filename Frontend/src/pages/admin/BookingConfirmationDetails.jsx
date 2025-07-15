@@ -84,10 +84,11 @@ const BookingDetail = () => {
       }
 
       const data = await res.json();
-      const emailMessage = actionType === "approve" 
-        ? "Booking approved successfully! Customer has been notified via email (check spam folder if not received)." 
-        : "Booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
-      
+      const emailMessage =
+        actionType === "approve"
+          ? "Booking approved successfully! Customer has been notified via email (check spam folder if not received)."
+          : "Booking rejected successfully! Customer has been notified via email (check spam folder if not received).";
+
       enqueueSnackbar(emailMessage, {
         variant: "success",
       });
@@ -107,8 +108,8 @@ const BookingDetail = () => {
       return;
     }
     // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
+    const cleanPath = booking.documentPath.startsWith("/")
+      ? booking.documentPath.substring(1)
       : booking.documentPath;
     window.open(`${API_BASE_URL}/${cleanPath}`, "_blank");
   };
@@ -119,8 +120,8 @@ const BookingDetail = () => {
       return;
     }
     // Remove leading slash from documentPath if it exists to avoid double slashes
-    const cleanPath = booking.documentPath.startsWith('/') 
-      ? booking.documentPath.substring(1) 
+    const cleanPath = booking.documentPath.startsWith("/")
+      ? booking.documentPath.substring(1)
       : booking.documentPath;
     const link = document.createElement("a");
     link.href = `${API_BASE_URL}/${cleanPath}`;
