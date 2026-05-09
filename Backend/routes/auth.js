@@ -17,9 +17,8 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    // Create user
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, email, password: hashedPassword });
+    // Create user — do NOT hash here; the User model pre('save') hook hashes automatically
+    const newUser = new User({ username, email, password });
     await newUser.save();
 
     // Successful response
@@ -64,7 +63,7 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.json({ token, userId: user._id });
+    res.json({ token, userId: user._id, role: user.role });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ message: "Error logging in", error });

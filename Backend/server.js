@@ -144,6 +144,16 @@ server.listen(PORT, () => {
   );
 });
 
+// Handle port-in-use errors gracefully
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n❌ Port ${PORT} is already in use.`);
+    console.error(`   Please stop the other process or use a different port.\n`);
+    process.exit(1);
+  }
+  throw err;
+});
+
 // Handle shutdown gracefully
 process.on("SIGINT", async () => {
   console.log("Shutting down server gracefully...");
