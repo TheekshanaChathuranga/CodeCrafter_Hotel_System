@@ -14,6 +14,22 @@ const Login = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
+  const demoAccounts = [
+    { label: "Admin", email: "supun@gmail.com", password: "supun123" },
+    { label: "User", email: "hashan1@gmail.com", password: "hashan123" },
+    {
+      label: "Receptionist",
+      email: "chathuranga@gmail.com",
+      password: "chathuranga123",
+    },
+  ];
+
+  const handleDemoFill = (demoEmail, demoPassword) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setErrors({});
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -255,6 +271,31 @@ const Login = () => {
                 </>
               )}
             </motion.button>
+
+            <div className="pt-2">
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-200"></div>
+                <span className="flex-shrink mx-3 text-xs uppercase tracking-wider text-gray-400">
+                  Demo Login
+                </span>
+                <div className="flex-grow border-t border-gray-200"></div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {demoAccounts.map((account) => (
+                  <motion.button
+                    key={account.label}
+                    type="button"
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() =>
+                      handleDemoFill(account.email, account.password)
+                    }
+                    className="py-2 px-2 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 bg-gray-50 hover:bg-[#2C3E50] hover:text-white hover:border-[#2C3E50] transition-colors cursor-pointer"
+                  >
+                    {account.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
           </form>
           <div
             className="px-8 py-4 text-center"
